@@ -1,0 +1,31 @@
+# Gradle
+.gradle/
+build/
+app/build/
+
+# Local machine config (SDK path)
+local.properties
+
+# Signing secrets — keep the keystore AND its passwords out of the repo
+*.keystore
+*.jks
+keystore.properties
+
+# IDE
+.idea/
+*.iml
+.kotlin/
+captures/
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Local tooling / build artifacts not for the repo
+.claude/
+/prezentacija/
+/Racunko-prezentacija.zip
+*.apk
+
+# foss OCR models are fetched at build time (tessdata_fast), never committed
+/app/src/foss/assets/tessdata/

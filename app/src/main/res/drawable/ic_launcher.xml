@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- dark rounded background -->
+    <path
+        android:fillColor="#1B222C"
+        android:pathData="M20,0 L88,0 A20,20 0 0 1 108,20 L108,88 A20,20 0 0 1 88,108 L20,108 A20,20 0 0 1 0,88 L0,20 A20,20 0 0 1 20,0 Z" />
+    <!-- bill/document -->
+    <path
+        android:fillColor="#E8A93D"
+        android:pathData="M30,22 L66,22 L78,34 L78,86 L30,86 Z" />
+    <path
+        android:fillColor="#1B222C"
+        android:pathData="M66,22 L66,34 L78,34 Z" />
+    <!-- QR-like squares -->
+    <path android:fillColor="#12171F" android:pathData="M38,42 L50,42 L50,54 L38,54 Z" />
+    <path android:fillColor="#E8A93D" android:pathData="M41,45 L47,45 L47,51 L41,51 Z" />
+    <path android:fillColor="#12171F" android:pathData="M56,42 L70,42 L70,48 L56,48 Z" />
+    <path android:fillColor="#12171F" android:pathData="M38,60 L70,60 L70,66 L38,66 Z" />
+    <path android:fillColor="#12171F" android:pathData="M38,72 L58,72 L58,78 L38,78 Z" />
+    <!-- green check -->
+    <path
+        android:fillColor="#45D39E"
+        android:pathData="M62,68 m-16,0 a16,16 0 1,1 32,0 a16,16 0 1,1 -32,0"
+        android:fillAlpha="0" />
+    <path
+        android:strokeColor="#45D39E"
+        android:strokeWidth="7"
+        android:strokeLineCap="round"
+        android:fillColor="#00000000"
+        android:pathData="M60,72 L68,80 L84,60" />
+</vector>

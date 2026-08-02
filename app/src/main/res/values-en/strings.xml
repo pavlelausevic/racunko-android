@@ -1,0 +1,158 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Računko</string>
+    <string name="subtitle">bills · QR codes · confirmations</string>
+
+    <string name="tab_racuni">Bills</string>
+    <string name="tab_potvrde">Confirmations</string>
+
+    <string name="btn_obradi">Process</string>
+    <string name="btn_podeli">Share</string>
+    <string name="btn_podeli_sve">Share all</string>
+    <string name="btn_qr_slika">QR image</string>
+    <string name="btn_sacuvaj">Save</string>
+    <string name="btn_otkazi">Cancel</string>
+    <string name="btn_add_address">+ Add address</string>
+
+    <string name="files_in_folder">Files in folder</string>
+    <string name="empty_folder">No PDF files in this folder.</string>
+    <string name="empty_racuni">Računko reads PDF bills from the Download folder (default).\n\nAdd bills with the ➕ button — Računko reads, renames them and extracts the NBS IPS payment QR code. Attach a payment confirmation to each bill via the ➕ on its card.</string>
+    <string name="empty_potvrde">Confirmations arrive by sharing from the bank into Računko (Share → Računko) or via the ➕ on a bill\'s card.</string>
+    <string name="system_picker">system file picker</string>
+    <string name="btn_add_bill">Add bill</string>
+    <string name="btn_add_potvrda">Add confirmation</string>
+    <string name="refresh">refresh</string>
+
+    <string name="processing">Reading %1$s …</string>
+    <string name="error_read">Cannot read this PDF. Check that the file is valid.</string>
+
+    <string name="badge_qr_ok">QR ✓</string>
+    <string name="badge_ok">recognized</string>
+    <string name="badge_warn">fill in manually</string>
+    <string name="badge_paired">paired with bill</string>
+    <string name="badge_err">error</string>
+    <string name="badge_placeno">paid ✓</string>
+
+    <string name="seg_provider_missing">provider?</string>
+    <string name="seg_address_missing">address?</string>
+    <string name="seg_month_missing">month?</string>
+    <string name="seg_amount_missing">amount?</string>
+
+    <string name="edit_provider">Service provider</string>
+    <string name="edit_address">Address (short label)</string>
+    <string name="edit_month">Month and year</string>
+    <string name="edit_amount">Amount (rounded)</string>
+    <string name="month_hint">e.g. maj26</string>
+    <string name="amount_hint">e.g. 3457</string>
+
+    <string name="show_qr">show QR</string>
+    <string name="hide_qr">hide QR</string>
+    <string name="share_qr">share QR image</string>
+    <string name="add_confirmation">add confirmation</string>
+    <string name="qr_missing">No QR code found in this PDF</string>
+    <string name="pick_bill_to_pair">Pair with bill:</string>
+    <string name="pick_confirmation">Pick a confirmation from the "potvrde" folder:</string>
+    <string name="no_unpaired_bills">No remembered unpaired bills.</string>
+
+    <string name="settings_title">Settings</string>
+    <string name="settings_addresses">My addresses</string>
+    <string name="settings_addresses_note">Left is the short label used in file names, right is the address text as printed on the bill (Cyrillic or Latin). Multiple rows may share one label.</string>
+    <string name="settings_providers">Provider labels (for file names)</string>
+    <string name="settings_language">Language</string>
+    <string name="settings_folder">Storage location</string>
+    <string name="settings_choose_location">Choose a different storage location</string>
+    <string name="settings_reset_location">Reset to default (Download/Racunko)</string>
+    <string name="legacy_folder_notice">The old folder structure is no longer used. New folders are in Download/Racunko.</string>
+    <string name="settings_clear_history">Clear pairing history</string>
+    <string name="lang_sr">Srpski</string>
+    <string name="lang_en">English</string>
+    <string name="lang_system">Follow system</string>
+    <string name="addr_label_hint">KD7</string>
+    <string name="addr_pattern_hint">street and number from the bill</string>
+
+    <string name="toast_qr_saved">QR saved to the gallery — scan it in your bank\'s app</string>
+
+    <!-- v1.4.2: generated-QR safety disclaimer + summary report -->
+    <string name="qr_disclaimer_title">Check before paying</string>
+    <string name="qr_disclaimer_text">Računko built this QR from the bill\'s data. When you scan it in your bank\'s app, verify the recipient, amount and payment reference before confirming.</string>
+    <string name="qr_disclaimer_short">Generated QR — verify recipient, amount and reference in your bank\'s app.</string>
+    <string name="btn_ok">OK</string>
+    <string name="report_make">Make report</string>
+    <string name="report_title">Report</string>
+    <string name="report_copy">Copy</string>
+    <string name="toast_report_copied">Report copied</string>
+
+    <!-- v1.4.3: selection action bar, delete, purge -->
+    <string name="action_delete">Delete</string>
+    <string name="select_all">Select all</string>
+    <string name="tag_processed">already processed</string>
+    <string name="cta_sifarnik_title">Build your address book</string>
+    <string name="cta_sifarnik_text">Addresses are the one thing Računko cannot derive on its own. With the address book (short label + address text from the bill) files are named by location automatically, e.g. infostan_BDS95_maj26_11152. You can continue without it — the address stays an editable "address?" chip.</string>
+    <string name="cta_sifarnik_btn">Build address book</string>
+    <string name="intake_conf_title">This document looks like a payment confirmation, not a bill. What would you like?</string>
+    <string name="intake_bill_title">This document looks like a bill, not a confirmation. What would you like?</string>
+    <string name="intake_unknown_title">We could not recognize the document type. Is this a bill or a confirmation?</string>
+    <string name="intake_add_as_conf">Add as confirmation</string>
+    <string name="intake_add_as_bill">Add as bill</string>
+    <string name="intake_keep_bill">Add as bill anyway</string>
+    <string name="intake_keep_conf">Add as confirmation anyway</string>
+    <string name="intake_cancel_hint">Tapping outside skips this file.</string>
+    <string name="space_tag_title">This name already exists — add a space tag</string>
+    <string name="space_tag_hint">e.g. G1, STAN, LOKAL</string>
+    <string name="space_tag_remember">Remember for this space</string>
+    <string name="share_type_bill">Bill</string>
+    <string name="share_type_conf">Payment confirmation</string>
+    <string name="toast_deleted">Deleted: %1$d</string>
+    <string name="toast_purged">Folder emptied</string>
+    <string name="delete_title">Delete selected (%1$d)?</string>
+    <string name="delete_also_files">Also delete the files (PDFs/images + QR)</string>
+    <string name="delete_counts">Deleting: %1$d bills, %2$d confirmations, %3$d QR codes</string>
+    <string name="settings_purge">Empty the folder</string>
+    <string name="purge_title">Empty the folder?</string>
+    <string name="purge_text">This permanently deletes %1$d bill files, %2$d confirmations and %3$d QR codes from Download/Racunko. Nothing outside that folder is touched. This cannot be undone.</string>
+    <string name="purge_continue">Continue</string>
+    <string name="purge_final_title">Are you sure?</string>
+    <string name="purge_also_payees">Also clear remembered payees</string>
+    <string name="purge_final_confirm">Yes, delete everything</string>
+
+    <!-- 8d: live camera scanning -->
+    <string name="back">back</string>
+    <string name="scan_perm_title">Camera access</string>
+    <string name="scan_perm_text">The camera is used only to scan the NBS IPS QR code on a paper bill, on-device. Nothing is recorded or uploaded — the app has no internet access.</string>
+    <string name="scan_perm_allow">Allow camera</string>
+    <string name="scan_hint">Point the camera at the IPS QR code on the bill</string>
+    <string name="scan_guidance">Align the bill in the frame, more light, move closer</string>
+    <string name="scan_captured">QR captured ✓</string>
+    <string name="scan_torch">torch</string>
+    <string name="scan_use_photo">Take a photo instead</string>
+    <string name="toast_addresses_saved">Settings saved</string>
+    <string name="toast_history_cleared">Pairing history cleared</string>
+    <string name="toast_renamed">Renamed: %1$s</string>
+    <string name="toast_rename_failed">Rename failed — check folder permissions</string>
+    <string name="toast_paired">Paired: %1$s</string>
+    <string name="toast_no_selection">Select at least one file</string>
+    <string name="toast_received">Confirmation received</string>
+    <string name="toast_folder_error">Cannot access the folder — pick it again</string>
+    <string name="toast_qr_generated">Payment QR created — saved to the gallery</string>
+    <string name="toast_payees_cleared">Remembered payees cleared</string>
+
+    <!-- 8c: verified account, generate QR, payee-memory hint, unified + menu -->
+    <string name="verified_account">account verified (check digits)</string>
+    <string name="btn_make_qr">Make QR</string>
+    <string name="make_qr_need_account">account needs confirmation</string>
+    <string name="make_qr_need_amount">amount missing</string>
+    <string name="suggested">suggested</string>
+    <string name="add_scan">Scan bill</string>
+    <string name="add_from_file">Add from file</string>
+    <string name="add_photo">Add photo</string>
+    <string name="settings_clear_payees">Clear remembered payees</string>
+
+    <!-- v1.5.0-rc1/rc2 Change 1: first-run folder grant (onboarding) -->
+    <string name="onboarding_title">Računko needs one folder</string>
+    <string name="onboarding_body">Računko created the Download/Racunko folder for your bills. Just confirm it on the next screen — one tap.</string>
+    <string name="onboarding_grant">Confirm folder</string>
+    <string name="onboarding_hint">No internet. Nothing leaves your phone.</string>
+    <string name="onboarding_info_btn">How does this work?</string>
+    <string name="onboarding_info_title">Confirm the folder</string>
+    <string name="onboarding_info">Računko already created the Download/Racunko folder. On the next screen, just tap \"Use this folder\".\n\nIf the dialog opens Download and the button is greyed out — open Racunko, then confirm.\n\nFiles from other apps (email, provider…) are added via \"Add from file\".</string>
+</resources>

@@ -1,0 +1,12 @@
+{
+  "sourceKind": "IMAGE_OCR",
+  "provider": "sz",
+  "recipientAccount": "200555000123456764",
+  "accountVerified": true,
+  "amount": 1500,
+  "month": null,
+  "paymentReference": "040255500012",
+  "addressLabel": null,
+  "pairsWith": "sz_DS99_*_1500",
+  "mustNotPairWith": []
+}

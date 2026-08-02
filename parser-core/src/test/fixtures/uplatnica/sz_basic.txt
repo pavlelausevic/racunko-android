@@ -1,0 +1,9 @@
+UPLATNICA NALOG ZA UPLATU
+uplatilac ***masked***
+racun uplatioca ***masked***
+svrha uplate Odrzavanje zajednickih delova zgrade
+primalac SZ DOBRIVOJA STANKOVICA 99
+racun primaoca 200-5550001234567-64
+model 97 poziv na broj 040255500012
+za uplatu 1.500,00
+iznos 1.500,00

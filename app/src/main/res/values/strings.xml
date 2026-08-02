@@ -1,0 +1,158 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Računko</string>
+    <string name="subtitle">računi · QR kodovi · potvrde</string>
+
+    <string name="tab_racuni">Računi</string>
+    <string name="tab_potvrde">Potvrde</string>
+
+    <string name="btn_obradi">Obradi</string>
+    <string name="btn_podeli">Podeli</string>
+    <string name="btn_podeli_sve">Podeli sve</string>
+    <string name="btn_qr_slika">QR slika</string>
+    <string name="btn_sacuvaj">Sačuvaj</string>
+    <string name="btn_otkazi">Otkaži</string>
+    <string name="btn_add_address">+ Dodaj adresu</string>
+
+    <string name="files_in_folder">Fajlovi u fascikli</string>
+    <string name="empty_folder">Nema PDF fajlova u ovoj fascikli.</string>
+    <string name="empty_racuni">Računko čita PDF račune iz fascikle Download (podrazumevano).\n\nDodaj račune dugmetom ➕, a Računko ih čita, preimenuje i izdvaja NBS IPS QR kôd za plaćanje. Potvrdu o plaćanju dodaješ na svaki račun preko ➕ na njegovoj kartici.</string>
+    <string name="empty_potvrde">Potvrde stižu deljenjem iz banke u Računko (Podeli → Računko) ili preko ➕ na kartici računa.</string>
+    <string name="system_picker">sistemski birač fajlova</string>
+    <string name="btn_add_bill">Dodaj račun</string>
+    <string name="btn_add_potvrda">Dodaj potvrdu</string>
+    <string name="refresh">osveži</string>
+
+    <string name="processing">Čitam %1$s …</string>
+    <string name="error_read">Ne mogu da pročitam ovaj PDF. Proveri da li je fajl ispravan.</string>
+
+    <string name="badge_qr_ok">QR ✓</string>
+    <string name="badge_ok">prepoznato</string>
+    <string name="badge_warn">dopuni ručno</string>
+    <string name="badge_paired">uparena sa računom</string>
+    <string name="badge_err">greška</string>
+    <string name="badge_placeno">plaćeno ✓</string>
+
+    <string name="seg_provider_missing">pružalac?</string>
+    <string name="seg_address_missing">adresa?</string>
+    <string name="seg_month_missing">mesec?</string>
+    <string name="seg_amount_missing">iznos?</string>
+
+    <string name="edit_provider">Pružalac usluge</string>
+    <string name="edit_address">Adresa (skraćenica)</string>
+    <string name="edit_month">Mesec i godina</string>
+    <string name="edit_amount">Iznos (zaokružen)</string>
+    <string name="month_hint">npr. maj26</string>
+    <string name="amount_hint">npr. 3457</string>
+
+    <string name="show_qr">prikaži QR</string>
+    <string name="hide_qr">sakrij QR</string>
+    <string name="share_qr">podeli QR sliku</string>
+    <string name="add_confirmation">dodaj potvrdu</string>
+    <string name="qr_missing">QR kod nije pronađen u ovom PDF-u</string>
+    <string name="pick_bill_to_pair">Upari sa računom:</string>
+    <string name="pick_confirmation">Izaberi potvrdu iz fascikle „potvrde":</string>
+    <string name="no_unpaired_bills">Nema zapamćenih neuparenih računa.</string>
+
+    <string name="settings_title">Podešavanja</string>
+    <string name="settings_addresses">Moje adrese</string>
+    <string name="settings_addresses_note">Levo je skraćenica za naziv fajla, desno tekst adrese kako piše na računu (ćirilica/latinica svejedno). Više redova može imati istu skraćenicu.</string>
+    <string name="settings_providers">Nazivi pružalaca (za naziv fajla)</string>
+    <string name="settings_language">Jezik</string>
+    <string name="settings_folder">Lokacija čuvanja</string>
+    <string name="settings_choose_location">Izaberi drugu lokaciju čuvanja</string>
+    <string name="settings_reset_location">Vrati na podrazumevano (Download/Racunko)</string>
+    <string name="legacy_folder_notice">Stara struktura foldera se više ne koristi. Nove fascikle su u Download/Racunko.</string>
+    <string name="settings_clear_history">Obriši istoriju uparivanja</string>
+    <string name="lang_sr">Srpski</string>
+    <string name="lang_en">English</string>
+    <string name="lang_system">Prati sistem</string>
+    <string name="addr_label_hint">KD7</string>
+    <string name="addr_pattern_hint">ulica i broj sa računa</string>
+
+    <string name="toast_qr_saved">QR sačuvan u galeriju — skeniraj ga u aplikaciji Vaše banke</string>
+
+    <!-- v1.4.2: generated-QR safety disclaimer + summary report -->
+    <string name="qr_disclaimer_title">Proveri pre plaćanja</string>
+    <string name="qr_disclaimer_text">Računko je napravio ovaj QR iz podataka sa računa. Kad ga skeniraš u aplikaciji svoje banke, proveri primaoca, iznos i poziv na broj pre potvrde.</string>
+    <string name="qr_disclaimer_short">Napravljen QR — proveri primaoca, iznos i poziv na broj u aplikaciji svoje banke.</string>
+    <string name="btn_ok">U redu</string>
+    <string name="report_make">Napravi izveštaj</string>
+    <string name="report_title">Izveštaj</string>
+    <string name="report_copy">Kopiraj</string>
+    <string name="toast_report_copied">Izveštaj kopiran</string>
+
+    <!-- v1.4.3: selection action bar, delete, purge -->
+    <string name="action_delete">Obriši</string>
+    <string name="select_all">Izaberi sve</string>
+    <string name="tag_processed">već obrađen</string>
+    <string name="cta_sifarnik_title">Napravi šifarnik adresa</string>
+    <string name="cta_sifarnik_text">Adrese su jedino što Računko ne može sam da izvede. Sa šifarnikom (skraćenica + tekst adrese sa računa) fajlovi se sami imenuju po lokaciji, npr. infostan_BDS95_maj26_11152. Možeš da nastaviš i bez njega — adresa ostaje „adresa?" za ručni unos.</string>
+    <string name="cta_sifarnik_btn">Napravi šifarnik</string>
+    <string name="intake_conf_title">Ovaj dokument izgleda kao potvrda o plaćanju, ne kao račun. Šta želiš?</string>
+    <string name="intake_bill_title">Ovaj dokument izgleda kao račun, ne kao potvrda. Šta želiš?</string>
+    <string name="intake_unknown_title">Nismo uspeli da prepoznamo tip dokumenta. Je li ovo račun ili potvrda?</string>
+    <string name="intake_add_as_conf">Dodaj kao potvrdu</string>
+    <string name="intake_add_as_bill">Dodaj kao račun</string>
+    <string name="intake_keep_bill">Ipak dodaj kao račun</string>
+    <string name="intake_keep_conf">Ipak dodaj kao potvrdu</string>
+    <string name="intake_cancel_hint">Dodir van prozora otkazuje ovaj fajl.</string>
+    <string name="space_tag_title">Isti naziv već postoji — dodaj oznaku prostora</string>
+    <string name="space_tag_hint">npr. G1, STAN, LOKAL</string>
+    <string name="space_tag_remember">Zapamti za ovaj prostor</string>
+    <string name="share_type_bill">Račun</string>
+    <string name="share_type_conf">Potvrda o plaćanju</string>
+    <string name="toast_deleted">Obrisano: %1$d</string>
+    <string name="toast_purged">Fascikla ispražnjena</string>
+    <string name="delete_title">Obriši izabrane (%1$d)?</string>
+    <string name="delete_also_files">Obriši i fajlove iz fascikle (PDF/slike + QR)</string>
+    <string name="delete_counts">Brišem: %1$d računa, %2$d potvrda, %3$d QR kodova</string>
+    <string name="settings_purge">Isprazni fasciklu</string>
+    <string name="purge_title">Isprazni fasciklu?</string>
+    <string name="purge_text">Trajno se brišu %1$d fajlova računa, %2$d potvrda i %3$d QR kodova iz Download/Racunko. Ništa van te fascikle se ne dira. Nepovratno je.</string>
+    <string name="purge_continue">Nastavi</string>
+    <string name="purge_final_title">Da li si siguran?</string>
+    <string name="purge_also_payees">Obriši i zapamćene primaoce</string>
+    <string name="purge_final_confirm">Da, obriši sve</string>
+
+    <!-- 8d: live camera scanning -->
+    <string name="back">nazad</string>
+    <string name="scan_perm_title">Pristup kameri</string>
+    <string name="scan_perm_text">Kamera služi samo za skeniranje NBS IPS QR koda sa papirnog računa, na uređaju. Ništa se ne snima niti šalje — aplikacija nema pristup internetu.</string>
+    <string name="scan_perm_allow">Dozvoli kameru</string>
+    <string name="scan_hint">Uperi kameru u IPS QR kod na računu</string>
+    <string name="scan_guidance">Poravnaj račun u okvir, više svetla, priđi bliže</string>
+    <string name="scan_captured">QR uhvaćen ✓</string>
+    <string name="scan_torch">lampa</string>
+    <string name="scan_use_photo">Uslikaj umesto toga</string>
+    <string name="toast_addresses_saved">Podešavanja sačuvana</string>
+    <string name="toast_history_cleared">Istorija uparivanja obrisana</string>
+    <string name="toast_renamed">Preimenovano: %1$s</string>
+    <string name="toast_rename_failed">Preimenovanje nije uspelo — proveri dozvole za fasciklu</string>
+    <string name="toast_paired">Uparena: %1$s</string>
+    <string name="toast_no_selection">Izaberi bar jedan fajl</string>
+    <string name="toast_received">Potvrda primljena</string>
+    <string name="toast_folder_error">Ne mogu da pristupim fascikli — izaberi je ponovo</string>
+    <string name="toast_qr_generated">QR za plaćanje napravljen — sačuvan u galeriju</string>
+    <string name="toast_payees_cleared">Zapamćeni primaoci obrisani</string>
+
+    <!-- 8c: verified account, generate QR, payee-memory hint, unified + menu -->
+    <string name="verified_account">račun proveren (kontrolni broj)</string>
+    <string name="btn_make_qr">Napravi QR</string>
+    <string name="make_qr_need_account">potrebna potvrda računa</string>
+    <string name="make_qr_need_amount">nedostaje iznos</string>
+    <string name="suggested">predloženo</string>
+    <string name="add_scan">Skeniraj račun</string>
+    <string name="add_from_file">Dodaj iz fajla</string>
+    <string name="add_photo">Dodaj fotografiju</string>
+    <string name="settings_clear_payees">Obriši zapamćene primaoce</string>
+
+    <!-- v1.5.0-rc1/rc2 Change 1: first-run folder grant (onboarding) -->
+    <string name="onboarding_title">Računku treba jedna fascikla</string>
+    <string name="onboarding_body">Računko je napravio fasciklu Download/Racunko za tvoje račune. Na sledećem ekranu samo je potvrdi — jedan tap.</string>
+    <string name="onboarding_grant">Potvrdi fasciklu</string>
+    <string name="onboarding_hint">Bez interneta. Ništa ne napušta telefon.</string>
+    <string name="onboarding_info_btn">Kako ovo radi?</string>
+    <string name="onboarding_info_title">Potvrda fascikle</string>
+    <string name="onboarding_info">Računko je već napravio fasciklu Download/Racunko. Na sledećem ekranu samo tapni „Koristi ovu fasciklu".\n\nAko dijalog otvori Download a dugme je sivo — uđi u Racunko pa potvrdi.\n\nFajlove iz drugih aplikacija (mejl, EPS…) dodaješ preko „Dodaj iz fajla".</string>
+</resources>
