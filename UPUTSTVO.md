@@ -1,6 +1,6 @@
 # Računko — uputstvo za korišćenje
 
-*(English version: [MANUAL.md](MANUAL.md))*
+*(English version: [MANUAL.md](MANUAL.md) · На русском: [РУКОВОДСТВО.md](%D0%A0%D0%A3%D0%9A%D0%9E%D0%92%D0%9E%D0%94%D0%A1%D0%A2%D0%92%D0%9E.md))*
 
 Računko je besplatna Android aplikacija koja sređuje tvoje komunalne račune:
 prepoznaje ih, lepo ih imenuje, daje ti QR kod za plaćanje i pamti koje su
@@ -16,7 +16,7 @@ tzv. APK fajla — to je normalan način instalacije Android aplikacija van
 prodavnice:
 
 1. Na telefonu otvori stranicu projekta i klikni **Releases** (izdanja), pa
-   preuzmi najnoviji fajl koji se završava na **`.apk`** (~99 MB).
+   preuzmi najnoviji fajl koji se završava na **`.apk`** (~62 MB).
 2. Kad se preuzimanje završi, otvori fajl iz trake obaveštenja ili iz fascikle
    *Download*.
 3. Android će reći da instalacija iz ovog izvora nije dozvoljena — klikni
@@ -121,22 +121,68 @@ korisnika". Prvi put kad se imena sudare, Računko te pita za kratku oznaku
 prostora (`G1`, `STAN`, `LOKAL`…) uz opciju **„Zapamti za ovaj prostor"** —
 od sledećeg meseca fajl sam dobija ime tipa `infostan_SG26-G1_jun26_1200.pdf`.
 
-## 8. Izveštaj
+## 8. Rok plaćanja i podsetnik
 
-Štikliraj račune u listi → **Napravi izveštaj**: zbirni pregled po mesecu i
-adresi (pružalac, iznos, plaćeno/neplaćeno), spreman za kopiranje ili deljenje
+Na svakoj kartici stoji **rok plaćanja**. Računko ga čita sa računa, ali samo
+kad na računu piše baš to — „rok plaćanja", „datum dospeća", „valuta plaćanja",
+„platiti do". **Datum izdavanja se nikad ne koristi kao rok**, jer to nije isti
+datum; ako roka nema, polje ostaje prazno i možeš ga uneti sam.
+
+Dodirni rok na kartici da otvoriš podešavanje:
+
+- **Podseti me da se približava plaćanje** — uključuje se za **svaki račun
+  posebno**.
+- **Koliko dana ranije** — npr. 3 dana pre roka.
+
+Kad otvoriš aplikaciju, na vrhu se pojavi traka sa računima kojima se rok
+približio (i koliko ih je već isteklo). Dodir na **„Prikaži"** suzi listu baš
+na njih. Račun kom je rok istekao nosi crvenu oznaku, ali **ne menja mesto** u
+listi — redosled ostaje po mesecu.
+
+> ⏰ Izabrano **vreme** se pamti, ali za sada još ne radi ništa: podsetnik se
+> vidi kad otvoriš aplikaciju, a ne kao sistemsko obaveštenje. Tako i piše na
+> samom ekranu — vreme čeka da obaveštenja budu dodata.
+
+## 9. Sređivanje liste — adrese, meseci, izbor
+
+- **Zbir na vrhu** — koliko je ostalo za plaćanje i koliko je plaćeno.
+- **Čipovi za adresu** — pojavljuju se kad imaš više od jedne adrese; dodir
+  suzi listu na tu adresu.
+- **Sekcije po adresama** se sklapaju. Kad imaš više adresa, ekran se otvara
+  sklopljen — kao pregled koji razviješ. Kod jedne adrese nema šta da se bira,
+  pa stoji otvoreno. Računi **bez adrese idu prvi**, jer oni traže tvoju
+  reakciju.
+- **Redosled** — po mesecu na koji se račun odnosi, najnoviji na vrhu.
+- **Biranje računa** — **dug pritisak** na karticu ulazi u režim izbora, dalje
+  bira običan dodir. „Izaberi sve" bira **samo ono što je trenutno prikazano**
+  — ako je uključen filter po adresi, bira samo tu adresu.
+
+## 10. Izveštaj
+
+Izaberi račune (dug pritisak, pa dodiri) → **Napravi izveštaj**: zbirni pregled
+po mesecu i adresi (pružalac, iznos, ukupno), spreman za kopiranje ili deljenje
 — zgodno za cimere, porodicu ili knjigovođu.
 
-## 9. Podešavanja
+```
+JUL  KD7
+EPS        4.200 RSD
+InfoStan   4.650 RSD
+∑          8.850 RSD
+```
 
-- **Jezik** — srpski / engleski / prati sistem.
+Razmaci su podešeni tako da iznosi stoje jedan ispod drugog i **pošto ga
+nalepiš** u Viber, WhatsApp ili belešku — a ne samo dok stoji u aplikaciji.
+
+## 11. Podešavanja
+
+- **Jezik** — srpski / engleski / ruski / prati sistem.
 - **Moje adrese** — šifarnik (tačka 4).
 - **Nazivi pružalaca** — kako se koji pružalac piše u imenu fajla.
 - **Lokacija čuvanja** — promena fascikle (za napredne korisnike).
 - **Brisanja** — istorija uparivanja, zapamćeni primaoci, ili kompletno
   pražnjenje fascikle (dva potvrđivanja — nepovratno!).
 
-## 10. Česta pitanja
+## 12. Česta pitanja
 
 **Gde su moji podaci?** Isključivo na tvom telefonu, u `Download/Racunko` (i
 lokalna baza aplikacije). Aplikacija nema dozvolu za internet — proveri i sam

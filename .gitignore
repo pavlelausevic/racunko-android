@@ -23,6 +23,7 @@ Thumbs.db
 
 # Local tooling / build artifacts not for the repo
 .claude/
+HANDOFF.md
 /prezentacija/
 /Racunko-prezentacija.zip
 *.apk

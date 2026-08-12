@@ -16,8 +16,40 @@ android {
         applicationId = "com.racunko.app"
         minSdk = 29
         targetSdk = 36
-        versionCode = 7
-        versionName = "1.5.2"
+        versionCode = 8
+        versionName = "1.6.0"
+
+        // Size: the x86/x86_64 slices of ML Kit and Tesseract are ~35 MB of the
+        // gms APK and ~16 MB of the foss one, and they exist for emulators only —
+        // no phone this app has ever run on is x86. armeabi-v7a stays: minSdk 29
+        // still admits 32-bit budget devices, and it is the cheaper of the two.
+        ndk { abiFilters += listOf("arm64-v8a", "armeabi-v7a") }
+    }
+
+    // Only the three languages the app actually speaks. Without this every
+    // AppCompat/Compose string ships in ~80 locales the UI has no words for.
+    androidResources {
+        localeFilters += listOf("sr", "en", "ru")
+
+        // PDFBox ships 92 predefined CMap files (1.21 MB) and every one of them
+        // is CJK — Adobe-Japan1, Adobe-GB1, Adobe-CNS1, Adobe-Korea1 and the Uni*
+        // families. A Serbian uplatnica does not use them. If some PDF ever did,
+        // Pipeline.extractTextWithOcrFallback already catches the failure and
+        // falls back to OCR, so the worst case is slower, not broken.
+        ignoreAssetsPatterns += "cmap"
+    }
+
+    packaging {
+        resources {
+            // PDFBox drags in BouncyCastle, whose post-quantum lookup tables are
+            // 4.15 MB of .properties. They are resources, not classes, so R8 does
+            // not touch them — and nothing in Računko does SIKE or Picnic.
+            excludes += "/org/bouncycastle/pqc/**"
+            excludes += "/org/bouncycastle/x509/CertPathReviewerMessages_*.properties"
+            excludes += "/META-INF/{AL2.0,LGPL2.1,DEPENDENCIES,LICENSE*,NOTICE*}"
+            excludes += "/kotlin/**"
+            excludes += "/DebugProbesKt.bin"
+        }
     }
 
     signingConfigs {
@@ -43,6 +75,20 @@ android {
 
     buildTypes {
         release {
+            // R8 is OFF until it is proven on a device.
+            //
+            // It was switched on in this round and took the release APK from
+            // 103 MB to 35 MB — but that build installed and would not launch,
+            // so it is not shippable no matter how small it is. The keep rules in
+            // proguard-rules.pro are written and the obvious suspects have been
+            // cleared by inspection (Room's _Impl, the ViewModel constructors,
+            // ML Kit's ComponentRegistrars, androidx.startup's Initializers and
+            // the manifest themes all survive with their names). Re-enabling
+            // needs a logcat from the failing build, not another guess.
+            //
+            // Everything else in this file is a size win that does not depend on
+            // R8 and is verified: the ABI filter, the BouncyCastle and CMap
+            // exclusions, the locale filter.
             isMinifyEnabled = false
             isCrunchPngs = false
             signingConfig = signingConfigs.findByName("release")
@@ -111,7 +157,6 @@ dependencies {
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.graphics)
-    implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.documentfile)

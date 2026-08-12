@@ -1,11 +1,12 @@
 # Računko
 
-**[Srpski](#-srpski)** · **[English](#-english)**
+**[Srpski](#-srpski)** · **[English](#-english)** · **[Русский](#-русский)**
 
 ![Platform](https://img.shields.io/badge/platform-Android%2010%2B-3DDC84?logo=android&logoColor=white)
 ![License](https://img.shields.io/badge/license-Apache--2.0-blue)
 ![Privacy](https://img.shields.io/badge/internet-NEMA%20DOZVOLU-success)
-![Tests](https://img.shields.io/badge/parser--core-76%20testova-brightgreen)
+![Tests](https://img.shields.io/badge/parser--core-86%20testova-brightgreen)
+![Languages](https://img.shields.io/badge/jezici-sr%20%C2%B7%20en%20%C2%B7%20ru-blueviolet)
 
 ---
 
@@ -27,7 +28,7 @@ Ne moraš da znaš ništa o GitHub-u niti o programiranju:
 
 1. Otvori stranicu **[Releases](../../releases/latest)** (dugme „Releases" desno
    na ovoj stranici).
-2. Preuzmi fajl **`Racunko-X.Y.Z.apk`** na telefon (~99 MB — u sebi nosi sve
+2. Preuzmi fajl **`Racunko-X.Y.Z.apk`** na telefon (~62 MB — u sebi nosi sve
    modele za čitanje, zato i radi bez interneta).
 3. Otvori preuzeti fajl i instaliraj (Android će pitati da dozvoliš instalaciju
    iz ovog izvora — potvrdi).
@@ -54,7 +55,14 @@ Ne moraš da znaš ništa o GitHub-u niti o programiranju:
   se sa računom automatski (poziv na broj → račun+iznos → ručno).
 - **Više prostora na istoj adresi** — stan + garaža ne mešaju se u imenima
   (`SG26-G1`), pamti se po šifri korisnika.
-- **Izveštaj** — zbirni pregled po mesecu i adresi, za kopiranje/deljenje.
+- **Rok plaćanja i podsetnik** — rok se čita **samo sa svoje oznake** na računu
+  (nikad iz datuma izdavanja); po računu biraš koliko dana ranije da te
+  podseti, a pri otvaranju aplikacije stoji traka sa onim što stiže.
+- **Sređeno po adresama** — zbir za plaćanje na vrhu, čipovi za filtriranje,
+  sekcije koje se sklapaju, računi poređani po mesecu na koji se odnose.
+- **Izveštaj** — zbirni pregled po mesecu i adresi, poravnat tako da iznosi
+  stoje jedan ispod drugog i kad ga nalepiš u Viber ili WhatsApp.
+- **Tri jezika** — srpski, engleski, ruski.
 
 ### Podržane banke (šabloni potvrda)
 
@@ -69,7 +77,7 @@ Dve varijante, obe 100% offline: `gms` (ML Kit + ZXing) i `foss`
 
 ```
 set JAVA_HOME=<JDK 17+ ili Android Studio jbr>
-gradlew.bat :parser-core:test                              # svih 76 testova mora biti zeleno
+gradlew.bat :parser-core:test                              # svih 86 testova mora biti zeleno
 gradlew.bat :app:assembleGmsDebug :app:assembleFossDebug   # oba flavora moraju da se builduju
 gradlew.bat :app:assembleGmsRelease                        # potpisan APK (vidi ispod)
 ```
@@ -105,7 +113,7 @@ the device. Details: [PRIVACY.md](PRIVACY.md).
 No GitHub or programming knowledge needed:
 
 1. Open the **[Releases](../../releases/latest)** page.
-2. Download **`Racunko-X.Y.Z.apk`** to your phone (~99 MB — it bundles all
+2. Download **`Racunko-X.Y.Z.apk`** to your phone (~62 MB — it bundles all
    recognition models, which is why it works offline).
 3. Open the downloaded file and install (Android will ask you to allow
    installs from this source — confirm).
@@ -130,7 +138,15 @@ No GitHub or programming knowledge needed:
 - **Confirmation pairing** — share a payment confirmation from your banking
   app into Računko; it pairs to the bill automatically (payment reference →
   account+amount → manual).
-- **Multiple units at one address** (flat + garage) and a monthly **report**.
+- **Multiple units at one address** (flat + garage), grouped per address with
+  a to-pay total, filter chips and folding sections, ordered by the month each
+  bill is *for*.
+- **Deadline and reminder** — the due date is read **only from its own label**
+  on the bill, never from the issue date; per bill you choose how many days
+  ahead to be reminded, and a banner greets you with what is coming up.
+- **Report** — a monthly per-address summary, spaced so the amounts still line
+  up after you paste it into Viber or WhatsApp.
+- **Three languages** — Serbian, English, Russian.
 - Two flavors, both fully offline: `gms` (ML Kit + ZXing) and `foss`
   (ZXing + Tesseract, Google-free, F-Droid-friendly).
 
@@ -144,13 +160,89 @@ fixture test, no emulator. See [ARCHITECTURE.md](ARCHITECTURE.md),
 `keystore.properties` (see the Serbian section for keys). PRs welcome —
 especially new bank templates with **redacted** samples.
 
+---
+
+## 🇷🇺 Русский
+
+**Računko приводит в порядок коммунальные счета.** Приложение для Android
+читает PDF-счета и бумажные платёжные квитанции (InfoStan, EPS, MTS, Yettel,
+жилищные товарищества…), само **переименовывает** их по поставщику, адресу,
+месяцу и сумме, **извлекает или создаёт QR-код NBS IPS** для оплаты одним
+сканированием в банковском приложении и **сопоставляет подтверждения об
+оплате** со счетами — чтобы всегда было видно, что оплачено, а что нет.
+
+**Приватность прежде всего: у приложения НЕТ разрешения на интернет.** Всё —
+чтение PDF, сканирование QR-кода, распознавание текста — происходит
+исключительно на телефоне. Данные никогда не покидают устройство. Подробнее:
+[PRIVACY.md](PRIVACY.md).
+
+> **Для кого это.** Приложение рассчитано на счета **сербских** поставщиков и
+> на сербский стандарт платёжного QR-кода (NBS IPS). Интерфейс полностью
+> переведён на русский, но сами счета должны быть сербскими.
+
+### 📲 Как получить приложение
+
+Знания GitHub или программирования не нужны:
+
+1. Откройте страницу **[Releases](../../releases/latest)**.
+2. Скачайте на телефон файл **`Racunko-X.Y.Z.apk`** (~62 МБ — внутри все
+   модели распознавания, поэтому приложение работает без интернета).
+3. Откройте скачанный файл и установите (Android попросит разрешить установку
+   из этого источника — подтвердите).
+4. При первом запуске одним касанием подтвердите папку `Download/Racunko` —
+   на этом настройка закончена.
+5. Язык переключается в **Настройках → Язык → Русский**.
+
+📖 **Полное руководство: [РУКОВОДСТВО.md](%D0%A0%D0%A3%D0%9A%D0%9E%D0%92%D0%9E%D0%94%D0%A1%D0%A2%D0%92%D0%9E.md)**
+
+> **Примечание:** Računko — приложение **только для Android** (10 и новее).
+> Версий для Windows (.exe) и iPhone не существует.
+
+### Возможности
+
+- **Никаких догадок** — значения берутся из расшифрованного QR-кода IPS, из
+  шаблонов, привязанных к подписям на счёте, и из номеров счетов, **проверенных
+  контрольной суммой** (МОД 97-10). Если значение нельзя доказать, приложение
+  спрашивает вас. Ни ИИ, ни облака.
+- **Понятные имена файлов** — `infostan_KD7_maj26_11152.pdf` вместо
+  `Racun-4482913.pdf`: поставщик, ваше сокращение адреса, месяц, сумма.
+  Названия месяцев в именах файлов остаются сербскими — это правило
+  именования, а не перевод.
+- **QR для оплаты** — извлекается из счёта, а для бумажной квитанции без
+  QR-кода **создаётся заново**, но только если номер счёта получателя прошёл
+  проверку контрольной суммой.
+- **Сопоставление подтверждений** — поделитесь подтверждением из банковского
+  приложения в Računko, и оно само привяжется к счёту.
+- **Срок оплаты и напоминание** — срок читается **только по его собственной
+  подписи** на счёте, никогда из даты выставления.
+- **Группировка по адресам**, сумма к оплате сверху, сортировка по месяцу, за
+  который выставлен счёт.
+- **Отчёт** — сводка по месяцу и адресу; колонки выровнены так, что суммы
+  остаются друг под другом даже после вставки в Viber или WhatsApp.
+
+### Поддерживаемые банки (шаблоны подтверждений)
+
+Banca Intesa, Erste, AIK и общий шаблон. Вашего банка нет?
+[Откройте issue](../../issues) с **обезличенным** образцом подтверждения —
+добавить шаблон несложно ([ADDING_A_TEMPLATE.md](ADDING_A_TEMPLATE.md)).
+
+### Разработчикам
+
+Ядро разбора — чистый JVM-модуль **`:parser-core`** без единой зависимости от
+Android, с реестром шаблонов: новый банк = один класс плюс тест с фикстурой,
+без эмулятора. См. [ARCHITECTURE.md](ARCHITECTURE.md),
+[CONTRIBUTING.md](CONTRIBUTING.md), [TESTING.md](TESTING.md).
+
+---
+
 ### Keywords
 
 Serbian utility bills · komunalni računi · NBS IPS QR · uplatnica · payment
 slip · InfoStan · EPS · Infostan bill renamer · QR plaćanje · poziv na broj
 model 97 · bank confirmation pairing · potvrda o uplati · offline OCR ·
 privacy-first Android · no internet permission · Jetpack Compose · Kotlin ·
-ML Kit · ZXing · Tesseract · F-Droid
+ML Kit · ZXing · Tesseract · F-Droid · коммунальные счета Сербии ·
+QR-код NBS IPS · офлайн распознавание · приложение без интернета
 
 ---
 

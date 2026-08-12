@@ -22,7 +22,14 @@ data class AppSettings(
     /** v1.4.7 Change 4: persisted OPEN_DOCUMENT_TREE grant for the Download folder. */
     val downloadsTreeUri: String?,
     /** v1.5.2 Change B1: sub-labels bound to per-space ids (InfoStan IDENT). */
-    val spaceBindings: List<SpaceBinding>
+    val spaceBindings: List<SpaceBinding>,
+    /**
+     * v1.6: provider names the user added themselves. The five built-in ones are
+     * the five the parser can DETECT; these extra names cannot teach detection —
+     * they exist so a provider Računko can't recognize still gets a one-tap chip
+     * when you set it by hand, instead of being retyped every month.
+     */
+    val customProviders: List<String>
 )
 
 class SettingsRepository(private val context: Context) {
@@ -35,6 +42,7 @@ class SettingsRepository(private val context: Context) {
     private val keyLanguage = stringPreferencesKey("language")
     private val keyDownloadsTree = stringPreferencesKey("downloads_tree_uri")
     private val keySpaceBindings = stringPreferencesKey("space_bindings")
+    private val keyCustomProviders = stringPreferencesKey("custom_providers")
 
     suspend fun load(): AppSettings {
         val prefs = context.dataStore.data.first()
@@ -50,8 +58,14 @@ class SettingsRepository(private val context: Context) {
             providerOverrides = overrides,
             language = prefs[keyLanguage] ?: "system",
             downloadsTreeUri = prefs[keyDownloadsTree],
-            spaceBindings = prefs[keySpaceBindings]?.let { decodeBindings(it) } ?: emptyList()
+            spaceBindings = prefs[keySpaceBindings]?.let { decodeBindings(it) } ?: emptyList(),
+            customProviders = prefs[keyCustomProviders]
+                ?.split('\n')?.map { it.trim() }?.filter { it.isNotEmpty() } ?: emptyList()
         )
+    }
+
+    suspend fun saveCustomProviders(providers: List<String>) {
+        context.dataStore.edit { it[keyCustomProviders] = providers.joinToString("\n") }
     }
 
     suspend fun saveSpaceBindings(bindings: List<SpaceBinding>) {

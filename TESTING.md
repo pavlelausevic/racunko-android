@@ -20,6 +20,8 @@ Run everything:
 | IPS QR round-trip | Does generate→decode return identical fields? | `IpsQrRoundTripTest` |
 | Payee memory | Is month-2 prefilled, and cleared on reset? | `PayeeMemoryTest` |
 | Registry | Does first-match hold, and does removal fall through cleanly? | `RegistryTest` |
+| Due date | Is the deadline read ONLY from its own label, and never from the issue date? | `DueDateParserTest` |
+| Report layout | Do the amounts line up by rendered WIDTH (proportional font), not by character count? | `ReportTest` |
 | Degradation (dev tool) | How bad can a photo be before the QR/OCR fails? | `tools/degradation/` (not shipped) |
 
 ## Fixture format (the contribution unit)

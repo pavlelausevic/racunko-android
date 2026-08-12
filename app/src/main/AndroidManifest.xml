@@ -19,18 +19,52 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Racunko">
 
+        <!--
+            One instance, one entry in Recents — including when a banking app
+            shares a confirmation into Računko.
+
+            Do NOT declare android:taskAffinity here. An empty affinity means the
+            activity belongs to no named task, so singleTask has no task to find
+            and reuse and every share builds a fresh one. That was one half of the
+            "second Računko in Recents" bug; the default affinity (the package
+            name) is what lets singleTask bring the existing task forward.
+
+            The other half is that a *sender* can still defeat that lookup, so
+            nothing outside the app is allowed to start this activity any more:
+            the share filters live on ShareTargetActivity below, which relaunches
+            this window from our own process. documentLaunchMode="never" stays as
+            a third line of defence against FLAG_ACTIVITY_NEW_DOCUMENT /
+            MULTIPLE_TASK.
+        -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
             android:launchMode="singleTask"
-            android:taskAffinity=""
+            android:documentLaunchMode="never"
+            android:excludeFromRecents="false"
             android:configChanges="orientation|screenSize|keyboardHidden"
             android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-            <!-- Share target: payment confirmations only (PDF from banking apps, or screenshots) -->
+        </activity>
+
+        <!--
+            Share target: payment confirmations (PDF from banking apps, or
+            screenshots). Invisible trampoline — see ShareTargetActivity for why
+            it exists. taskAffinity="" is correct HERE and only here: it keeps the
+            trampoline out of the real Računko task. excludeFromRecents + noHistory
+            keep it out of Recents and out of the back stack.
+        -->
+        <activity
+            android:name=".ShareTargetActivity"
+            android:exported="true"
+            android:theme="@style/Theme.RacunkoInvisible"
+            android:taskAffinity=""
+            android:excludeFromRecents="true"
+            android:noHistory="true"
+            android:documentLaunchMode="never">
             <intent-filter>
                 <action android:name="android.intent.action.SEND" />
                 <category android:name="android.intent.category.DEFAULT" />

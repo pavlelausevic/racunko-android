@@ -1,6 +1,6 @@
 # Računko — User Manual
 
-*(Srpska verzija: [UPUTSTVO.md](UPUTSTVO.md))*
+*(Srpska verzija: [UPUTSTVO.md](UPUTSTVO.md) · На русском: [РУКОВОДСТВО.md](%D0%A0%D0%A3%D0%9A%D0%9E%D0%92%D0%9E%D0%94%D0%A1%D0%A2%D0%92%D0%9E.md))*
 
 Računko is a free Android app that organizes Serbian utility bills: it
 recognizes them, names the files nicely, gives you a payment QR code and keeps
@@ -15,7 +15,7 @@ Računko is not (yet) on Google Play. It installs from an APK file — the norma
 way to install Android apps outside the store:
 
 1. On your phone, open the project page, tap **Releases**, and download the
-   newest file ending in **`.apk`** (~99 MB).
+   newest file ending in **`.apk`** (~62 MB).
 2. When the download finishes, open the file from the notification shade or
    from your *Download* folder.
 3. Android will say installs from this source aren't allowed — tap
@@ -121,19 +121,65 @@ time names would collide, Računko asks for a short unit tag (`G1`, `STAN`,
 `LOKAL`…) with a **"Remember for this unit"** option — from the next month the
 file names itself, e.g. `infostan_SG26-G1_jun26_1200.pdf`.
 
-## 8. Report
+## 8. Due date and reminder
 
-Select bills in the list → **Make report**: a summary by month and address
-(provider, amount, paid/unpaid), ready to copy or share — handy for flatmates,
-family or your accountant.
+Every card carries a **due date**. Računko reads it off the bill, but only
+where the bill says exactly that — „rok plaćanja“, „datum dospeća“,
+„valuta plaćanja“, „platiti do“. **The issue date is never used as the due
+date**, because it is not the same date; when a bill prints no deadline the
+field stays empty and you can fill it in yourself.
 
-## 9. Settings
+Tap the due date on a card to set it up:
 
-Language (Serbian/English/system), address book, provider display names,
+- **Remind me when the payment is due** — switched on **per bill**.
+- **How many days before** — 3 days ahead, for example.
+
+When you open the app, a banner at the top lists the bills whose deadline is
+approaching (and how many are already late). **Show** narrows the list to
+exactly those. An overdue bill gets a red marker but **keeps its place** in the
+list — the order stays by month.
+
+> ⏰ The chosen **time** is remembered but does nothing yet: the reminder
+> appears when you open the app, not as a system notification. The screen says
+> so too — the time is waiting for notifications to be added.
+
+## 9. Organizing the list — addresses, months, selection
+
+- **Total at the top** — how much is left to pay and how much is paid.
+- **Address chips** — they appear once you have more than one address; a tap
+  narrows the list to that address.
+- **Address sections fold.** With several addresses the screen opens folded —
+  an overview you unfold. With a single address there is nothing to choose
+  between, so it stays open. Bills **with no address come first**, because
+  those are the ones asking for your input.
+- **Order** — by the month each bill is *for*, newest at the top.
+- **Selecting bills** — a **long press** on a card enters selection mode; from
+  then on a plain tap selects. „Select all“ takes **only what is currently
+  shown** — with an address filter on, only that address.
+
+## 10. Report
+
+Select bills (long press, then taps) → **Make report**: a summary by month and
+address (provider, amount, total), ready to copy or share — handy for
+flatmates, family or your accountant.
+
+```
+JUL  KD7
+EPS        4.200 RSD
+InfoStan   4.650 RSD
+∑          8.850 RSD
+```
+
+The spacing is tuned so the amounts still line up **after you paste it** into
+Viber, WhatsApp or a note — not just while it sits in the app.
+
+## 11. Settings
+
+Language (Serbian/English/Russian/system), address book, provider display names,
 storage location, and destructive actions (clear pairing history, clear
 remembered payees, empty the folder — double-confirmed, irreversible).
 
-## 10. FAQ
+## 12. FAQ
 
 **Where is my data?** Only on your phone, in `Download/Racunko` (plus the
 app's local database). The app has no internet permission — verify it yourself

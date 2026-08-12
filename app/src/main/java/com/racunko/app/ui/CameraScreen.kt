@@ -24,9 +24,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -201,16 +204,25 @@ private fun CameraContent(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             TextButton(onClick = onCancel) {
+                Icon(
+                    RIcons.ArrowBack, contentDescription = null,
+                    tint = Color.White, modifier = Modifier.size(17.dp)
+                )
+                Spacer(Modifier.width(7.dp))
                 Text(stringResource(R.string.back), color = Color.White, fontSize = 15.sp)
             }
             TextButton(onClick = {
                 torchOn = !torchOn
                 cameraControl?.enableTorch(torchOn)
             }) {
-                Text(
-                    (if (torchOn) "🔦 " else "🔦 ") + stringResource(R.string.scan_torch),
-                    color = Color.White, fontSize = 15.sp
+                // the torch state is the tint, not a different glyph
+                val tint = if (torchOn) Palette.Amber else Color.White
+                Icon(
+                    RIcons.Torch, contentDescription = null,
+                    tint = tint, modifier = Modifier.size(17.dp)
                 )
+                Spacer(Modifier.width(7.dp))
+                Text(stringResource(R.string.scan_torch), color = tint, fontSize = 15.sp)
             }
         }
 

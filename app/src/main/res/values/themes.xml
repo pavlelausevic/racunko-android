@@ -1,8 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <style name="Theme.Racunko" parent="Theme.AppCompat.DayNight.NoActionBar">
-        <item name="android:windowBackground">#12171F</item>
-        <item name="android:statusBarColor">#12171F</item>
-        <item name="android:navigationBarColor">#12171F</item>
+        <item name="android:windowBackground">#0B1512</item>
+        <item name="android:statusBarColor">#0B1512</item>
+        <item name="android:navigationBarColor">#0B1512</item>
+    </style>
+
+    <!-- ShareTargetActivity: exists for one frame and must never be seen. -->
+    <style name="Theme.RacunkoInvisible" parent="@android:style/Theme.Translucent.NoTitleBar">
+        <item name="android:windowAnimationStyle">@null</item>
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:backgroundDimEnabled">false</item>
     </style>
 </resources>

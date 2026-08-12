@@ -1,0 +1,212 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Računko</string>
+    <string name="subtitle">счета · QR-коды · подтверждения</string>
+
+    <string name="tab_racuni">Счета</string>
+    <string name="tab_potvrde">Подтверждения</string>
+
+    <string name="btn_obradi">Обработать</string>
+    <string name="btn_podeli">Поделиться</string>
+    <string name="btn_podeli_sve">Поделиться всем</string>
+    <string name="btn_qr_slika">QR-картинка</string>
+    <string name="btn_sacuvaj">Сохранить</string>
+    <string name="btn_otkazi">Отмена</string>
+    <string name="btn_add_address">Добавить адрес</string>
+
+    <string name="files_in_folder">Файлы в папке</string>
+    <string name="empty_folder">В этой папке нет PDF-файлов.</string>
+    <string name="empty_racuni">Računko читает PDF-счета из папки Download (по умолчанию).\n\nДобавьте счета кнопкой «+» — Računko прочитает их, переименует и извлечёт QR-код NBS IPS для оплаты. Подтверждение об оплате добавляется к каждому счёту через «+» на его карточке.</string>
+    <string name="empty_potvrde">Подтверждения приходят из банка через «Поделиться» → Računko, либо через «+» на карточке счёта.</string>
+    <string name="system_picker">системный выбор файлов</string>
+    <string name="btn_add_bill">Добавить счёт</string>
+    <string name="btn_add_potvrda">Добавить подтверждение</string>
+    <string name="refresh">обновить</string>
+
+    <string name="processing">Читаю %1$s …</string>
+    <string name="error_read">Не удаётся прочитать этот PDF. Проверьте, цел ли файл.</string>
+
+    <string name="badge_qr_ok">QR ✓</string>
+    <string name="badge_ok">распознано</string>
+    <string name="badge_warn">заполните вручную</string>
+    <string name="badge_paired">сопоставлено со счётом</string>
+    <string name="badge_err">ошибка</string>
+    <string name="badge_placeno">оплачено ✓</string>
+
+    <string name="seg_provider_missing">поставщик?</string>
+    <string name="seg_address_missing">адрес?</string>
+    <string name="seg_month_missing">месяц?</string>
+    <string name="seg_amount_missing">сумма?</string>
+
+    <string name="edit_provider">Поставщик услуги</string>
+    <string name="edit_address">Адрес (сокращение)</string>
+    <string name="edit_month">Месяц и год</string>
+    <string name="edit_amount">Сумма (округлённая)</string>
+    <string name="month_hint">напр. maj26</string>
+    <string name="amount_hint">напр. 3457</string>
+
+    <string name="show_qr">показать QR</string>
+    <string name="hide_qr">скрыть QR</string>
+    <string name="share_qr">поделиться QR-картинкой</string>
+    <string name="add_confirmation">добавить подтверждение</string>
+    <string name="qr_missing">QR-код в этом PDF не найден</string>
+    <string name="pick_bill_to_pair">Сопоставить со счётом:</string>
+    <string name="pick_confirmation">Выберите подтверждение из папки «Potvrde»:</string>
+    <string name="no_unpaired_bills">Нет сохранённых несопоставленных счетов.</string>
+
+    <string name="settings_title">Настройки</string>
+    <string name="settings_addresses">Мои адреса</string>
+    <string name="settings_addresses_note">Слева — сокращение для имени файла, справа — текст адреса так, как он напечатан на счёте (кириллица или латиница — неважно). Несколько строк могут иметь одно сокращение.</string>
+    <string name="settings_providers">Названия поставщиков (для имени файла)</string>
+    <string name="settings_language">Язык</string>
+    <string name="settings_folder">Место хранения</string>
+    <string name="settings_choose_location">Выбрать другое место хранения</string>
+    <string name="settings_reset_location">Вернуть по умолчанию (Download/Racunko)</string>
+    <string name="legacy_folder_notice">Старая структура папок больше не используется. Новые папки — в Download/Racunko.</string>
+    <string name="settings_clear_history">Очистить историю сопоставлений</string>
+    <string name="lang_sr">Srpski</string>
+    <string name="lang_en">English</string>
+    <string name="lang_system">Как в системе</string>
+    <string name="addr_label_hint">KD7</string>
+    <string name="addr_pattern_hint">улица и номер со счёта</string>
+
+    <string name="toast_qr_saved">QR сохранён в галерею — отсканируйте его в приложении своего банка</string>
+
+    <string name="qr_disclaimer_title">Проверьте перед оплатой</string>
+    <string name="qr_disclaimer_text">Računko построил этот QR по данным со счёта. Отсканировав его в приложении банка, проверьте получателя, сумму и номер платежа до подтверждения.</string>
+    <string name="qr_disclaimer_short">QR создан приложением — проверьте получателя, сумму и номер платежа в приложении банка.</string>
+    <string name="btn_ok">Хорошо</string>
+    <string name="report_make">Создать отчёт</string>
+    <string name="report_title">Отчёт</string>
+    <string name="report_copy">Копировать</string>
+    <string name="toast_report_copied">Отчёт скопирован</string>
+
+    <string name="action_delete">Удалить</string>
+    <string name="select_all">Выбрать все</string>
+
+    <string name="summary_unpaid">Итого к оплате</string>
+    <string name="summary_paid">Оплачено</string>
+    <string name="filter_all">Все</string>
+    <string name="group_no_address">без адреса</string>
+    <string name="group_unpaid">%1$d не оплачено</string>
+    <plurals name="bill_count">
+        <item quantity="one">%d счёт</item>
+        <item quantity="few">%d счёта</item>
+        <item quantity="many">%d счетов</item>
+        <item quantity="other">%d счёта</item>
+    </plurals>
+    <plurals name="item_count">
+        <item quantity="one">%d позиция</item>
+        <item quantity="few">%d позиции</item>
+        <item quantity="many">%d позиций</item>
+        <item quantity="other">%d позиции</item>
+    </plurals>
+
+    <string name="due_missing">срок?</string>
+    <string name="due_in">через %1$dд</string>
+    <string name="due_overdue">просрочка %1$dд</string>
+    <string name="due_title">Срок оплаты и напоминание</string>
+    <string name="due_date_label">Дата платежа</string>
+    <string name="due_not_set">Не задана</string>
+    <string name="due_clear">Убрать срок</string>
+    <string name="due_remind">Напомнить, что подходит срок оплаты</string>
+    <string name="due_days_label">За сколько дней</string>
+    <string name="due_on_day">В день оплаты</string>
+    <string name="due_time_label">В какое время</string>
+    <string name="due_time_note">Пока напоминание показывается в приложении при его открытии. Время сохраняется для системного уведомления, когда мы его добавим.</string>
+    <string name="due_banner_show">Показать</string>
+    <string name="due_show_all">Показать все</string>
+    <plurals name="due_banner">
+        <item quantity="one">%d счёт подходит к сроку</item>
+        <item quantity="few">%d счёта подходят к сроку</item>
+        <item quantity="many">%d счетов подходят к сроку</item>
+        <item quantity="other">%d счёта подходят к сроку</item>
+    </plurals>
+    <plurals name="due_banner_overdue">
+        <item quantity="one">%d уже просрочен</item>
+        <item quantity="few">%d уже просрочены</item>
+        <item quantity="many">%d уже просрочено</item>
+        <item quantity="other">%d уже просрочено</item>
+    </plurals>
+    <plurals name="day_count">
+        <item quantity="one">за %d день</item>
+        <item quantity="few">за %d дня</item>
+        <item quantity="many">за %d дней</item>
+        <item quantity="other">за %d дня</item>
+    </plurals>
+
+    <string name="lang_ru">Русский</string>
+    <string name="settings_providers_note">Эти пять Računko распознаёт на счёте сам. Здесь меняется только название, попадающее в имя файла (напр. yettel → sbb).</string>
+    <string name="provider_label_sz">жилищное товарищество</string>
+    <string name="settings_custom_providers">Мои поставщики</string>
+    <string name="settings_custom_providers_note">Поставщик, которого Računko не умеет распознавать сам. Добавленное здесь имя не учит приложение распознаванию — оно появляется кнопкой, когда поставщик задаётся вручную на карточке счёта.</string>
+    <string name="btn_add_provider">Добавить поставщика</string>
+    <string name="provider_hint">напр. vodovod</string>
+    <string name="settings_danger">Удаление данных</string>
+    <string name="tag_processed">уже обработан</string>
+    <string name="cta_sifarnik_title">Создайте справочник адресов</string>
+    <string name="cta_sifarnik_text">Адреса — единственное, что Računko не может вывести сам. Со справочником (сокращение + текст адреса со счёта) файлы называются по месту автоматически, напр. infostan_BDS95_maj26_11152. Можно работать и без него — адрес останется полем «адрес?» для ручного ввода.</string>
+    <string name="cta_sifarnik_btn">Создать справочник</string>
+    <string name="intake_conf_title">Этот документ похож на подтверждение об оплате, а не на счёт. Что сделать?</string>
+    <string name="intake_bill_title">Этот документ похож на счёт, а не на подтверждение. Что сделать?</string>
+    <string name="intake_unknown_title">Не удалось определить тип документа. Это счёт или подтверждение?</string>
+    <string name="intake_add_as_conf">Добавить как подтверждение</string>
+    <string name="intake_add_as_bill">Добавить как счёт</string>
+    <string name="intake_keep_bill">Всё равно как счёт</string>
+    <string name="intake_keep_conf">Всё равно как подтверждение</string>
+    <string name="intake_cancel_hint">Касание вне окна пропускает этот файл.</string>
+    <string name="space_tag_title">Такое имя уже есть — добавьте метку помещения</string>
+    <string name="space_tag_hint">напр. G1, STAN, LOKAL</string>
+    <string name="space_tag_remember">Запомнить для этого помещения</string>
+    <string name="share_type_bill">Счёт</string>
+    <string name="share_type_conf">Подтверждение об оплате</string>
+    <string name="toast_deleted">Удалено: %1$d</string>
+    <string name="toast_purged">Папка очищена</string>
+    <string name="delete_title">Удалить выбранные (%1$d)?</string>
+    <string name="delete_also_files">Удалить и файлы из папки (PDF/картинки + QR)</string>
+    <string name="delete_counts">Удаляю: счетов — %1$d, подтверждений — %2$d, QR-кодов — %3$d</string>
+    <string name="settings_purge">Очистить папку</string>
+    <string name="purge_title">Очистить папку?</string>
+    <string name="purge_text">Будут безвозвратно удалены %1$d файлов счетов, %2$d подтверждений и %3$d QR-кодов из Download/Racunko. Ничего за пределами этой папки не затрагивается. Отменить нельзя.</string>
+    <string name="purge_continue">Продолжить</string>
+    <string name="purge_final_title">Вы уверены?</string>
+    <string name="purge_also_payees">Удалить и сохранённых получателей</string>
+    <string name="purge_final_confirm">Да, удалить всё</string>
+
+    <string name="back">назад</string>
+    <string name="scan_perm_title">Доступ к камере</string>
+    <string name="scan_perm_text">Камера нужна только для сканирования QR-кода NBS IPS с бумажного счёта, прямо на устройстве. Ничего не записывается и не отправляется — у приложения нет доступа к интернету.</string>
+    <string name="scan_perm_allow">Разрешить камеру</string>
+    <string name="scan_hint">Наведите камеру на IPS QR-код на счёте</string>
+    <string name="scan_guidance">Впишите счёт в рамку, добавьте света, подойдите ближе</string>
+    <string name="scan_captured">QR распознан ✓</string>
+    <string name="scan_torch">фонарик</string>
+    <string name="scan_use_photo">Сфотографировать вместо этого</string>
+    <string name="toast_addresses_saved">Настройки сохранены</string>
+    <string name="toast_history_cleared">История сопоставлений очищена</string>
+    <string name="toast_renamed">Переименовано: %1$s</string>
+    <string name="toast_rename_failed">Переименование не удалось — проверьте доступ к папке</string>
+    <string name="toast_paired">Сопоставлено: %1$s</string>
+    <string name="toast_no_selection">Выберите хотя бы один файл</string>
+    <string name="toast_received">Подтверждение получено</string>
+    <string name="toast_folder_error">Нет доступа к папке — выберите её заново</string>
+    <string name="toast_qr_generated">QR для оплаты создан — сохранён в галерею</string>
+    <string name="toast_payees_cleared">Сохранённые получатели удалены</string>
+
+    <string name="verified_account">счёт проверен (контрольное число)</string>
+    <string name="btn_make_qr">Создать QR</string>
+    <string name="make_qr_need_account">нужен проверенный счёт получателя</string>
+    <string name="make_qr_need_amount">нет суммы</string>
+    <string name="suggested">предложено</string>
+    <string name="add_scan">Сканировать счёт</string>
+    <string name="add_from_file">Добавить из файла</string>
+    <string name="add_photo">Добавить фотографию</string>
+    <string name="settings_clear_payees">Удалить сохранённых получателей</string>
+
+    <string name="onboarding_title">Računko нужна одна папка</string>
+    <string name="onboarding_body">Računko создал папку Download/Racunko для ваших счетов. На следующем экране просто подтвердите её — одно касание.</string>
+    <string name="onboarding_grant">Подтвердить папку</string>
+    <string name="onboarding_hint">Без интернета. Ничего не покидает телефон.</string>
+    <string name="onboarding_info_btn">Как это работает?</string>
+    <string name="onboarding_info">Računko уже создал папку Download/Racunko. На следующем экране нажмите «Использовать эту папку».\n\nЕсли диалог открылся в Download, а кнопка неактивна — зайдите в Racunko и подтвердите там.\n\nФайлы из других приложений (почта, EPS…) добавляются через «Добавить из файла».</string>
+</resources>

@@ -7,6 +7,7 @@ import android.net.Uri
 import android.widget.Toast
 import androidx.core.content.FileProvider
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.racunko.app.R
 import com.racunko.app.data.AppDb
@@ -23,6 +24,7 @@ import com.racunko.app.domain.Pipeline
 import com.racunko.app.parser.AddressEntry
 import com.racunko.app.parser.BillName
 import com.racunko.app.parser.Months
+import com.racunko.app.parser.ProviderDetector
 import com.racunko.app.parser.ProviderNames
 import com.racunko.app.parser.Report
 import com.racunko.app.parser.ReportLine
@@ -87,13 +89,34 @@ data class UiState(
     val pendingIntake: List<PendingIntake>? = null,
     /** v1.5.2 Change B1: sub-labels bound to per-space ids (InfoStan IDENT). */
     val spaceBindings: List<SpaceBinding> = emptyList(),
+    /** v1.6: user-added provider names — extra chips for manual entry. */
+    val customProviders: List<String> = emptyList(),
     /** v1.4.7 Change 4 / rc1: the persisted SAF tree grant (Download). null = ask first. */
     val downloadsTreeUri: String? = null,
     /** v1.5.0-rc1 Change 1: no valid tree yet → show the first-run folder-grant screen. */
     val needsOnboarding: Boolean = false
 )
 
-class MainViewModel(app: Application) : AndroidViewModel(app) {
+class MainViewModel(
+    app: Application,
+    /** v1.6: survives process death, so a selection isn't lost by backgrounding. */
+    private val saved: SavedStateHandle
+) : AndroidViewModel(app) {
+
+    /**
+     * The selection is remembered by FILE NAME, not by card id: ids are minted
+     * per session, while the name is the card's stable identity (it is the Room
+     * primary key). On the way back the names are matched to the rebuilt cards.
+     */
+    private var savedSelectionNames: List<String>
+        get() = saved.get<ArrayList<String>>(KEY_SELECTION) ?: emptyList()
+        set(value) { saved[KEY_SELECTION] = ArrayList(value) }
+
+    /** Single place that changes the selection, so persistence can't drift. */
+    private fun applySelection(ids: Set<String>) {
+        savedSelectionNames = _state.value.items.filter { it.id in ids }.map { it.currentName }
+        _state.value = _state.value.copy(reportSelection = ids)
+    }
 
     private val settings = SettingsRepository(app)
     private val dao = AppDb.get(app).bills()
@@ -127,7 +150,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 providerOverrides = s.providerOverrides,
                 language = s.language,
                 downloadsTreeUri = if (bound) tree else null,
-                spaceBindings = s.spaceBindings
+                spaceBindings = s.spaceBindings,
+                customProviders = s.customProviders
             )
             if (bound) {
                 refreshFiles()
@@ -192,7 +216,12 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         paired = paired,
         isImage = !currentName.endsWith(".pdf", true),
         dismissed = false,
-        timestamp = System.currentTimeMillis()
+        timestamp = System.currentTimeMillis(),
+        dueDateEpochDay = dueDateEpochDay,
+        remindEnabled = remindEnabled,
+        remindDaysBefore = remindDaysBefore,
+        remindHour = remindHour,
+        remindMinute = remindMinute
     )
 
     private fun com.racunko.app.data.CardRecordEntity.toCardItem(
@@ -216,6 +245,11 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         qrImageUri = qrImageUri,
         matched = matched,
         paired = paired,
+        dueDateEpochDay = dueDateEpochDay,
+        remindEnabled = remindEnabled,
+        remindDaysBefore = remindDaysBefore,
+        remindHour = remindHour,
+        remindMinute = remindMinute,
         currentName = name
     )
 
@@ -267,6 +301,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             }
         }
 
+        val remembered = savedSelectionNames.toSet()
         val inMem = _state.value.items.associateBy { it.currentName }
         var items = cardDao.all().filter { !it.dismissed }.mapNotNull { rec ->
             val uri = uriByName[rec.name] ?: return@mapNotNull null
@@ -282,7 +317,12 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 else card
             } else card
         }
-        _state.value = _state.value.copy(items = items)
+        // v1.6: cards get fresh ids on a rebuild, so a selection that survived
+        // process death is re-attached by file name.
+        val selection =
+            if (remembered.isEmpty()) _state.value.reportSelection
+            else items.filter { it.currentName in remembered }.map { it.id }.toSet()
+        _state.value = _state.value.copy(items = items, reportSelection = selection)
     }
 
     // ------------------------------------------------- storage (v1.5.0-rc1)
@@ -348,12 +388,13 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     fun setTab(tab: Int) {
         // Clear the selection when switching tabs so it never spans both lists.
-        _state.value = _state.value.copy(tab = tab, reportSelection = emptySet())
+        _state.value = _state.value.copy(tab = tab)
+        applySelection(emptySet())
     }
 
-    /** v1.4.4 Change 2: „Izaberi sve" — select every card currently in the list. */
+    /** v1.6: „Izaberi sve" — every card the current filters are showing. */
     fun selectAll(ids: List<String>) {
-        _state.value = _state.value.copy(reportSelection = ids.toSet())
+        applySelection(ids.toSet())
     }
 
     fun clearFocus() {
@@ -673,6 +714,23 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+    /**
+     * v1.6: the bill's payment deadline and its own reminder. The deadline may
+     * be cleared back to null — it is optional, and an empty one is a legitimate
+     * final state, not an unfinished edit.
+     */
+    fun setDue(cardId: String, dueEpochDay: Long?, remind: Boolean, daysBefore: Int, hour: Int) {
+        val item = _state.value.items.firstOrNull { it.id == cardId } ?: return
+        replaceItem(
+            item.copy(
+                dueDateEpochDay = dueEpochDay,
+                remindEnabled = remind,
+                remindDaysBefore = daysBefore,
+                remindHour = hour
+            )
+        )
+    }
+
     /** Change 5b: „Napravi QR" — generate an IPS QR for a bill that lacks one. */
     fun generateQr(cardId: String) {
         val item = _state.value.items.firstOrNull { it.id == cardId } ?: return
@@ -722,15 +780,16 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     // ------------------------------------------------------ summary report (Change 5)
 
     fun toggleReportSelection(cardId: String) {
-        _state.value = _state.value.copy(
-            reportSelection = _state.value.reportSelection.let {
+        applySelection(
+            _state.value.reportSelection.let {
                 if (cardId in it) it - cardId else it + cardId
             }
         )
     }
 
     fun clearReport() {
-        _state.value = _state.value.copy(reportText = null, reportSelection = emptySet())
+        _state.value = _state.value.copy(reportText = null)
+        applySelection(emptySet())
     }
 
     /** Builds the grouped report from the selected, complete bill cards. */
@@ -842,7 +901,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                     }
                 }
             }
-            _state.value = _state.value.copy(reportSelection = emptySet())
+            applySelection(emptySet())
             reconcileCards()
             refreshFiles()
             toast(R.string.toast_deleted, cards.size)
@@ -865,9 +924,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             cardDao.clear()
             dao.clear()
             if (alsoPayees) payeeDao.clear()
-            _state.value = _state.value.copy(
-                items = emptyList(), reportSelection = emptySet(), unpairedBills = emptyList()
-            )
+            _state.value = _state.value.copy(items = emptyList(), unpairedBills = emptyList())
+            applySelection(emptySet())
             refreshFiles()
             toast(R.string.toast_purged)
         }
@@ -1082,6 +1140,23 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+    /**
+     * v1.6: provider names the user added. These do NOT teach the parser to
+     * recognize a new provider — detection lives in `ProviderDetector` and is
+     * fixed at build time. They only widen the chip list offered when a provider
+     * is set by hand, so an unrecognized one is a tap instead of retyping.
+     */
+    fun saveCustomProviders(names: List<String>) {
+        val clean = names
+            .map { BillName.sanitizeToken(it).lowercase() }
+            .filter { it.isNotBlank() && it !in ProviderDetector.PROVIDERS }
+            .distinct()
+        viewModelScope.launch {
+            settings.saveCustomProviders(clean)
+            _state.value = _state.value.copy(customProviders = clean)
+        }
+    }
+
     fun saveProviderOverrides(overrides: Map<String, String>) {
         val clean = overrides.filterValues { it.isNotBlank() }
             .mapValues { BillName.sanitizeToken(it.value).lowercase() }
@@ -1132,4 +1207,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+    private companion object {
+        const val KEY_SELECTION = "selected_card_names"
+    }
 }

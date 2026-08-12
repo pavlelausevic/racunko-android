@@ -64,6 +64,13 @@ data class CardItem(
     val addressSuggested: Boolean = false,
     /** v1.5.2 Change B: canonical per-space id (InfoStan IDENT), "" when none. */
     val spaceId: String = "",
+    /** v1.6: payment deadline as an epoch day; null when the bill prints none. */
+    val dueDateEpochDay: Long? = null,
+    /** v1.6: per-bill reminder („Podseti me da se približava plaćanje"). */
+    val remindEnabled: Boolean = true,
+    val remindDaysBefore: Int = 3,
+    val remindHour: Int = 10,
+    val remindMinute: Int = 0,
     /** v1.5.2 Change B2: the final name collides — ask for a space tag, no silent _2. */
     val needsSpaceTag: Boolean = false,
     val status: CardStatus = CardStatus.OK,
@@ -301,6 +308,9 @@ class Pipeline(
         // v1.5.2 Change B: the per-space id (InfoStan IDENT) picks up a bound
         // sub-label once set — SG26 becomes SG26-G1 automatically, every month.
         val spaceId = com.racunko.app.parser.SpaceId.detect(rawProvider, ips, text) ?: ""
+        // v1.6: the deadline is read from its printed label, or stays empty for
+        // an optional manual entry — never guessed from the issue date.
+        val dueDate = com.racunko.app.parser.DueDateParser.parse(text)
         val subLabel = com.racunko.app.parser.SpaceNaming.subFor(spaceId, prefill.addressLabel, bindings)
         val addressLabel = com.racunko.app.parser.SpaceNaming.addressToken(prefill.addressLabel, subLabel)
         val providerToken = overrides[prefill.provider]?.takeIf { it.isNotBlank() } ?: prefill.provider
@@ -379,6 +389,7 @@ class Pipeline(
             providerSuggested = prefill.providerSuggested,
             addressSuggested = prefill.addressSuggested,
             spaceId = spaceId,
+            dueDateEpochDay = dueDate?.toEpochDay(),
             needsSpaceTag = needsSpaceTag,
             addrAmbiguous = if (addr.ambiguous) addr.all else emptyList(),
             currentName = currentName

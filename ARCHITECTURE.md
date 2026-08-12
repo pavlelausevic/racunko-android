@@ -20,14 +20,22 @@ Računko renames Serbian utility bills, extracts (or generates) the NBS IPS paym
                  - IPS QR payload parse + build
                  - AccountChecksum (ISO 7064 MOD 97-10)
                  - pairing engine (layers 1–3)
+                 - DueDateParser (label-anchored ONLY; never the issue date)
+                 - Report + Padding (columns spaced by glyph WIDTH, so the
+                   shared summary still aligns in a proportional font)
                  - ALL unit tests live here
 
 :platform-api    Tiny interfaces the core needs from the device:
                  QrDecoder, QrEncoder, TextRecognizer, LiveQrScanner
 
-:app             Android. UI (Compose, Material 3, Serbian-first), storage
-                 (MediaStore under Download/Racunko), CameraX, DI wiring,
+:app             Android. UI (Compose, Material 3, Serbian-first; sr/en/ru),
+                 storage (SAF under Download/Racunko), CameraX, DI wiring,
                  flavor-specific engine implementations.
+                 - MainActivity: singleTask, the ONLY long-lived window
+                 - ShareTargetActivity: invisible trampoline that owns the
+                   SEND intent-filters and relaunches MainActivity from our
+                   own process, so a sender's launch flags cannot spawn a
+                   second task in Recents
 ```
 
 **Dependency rule:** `:app` → `:parser-core` + `:platform-api`. `:parser-core` depends on **nothing Android**. If you find yourself importing `android.*` inside `parser-core`, the abstraction belongs in `platform-api` instead.

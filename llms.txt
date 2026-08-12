@@ -24,9 +24,10 @@ the user always confirms in their own banking app).
 
 ## Docs
 
-- [README (Serbian + English)](README.md): overview, install, build
+- [README (Serbian + English + Russian)](README.md): overview, install, build
 - [User manual — Serbian](UPUTSTVO.md): installation and usage for regular users
 - [User manual — English](MANUAL.md): installation and usage for regular users
+- [User manual — Russian](%D0%A0%D0%A3%D0%9A%D0%9E%D0%92%D0%9E%D0%94%D0%A1%D0%A2%D0%92%D0%9E.md): installation and usage, in Russian
 - [Architecture](ARCHITECTURE.md): module map, template registry, checksums
 - [Contributing](CONTRIBUTING.md): setup, adding a bank template, PR checklist
 - [Adding a template](ADDING_A_TEMPLATE.md): full worked example for a new bank
@@ -43,3 +44,8 @@ the user always confirms in their own banking app).
   fully accessible without the app.
 - Pure-JVM parsing core (`:parser-core`, zero Android deps) with a plugin
   template registry — a new bank = one class + a fixture test.
+- Payment deadlines are read ONLY from their own label on the bill („rok
+  plaćanja", „datum dospeća", „valuta plaćanja") and never inferred from the
+  issue date; a per-bill reminder surfaces as an in-app banner.
+- Bills are grouped per address with a to-pay total and ordered by the month
+  each bill is for.

@@ -12,12 +12,12 @@
     <string name="btn_qr_slika">QR image</string>
     <string name="btn_sacuvaj">Save</string>
     <string name="btn_otkazi">Cancel</string>
-    <string name="btn_add_address">+ Add address</string>
+    <string name="btn_add_address">Add address</string>
 
     <string name="files_in_folder">Files in folder</string>
     <string name="empty_folder">No PDF files in this folder.</string>
-    <string name="empty_racuni">Računko reads PDF bills from the Download folder (default).\n\nAdd bills with the ➕ button — Računko reads, renames them and extracts the NBS IPS payment QR code. Attach a payment confirmation to each bill via the ➕ on its card.</string>
-    <string name="empty_potvrde">Confirmations arrive by sharing from the bank into Računko (Share → Računko) or via the ➕ on a bill\'s card.</string>
+    <string name="empty_racuni">Računko reads PDF bills from the Download folder (default).\n\nAdd bills with the + button — Računko reads, renames them and extracts the NBS IPS payment QR code. Attach a payment confirmation to each bill via the + on its card.</string>
+    <string name="empty_potvrde">Confirmations arrive by sharing from the bank into Računko (Share → Računko) or via the + on a bill\'s card.</string>
     <string name="system_picker">system file picker</string>
     <string name="btn_add_bill">Add bill</string>
     <string name="btn_add_potvrda">Add confirmation</string>
@@ -85,6 +85,59 @@
     <!-- v1.4.3: selection action bar, delete, purge -->
     <string name="action_delete">Delete</string>
     <string name="select_all">Select all</string>
+
+    <!-- v1.6: summary card + per-address grouping -->
+    <string name="summary_unpaid">Total to pay</string>
+    <string name="summary_paid">Paid</string>
+    <string name="filter_all">All</string>
+    <string name="group_no_address">no address</string>
+    <string name="group_unpaid">%1$d unpaid</string>
+    <plurals name="bill_count">
+        <item quantity="one">%d bill</item>
+        <item quantity="other">%d bills</item>
+    </plurals>
+    <plurals name="item_count">
+        <item quantity="one">%d item</item>
+        <item quantity="other">%d items</item>
+    </plurals>
+
+    <!-- v1.6: payment deadline + per-bill reminder -->
+    <string name="due_missing">due date?</string>
+    <string name="due_in">in %1$dd</string>
+    <string name="due_overdue">%1$dd late</string>
+    <string name="due_title">Deadline and reminder</string>
+    <string name="due_date_label">Due date</string>
+    <string name="due_not_set">Not set</string>
+    <string name="due_clear">Clear deadline</string>
+    <string name="due_remind">Remind me when the payment is due</string>
+    <string name="due_days_label">How many days before</string>
+    <string name="due_on_day">On the day</string>
+    <string name="due_time_label">At what time</string>
+    <string name="due_time_note">For now the reminder appears in the app when you open it. The time is stored for the system notification, once that lands.</string>
+    <string name="due_banner_show">Show</string>
+    <string name="due_show_all">Show all</string>
+    <plurals name="due_banner">
+        <item quantity="one">%d bill is due</item>
+        <item quantity="other">%d bills are due</item>
+    </plurals>
+    <plurals name="due_banner_overdue">
+        <item quantity="one">%d is already late</item>
+        <item quantity="other">%d are already late</item>
+    </plurals>
+    <plurals name="day_count">
+        <item quantity="one">%d day before</item>
+        <item quantity="other">%d days before</item>
+    </plurals>
+
+    <!-- v1.6: providers and language -->
+    <string name="lang_ru">Русский</string>
+    <string name="settings_providers_note">These five Računko recognizes on the bill by itself. Here you only change the name that goes into the file name (e.g. yettel → sbb).</string>
+    <string name="provider_label_sz">housing association</string>
+    <string name="settings_custom_providers">My providers</string>
+    <string name="settings_custom_providers_note">A provider Računko cannot recognize on its own. A name added here does not teach the app to detect it — it appears as a one-tap chip when you set the provider by hand on a bill card.</string>
+    <string name="btn_add_provider">Add provider</string>
+    <string name="provider_hint">e.g. vodovod</string>
+    <string name="settings_danger">Deleting data</string>
     <string name="tag_processed">already processed</string>
     <string name="cta_sifarnik_title">Build your address book</string>
     <string name="cta_sifarnik_text">Addresses are the one thing Računko cannot derive on its own. With the address book (short label + address text from the bill) files are named by location automatically, e.g. infostan_BDS95_maj26_11152. You can continue without it — the address stays an editable "address?" chip.</string>

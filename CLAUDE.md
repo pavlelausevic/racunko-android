@@ -14,7 +14,8 @@ $env:JAVA_HOME="C:\Program Files\Android\Android Studio\jbr"   # PowerShell
 .\gradlew.bat :app:assembleGmsRelease            # signed APK (keystore in repo root)
 .\gradlew.bat :parser-core:run --args="mkaccount 190 99870"    # → valid 18-digit account
 ```
-Signed release APKs are ~97 MB (bundled ML Kit / Tesseract models). Keep APKs,
+Signed release APKs are ~62 MB gms / ~48 MB foss (bundled ML Kit / Tesseract
+models; see the size notes in app/build.gradle.kts). Keep APKs,
 `prezentacija/`, `.claude/`, tessdata out of git (already in `.gitignore`).
 
 ## Modules (dependency rule: :app → :parser-core + :platform-api)
@@ -86,7 +87,53 @@ app:
 
 ## Version / phase state (update as it moves)
 Repo `github.com/pavlelausevic/racunko-android`, branch main. From here every
-round is a point release (1.5.1, 1.5.2 …).
+round is a point release (1.5.1, 1.5.2 …); 1.6.0 is the first MINOR bump —
+nothing a user depends on broke, so it is not 2.0. Reserve 2.0 for the JSON
+fixture corpus / a consumable `:parser-core` artifact / real system
+notifications.
+
+**v1.6.0 executed 2026-08-12** — mani-form redesign + deadlines. UI: Theme.kt
+repainted (deep green + turquoise; the names in `Palette` deliberately KEPT —
+`Amber`→gold, `Blue`→turquoise, `Violet`→lemon, `Green`→emerald; `Palette.Dot`
+stays orange as the one mark not borrowed from mani), `RIcons` (20 Material
+Symbols drawn in code, NO material-icons-extended, zero emoji), mani building
+blocks in App.kt (SheetTitle/FieldLabel/SheetRow/ToggleRow/FlowRowChips).
+List: summary card, address filter chips (>1 address), folding per-address
+sections that START FOLDED when >1 address and open under a filter, no-address
+group FIRST, cards ordered `BY_MONTH_DESC` (newest first, unreadable month
+last). Select mode: no checkboxes, long-press enters, „Izaberi sve" scoped to
+what the filter shows (file-list checkboxes stay — that is a file picker).
+parser-core: `DueDateParser` (label-anchored ONLY, never the issue date; 6
+tests both directions), `Padding` + rewritten `Report` (columns spaced by
+Roboto glyph WIDTH so the shared summary aligns in a PROPORTIONAL font —
+measured spread 22px→6px; the in-app preview is therefore NOT monospace).
+Room v4 (3→4): dueDateEpochDay, remindEnabled, remindDaysBefore, remindHour,
+remindMinute. Reminder is per bill, shown as an on-open banner; the chosen TIME
+is stored but INERT until system notifications land (the sheet says so).
+`values-ru` complete (4 Russian plural forms); month tokens in FILE NAMES stay
+Serbian. Settings: „sz" row labelled `provider_label_sz`, „Moji pružaoci"
+section HIDDEN (state still loaded+saved, recoverable from git).
+**Share-into fix (the one that took three attempts):** `taskAffinity=""` on
+MainActivity nullified singleTask — but removing it was NOT enough, because the
+SENDER's launch flags still decide placement. The SEND filters now live on
+`ShareTargetActivity`, an invisible trampoline (`taskAffinity=""` is correct
+THERE and only there, + excludeFromRecents + noHistory) which pulls our task
+forward via `ActivityManager.AppTask.moveToFront()` (addresses the task by ID,
+no affinity matching) and then starts MainActivity itself; uris are re-granted
+through ClipData because extras carry no permission. CONFIRMED on device.
+Size: 103.5 MB → 62.4 MB via ABI filter (arm64+v7a; x86 was 35 MB of
+emulator-only weight), BouncyCastle pqc `.properties` excluded (4.15 MB,
+resources so R8 never touches them), PDFBox CJK CMaps excluded (1.2 MB, 92
+files, all CJK; PdfText failure already falls back to OCR), locale filter
+sr/en/ru, `ui-tooling-preview` dropped (no @Preview anywhere).
+**R8 is OFF.** Turning it on gave 35.1 MB but the APK installed and would not
+launch. Keep rules are written in `app/proguard-rules.pro` and the obvious
+suspects were CLEARED by inspecting mapping.txt (Room `_Impl`, ViewModel ctors,
+ML Kit ComponentRegistrars, androidx.startup Initializers, manifest themes all
+survive by name). Re-enabling needs a logcat from the failing build — or try
+`-dontobfuscate` first, since a name-based lookup is the likeliest cause.
+Docs: РУКОВОДСТВО.md added (full Russian manual), README gained a 🇷🇺 section,
+UPUTSTVO/MANUAL gained the deadline + list-ordering + report sections.
 
 **PUBLIC RELEASE 2026-08-02**: history intentionally SQUASHED to one clean root
 commit for open-sourcing (all personal data in tests/docs replaced by fictional,
@@ -143,6 +190,9 @@ IpsQrRoundTripTest, RegistryTest, FalsePositiveTest, PayeeMemoryTest,
 FixtureTest (fixtures/**/*.expected.json), InfostanMonthTest, ReportTest,
 NeverGuessAddressTest (v1.5.1: one-entry book + non-matching doc → empty label),
 ClassifyDocTypeTest (v1.5.2 A: mismatch guard incl. QR-less SZ no-nag),
-SpaceNamingTest (v1.5.2 B: IDENT sub-labels, collision flagged not _2).
+SpaceNamingTest (v1.5.2 B: IDENT sub-labels, collision flagged not _2),
+DueDateParserTest (v1.6: label-anchored only, issue date never a deadline),
+ReportTest (v1.6: amounts align by WIDTH not char count; spacer never
+overshoots and never emits two ASCII spaces in a row). 86 green.
 UI has no JVM proof → device pass. A PR adding a template needs a fixture; never
 weaken a checksum/false-positive assertion.

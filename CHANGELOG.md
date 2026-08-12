@@ -1,5 +1,54 @@
 # Changelog
 
+## [1.6.0] — 2026-08-12
+
+Najveća promena od prvog javnog izdanja: aplikacija je dobila novo lice, računi
+su sređeni po adresama, i uveden je rok plaćanja sa podsetnikom.
+
+### Novo
+- **Rok plaćanja i podsetnik.** Računko čita rok sa računa — ali **samo sa
+  njegove oznake** („rok plaćanja", „datum dospeća", „valuta plaćanja"…), nikad
+  iz datuma izdavanja, da ne bi izmislio datum koji na računu ne piše. Ako roka
+  nema, polje ostaje prazno i možeš ga uneti sam. Za svaki račun posebno se
+  uključuje podsetnik i bira koliko dana ranije; pri otvaranju aplikacije
+  pojavi se traka sa računima kojima se rok približio, a dodir na nju suzi
+  listu baš na njih. Istekao rok nosi crvenu oznaku na kartici.
+- **Računi grupisani po adresama.** Na vrhu je kartica sa zbirom („za plaćanje"
+  / „plaćeno"), ispod nje čipovi za filtriranje po adresi, pa sekcije koje se
+  sklapaju. Računi bez adrese idu **prvi** — oni traže tvoju reakciju. Kad
+  imaš više adresa, sekcije se otvaraju sklopljene, kao pregled koji razviješ;
+  kod jedne adrese nema šta da se bira pa stoji otvorena.
+- **Računi poređani po mesecu na koji se odnose**, najnoviji na vrhu — isto u
+  punoj listi i unutar filtera po adresi.
+- **Ruski jezik.** Ceo interfejs, uz ruske oblike množine. Nazivi meseci u
+  imenima fajlova ostaju srpski — to je pravilo imenovanja, ne prevod.
+- **„Fajlovi u fascikli" se sklapa** i stoji sklopljeno; „Dodaj račun" je i
+  dalje u zaglavlju, pa dodavanje nikad ne traži da sekcija bude otvorena.
+
+### Promenjeno
+- **Novo vizuelno lice** — duboko zelene površine, tirkizni akcenat, zlatna za
+  pružaoca, smaragdna za iznos. Sve ikonice su crtane u kodu (Material
+  Symbols), emodžija u interfejsu više nema. Narandžasta tačka u „računko."
+  ostaje kao jedini znak koji je samo naš.
+- **Biranje računa bez čekboksa.** Dug pritisak na karticu ulazi u režim
+  izbora, dalje bira običan dodir. „Izaberi sve" bira **samo ono što filter
+  trenutno prikazuje**, ne sve u tabu. (Čekboksi u listi fajlova ostaju — to je
+  birač fajlova, ne kartica.)
+- **Izveštaj se poravnava za normalan font.** Ranije je razmak računat po broju
+  slova, što se slaže samo u fontu sa jednakom širinom znakova — a izveštaj se
+  lepi u Viber ili WhatsApp, gde je „InfoStan" mnogo šire od „EPS". Sada se
+  računa stvarna širina, pa iznosi stoje jedan ispod drugog i posle lepljenja.
+- **Aplikacija se ne otvara dvaput.** Deljenje potvrde iz aplikacije banke sada
+  uvek vraća **postojeći** Računko sa svim tvojim karticama, umesto da otvori
+  novi u Recents-u ispod banke.
+- **Prikaz preživljava izlazak** — izbor kartica, filter i pozicija skrola su
+  tu kad se vratiš.
+- **APK je manji za 40 %** — sa 103 MB na 62 MB. Izbačene su biblioteke za
+  procesore kojih na telefonima nema (x86), tabele za kriptografiju koju
+  aplikacija ne koristi, i azijske tablice znakova iz PDF čitača.
+- U podešavanjima „sz" je ispisano kao „stambena zajednica"; sekcija „Moji
+  pružaoci" je privremeno sklonjena dok se ne razradi.
+
 ## [1.5.2] — 2026-07-06
 
 ### Novo

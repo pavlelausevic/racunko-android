@@ -121,7 +121,15 @@ data class CardRecordEntity(
     val isImage: Boolean,
     /** List-only delete (Change 4): file kept, but card hidden so backfill won't revive it. */
     val dismissed: Boolean,
-    val timestamp: Long
+    val timestamp: Long,
+    /** v1.6: payment deadline as an epoch day; null when the bill prints none. */
+    val dueDateEpochDay: Long? = null,
+    /** v1.6: per-bill reminder, mirroring mani's „Podseti me da se približava plaćanje". */
+    val remindEnabled: Boolean = true,
+    val remindDaysBefore: Int = 3,
+    /** Kept for the future system notification; the in-app banner shows on open. */
+    val remindHour: Int = 10,
+    val remindMinute: Int = 0
 )
 
 @Dao
@@ -147,7 +155,7 @@ interface CardDao {
 
 @Database(
     entities = [BillEntity::class, PayeeProfileEntity::class, CardRecordEntity::class],
-    version = 3,
+    version = 4,
     exportSchema = false
 )
 abstract class AppDb : RoomDatabase() {
@@ -187,9 +195,20 @@ abstract class AppDb : RoomDatabase() {
             }
         }
 
+        /** v1.6: payment deadline + per-bill reminder. Defaults match the entity. */
+        private val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE `card_records` ADD COLUMN `dueDateEpochDay` INTEGER")
+                db.execSQL("ALTER TABLE `card_records` ADD COLUMN `remindEnabled` INTEGER NOT NULL DEFAULT 1")
+                db.execSQL("ALTER TABLE `card_records` ADD COLUMN `remindDaysBefore` INTEGER NOT NULL DEFAULT 3")
+                db.execSQL("ALTER TABLE `card_records` ADD COLUMN `remindHour` INTEGER NOT NULL DEFAULT 10")
+                db.execSQL("ALTER TABLE `card_records` ADD COLUMN `remindMinute` INTEGER NOT NULL DEFAULT 0")
+            }
+        }
+
         fun get(context: Context): AppDb = instance ?: synchronized(this) {
             instance ?: Room.databaseBuilder(context.applicationContext, AppDb::class.java, "racunko.db")
-                .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
+                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
                 .build()
                 .also { instance = it }
         }

@@ -12,12 +12,12 @@
     <string name="btn_qr_slika">QR slika</string>
     <string name="btn_sacuvaj">Sačuvaj</string>
     <string name="btn_otkazi">Otkaži</string>
-    <string name="btn_add_address">+ Dodaj adresu</string>
+    <string name="btn_add_address">Dodaj adresu</string>
 
     <string name="files_in_folder">Fajlovi u fascikli</string>
     <string name="empty_folder">Nema PDF fajlova u ovoj fascikli.</string>
-    <string name="empty_racuni">Računko čita PDF račune iz fascikle Download (podrazumevano).\n\nDodaj račune dugmetom ➕, a Računko ih čita, preimenuje i izdvaja NBS IPS QR kôd za plaćanje. Potvrdu o plaćanju dodaješ na svaki račun preko ➕ na njegovoj kartici.</string>
-    <string name="empty_potvrde">Potvrde stižu deljenjem iz banke u Računko (Podeli → Računko) ili preko ➕ na kartici računa.</string>
+    <string name="empty_racuni">Računko čita PDF račune iz fascikle Download (podrazumevano).\n\nDodaj račune dugmetom „+", a Računko ih čita, preimenuje i izdvaja NBS IPS QR kôd za plaćanje. Potvrdu o plaćanju dodaješ na svaki račun preko „+" na njegovoj kartici.</string>
+    <string name="empty_potvrde">Potvrde stižu deljenjem iz banke u Računko (Podeli → Računko) ili preko „+" na kartici računa.</string>
     <string name="system_picker">sistemski birač fajlova</string>
     <string name="btn_add_bill">Dodaj račun</string>
     <string name="btn_add_potvrda">Dodaj potvrdu</string>
@@ -85,6 +85,65 @@
     <!-- v1.4.3: selection action bar, delete, purge -->
     <string name="action_delete">Obriši</string>
     <string name="select_all">Izaberi sve</string>
+
+    <!-- v1.6: sažetak na vrhu + pregled po adresama -->
+    <string name="summary_unpaid">Ukupno za plaćanje</string>
+    <string name="summary_paid">Plaćeno</string>
+    <string name="filter_all">Sve</string>
+    <string name="group_no_address">bez adrese</string>
+    <string name="group_unpaid">%1$d neplaćeno</string>
+    <plurals name="bill_count">
+        <item quantity="one">%d račun</item>
+        <item quantity="few">%d računa</item>
+        <item quantity="other">%d računa</item>
+    </plurals>
+    <plurals name="item_count">
+        <item quantity="one">%d stavka</item>
+        <item quantity="few">%d stavke</item>
+        <item quantity="other">%d stavki</item>
+    </plurals>
+
+    <!-- v1.6: rok plaćanja + podsetnik po računu -->
+    <string name="due_missing">rok?</string>
+    <string name="due_in">za %1$dd</string>
+    <string name="due_overdue">kasni %1$dd</string>
+    <string name="due_title">Rok plaćanja i podsetnik</string>
+    <string name="due_date_label">Datum dospeća</string>
+    <string name="due_not_set">Nije postavljen</string>
+    <string name="due_clear">Obriši rok</string>
+    <string name="due_remind">Podseti me da se približava plaćanje</string>
+    <string name="due_days_label">Koliko dana ranije</string>
+    <string name="due_on_day">Na dan</string>
+    <string name="due_time_label">U koje vreme</string>
+    <string name="due_time_note">Podsetnik se za sada prikazuje u aplikaciji kada je otvoriš. Vreme se pamti za sistemsko obaveštenje, kada ga uvedemo.</string>
+    <string name="due_banner_show">Prikaži</string>
+    <string name="due_show_all">Prikaži sve</string>
+    <plurals name="due_banner">
+        <item quantity="one">%d račun je pred rokom</item>
+        <item quantity="few">%d računa su pred rokom</item>
+        <item quantity="other">%d računa je pred rokom</item>
+    </plurals>
+    <plurals name="due_banner_overdue">
+        <item quantity="one">%d već kasni</item>
+        <item quantity="few">%d već kasne</item>
+        <item quantity="other">%d već kasni</item>
+    </plurals>
+    <plurals name="day_count">
+        <item quantity="one">%d dan ranije</item>
+        <item quantity="few">%d dana ranije</item>
+        <item quantity="other">%d dana ranije</item>
+    </plurals>
+
+    <!-- v1.6: pružaoci i jezik -->
+    <string name="lang_ru">Русский</string>
+    <string name="settings_providers_note">Ovih pet Računko sam prepoznaje sa računa. Ovde im menjaš samo naziv koji ide u ime fajla (npr. yettel → sbb).</string>
+    <!-- Left column of „Nazivi pružalaca": „sz" is our filename token, spelled out. -->
+    <string name="provider_label_sz">stambena zajednica</string>
+    <string name="settings_custom_providers">Moji pružaoci</string>
+    <string name="settings_custom_providers_note">Pružalac kog Računko ne ume sam da prepozna. Ime dodato ovde ne uči aplikaciju da ga prepoznaje — pojavljuje se kao dugme kad pružaoca postavljaš ručno na kartici računa.</string>
+    <string name="btn_add_provider">Dodaj pružaoca</string>
+    <string name="provider_hint">npr. vodovod</string>
+    <string name="settings_danger">Brisanje podataka</string>
     <string name="tag_processed">već obrađen</string>
     <string name="cta_sifarnik_title">Napravi šifarnik adresa</string>
     <string name="cta_sifarnik_text">Adrese su jedino što Računko ne može sam da izvede. Sa šifarnikom (skraćenica + tekst adrese sa računa) fajlovi se sami imenuju po lokaciji, npr. infostan_BDS95_maj26_11152. Možeš da nastaviš i bez njega — adresa ostaje „adresa?" za ručni unos.</string>
