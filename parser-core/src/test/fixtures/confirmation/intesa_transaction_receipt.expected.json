@@ -1,0 +1,7 @@
+{
+  "note": "A bank confirmation carries a bill's numbers — recipient account, amount, reference — so nothing about the FIELDS distinguishes it. The bank template's own fingerprint does, and it must, because this document arriving through „Dodaj račun\" is the mistake the intake question exists to catch. Pairing this receipt to a bill is NOT expressed here: that needs other bills to bind against, and lives in AcceptanceTest.",
+  "sourceKind": "PDF_TEXT",
+  "looksLikeBill": true,
+  "docType": "CONFIRMATION",
+  "docTypeConfidence": "HIGH"
+}

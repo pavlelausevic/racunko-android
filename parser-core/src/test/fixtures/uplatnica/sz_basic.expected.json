@@ -1,5 +1,5 @@
 {
-  "note": "QR-less paper uplatnica: the registry recovers the account from the printed labels.",
+  "note": "QR-less paper uplatnica: the registry recovers the account from the printed labels. It is also the regression guard for the intake question — this bill has no QR, and an implementation that reads QR absence as „probably a confirmation\" nags the user on every paper slip. The printed labels are the fingerprint, so it classifies BILL with HIGH confidence and passes silently.",
   "sourceKind": "IMAGE_OCR",
   "provider": "sz",
   "recipientAccount": "200555000123456764",
@@ -8,5 +8,9 @@
   "month": null,
   "paymentReference": "040255500012",
   "addressLabel": "DS99",
-  "expectedName": "sz_DS99_X_1500"
+  "expectedName": "sz_DS99_X_1500",
+
+  "looksLikeBill": true,
+  "docType": "BILL",
+  "docTypeConfidence": "HIGH"
 }

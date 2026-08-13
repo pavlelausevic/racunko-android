@@ -1,0 +1,12 @@
+{
+  "note": "The month lives in the hyphen-anchored RO suffix `-{YY}{MM}{D}-{K}`, never in a digit run that merely looks like one. This ident ends in `...080-`, which an unanchored pattern reads as month 08 of year 20 and names the file `avgust98`. It is a June bill: only `-26069-1` counts.",
+  "sourceKind": "PDF_TEXT",
+  "ips": "K:PR|V:01|C:1|R:200220618010100048|N:JKP INFOSTAN TEHNOLOGIJE BEOGRAD|I:RSD8419,60|SF:122|S:OBJEDINJENA NAPLATA|RO:11800598102080-26069-1",
+  "provider": "infostan",
+  "addressLabel": "DL27",
+  "addressAmbiguous": false,
+  "month": "jun26",
+  "amount": 8420,
+  "spaceId": "598102",
+  "expectedName": "infostan_DL27_jun26_8420"
+}

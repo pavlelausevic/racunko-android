@@ -1,0 +1,9 @@
+{
+  "note": "Sharper than the plain no-match case: the EPS metering-point anchor DOES locate an address on the page, and it is still not adopted, because it is not in the user's book. Finding an address and recognizing one are different things — only the book turns text into a label.",
+  "sourceKind": "PDF_TEXT",
+  "addressBook": "BDS95=bulevar dušana simića 95",
+  "provider": "eps",
+  "addressLabel": null,
+  "addressAmbiguous": false,
+  "expectedName": "eps_X_X_X"
+}

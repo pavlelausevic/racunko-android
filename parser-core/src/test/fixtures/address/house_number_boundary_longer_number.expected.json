@@ -1,0 +1,10 @@
+{
+  "note": "House-number boundary, miss side: `koste dragojevića 7` must NOT match number 71. A different building on the same street is a different address, so the label stays empty rather than being guessed.",
+  "sourceKind": "PDF_TEXT",
+  "provider": "",
+  "addressLabel": null,
+  "addressAmbiguous": false,
+  "month": null,
+  "amount": null,
+  "expectedName": "X_X_X_X"
+}

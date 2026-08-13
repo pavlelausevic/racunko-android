@@ -1,5 +1,6 @@
 package com.racunko.app
 
+import com.racunko.app.parser.AddressEntry
 import com.racunko.app.parser.AddressMatcher
 import com.racunko.app.parser.AmountParser
 import com.racunko.app.parser.BillName
@@ -7,6 +8,7 @@ import com.racunko.app.parser.IpsQr
 import com.racunko.app.parser.MonthDetector
 import com.racunko.app.parser.Months
 import com.racunko.app.parser.ProviderDetector
+import com.racunko.app.parser.SpaceId
 import com.racunko.app.parser.registry.NormalizedDoc
 import com.racunko.app.parser.registry.SourceKind
 import com.racunko.app.parser.registry.TemplateRegistry
@@ -50,9 +52,10 @@ class FixtureTest {
     /** Every key a fixture may set. Anything else is a typo, and fails. */
     private val knownKeys = setOf(
         "sourceKind", "ips", "note",
-        "provider", "addressLabel", "addressAmbiguous", "month", "amount",
+        "provider", "addressBook", "addressLabel", "addressAmbiguous", "month", "amount",
         "recipientAccount", "accountVerified", "paymentReference", "spaceId",
-        "expectedName"
+        "expectedName",
+        "looksLikeBill", "docType", "docTypeConfidence", "docTypeLean"
     )
 
     private fun fixturesDir(): File = listOf(
@@ -92,7 +95,7 @@ class FixtureTest {
         val provider = ProviderDetector.detect(ips, text)
         val amount = AmountParser.parse(ips, text)
         val month = MonthDetector.detect(provider, ips, text)
-        val address = AddressMatcher.detect(SampleAddresses.MAP, ips, text, provider)
+        val address = AddressMatcher.detect(addressBook(json), ips, text, provider)
 
         if (has(json, "provider")) assertEquals("$where provider", str(json, "provider"), provider)
         if (has(json, "amount")) assertEquals("$where amount", longOrNull(json, "amount"), amount)
@@ -104,6 +107,14 @@ class FixtureTest {
         }
         if (has(json, "addressAmbiguous")) {
             assertEquals("$where addressAmbiguous", boolean(json, "addressAmbiguous"), address.ambiguous)
+        }
+        // The space id keys the sub-label, so it belongs to the naming path, not
+        // to the registry. `ExtractedFields.spaceId` is a different value on the
+        // same name: for a bill carrying a QR it is null, because the registry
+        // never reaches the RO layout. Asserting that one here would pin `null`
+        // for every QR bill and prove nothing about the file name.
+        if (has(json, "spaceId")) {
+            assertEquals("$where spaceId", strOrNull(json, "spaceId"), SpaceId.detect(provider, ips, text))
         }
         if (has(json, "expectedName")) {
             assertEquals(
@@ -124,8 +135,51 @@ class FixtureTest {
         if (has(json, "paymentReference")) {
             assertEquals("$where paymentReference", strOrNull(json, "paymentReference"), f.paymentReference)
         }
-        if (has(json, "spaceId")) {
-            assertEquals("$where spaceId", strOrNull(json, "spaceId"), f.spaceId)
+
+        // ---- what kind of document is this? ----------------------------------
+        // Answered by fingerprint, never by filename and never by QR absence.
+        // `looksLikeBill` gates what a folder scan offers the user; `docType`
+        // drives the intake question. Both are claims about the document, so
+        // they belong here; what the app DOES with a guess is a decision table
+        // and stays in ClassifyDocTypeTest.
+        if (has(json, "looksLikeBill")) {
+            assertEquals(
+                "$where looksLikeBill",
+                boolean(json, "looksLikeBill"),
+                registry.looksLikeBill(doc)
+            )
+        }
+        if (has(json, "docType") || has(json, "docTypeConfidence") || has(json, "docTypeLean")) {
+            val guess = registry.classifyDocType(doc)
+            if (has(json, "docType")) {
+                assertEquals("$where docType", str(json, "docType"), guess.type.name)
+            }
+            if (has(json, "docTypeConfidence")) {
+                assertEquals(
+                    "$where docTypeConfidence",
+                    str(json, "docTypeConfidence"),
+                    guess.confidence.name
+                )
+            }
+            if (has(json, "docTypeLean")) {
+                assertEquals("$where docTypeLean", strOrNull(json, "docTypeLean"), guess.lean?.name)
+            }
+        }
+    }
+
+    /**
+     * The address book this case resolves against. Most cases want the shared
+     * fictional book, so `addressBook` is omitted and [SampleAddresses] applies.
+     *
+     * A case that is ABOUT the book — one entry, a blank pattern — declares its
+     * own, in a one-line form the flat schema can carry:
+     * `"LABEL=pattern|other pattern;LABEL2=pattern"`. Entries split on `;`,
+     * a label from its patterns on `=`, patterns from each other on `|`.
+     */
+    private fun addressBook(json: String): List<AddressEntry> {
+        val spec = strOrNull(json, "addressBook") ?: return SampleAddresses.MAP
+        return spec.split(";").filter { it.isNotEmpty() }.map { entry ->
+            AddressEntry(entry.substringBefore("="), entry.substringAfter("=").split("|"))
         }
     }
 

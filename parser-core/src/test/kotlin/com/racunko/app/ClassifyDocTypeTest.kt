@@ -1,100 +1,81 @@
 package com.racunko.app
 
 import com.racunko.app.parser.registry.DocType
+import com.racunko.app.parser.registry.DocTypeGuess
 import com.racunko.app.parser.registry.GuessConfidence
 import com.racunko.app.parser.registry.IntakeAction
 import com.racunko.app.parser.registry.IntakeGuard
-import com.racunko.app.parser.registry.NormalizedDoc
-import com.racunko.app.parser.registry.SourceKind
-import com.racunko.app.parser.registry.TemplateRegistry
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
 /**
- * v1.5.2 Change A — type/tab mismatch guard. The classifier (not QR absence!)
- * decides when to warn: a clear confirmation added as a bill warns with
- * „Dodaj kao potvrdu"; a QR-less SZ bill passes silently; garbage asks.
+ * v1.5.2 Change A — the type/tab mismatch guard, now reduced to what it actually
+ * is: a decision table over (what the document looks like) × (what the user
+ * aimed at). No document is needed to state it, so none is used.
+ *
+ * Recognizing the type from a document IS a claim about that document, and it
+ * moved to the fixture corpus — `fixtures/confirmation/`, `fixtures/unknown/`,
+ * and the `docType` keys on the bill cases. What remains here is the mapping the
+ * app applies to a guess, and it is now pinned for **every** combination rather
+ * than for the five that happened to have a sample.
+ *
+ * Two rules the table must never lose:
+ *  - UNKNOWN always asks. QR absence is not evidence of a confirmation.
+ *  - Share-into (`intended = null`) has no expectation to contradict, so a clear
+ *    type routes silently — but an unclear one still asks.
  */
 class ClassifyDocTypeTest {
 
-    private val registry = TemplateRegistry.default()
-
-    private fun doc(text: String?, ipsQr: Map<String, String>? = null) =
-        NormalizedDoc.of(text, ipsQr, SourceKind.PDF_TEXT)
-
-    private val intesaConfirmation = """
-        Potvrda transakcije UPLATA/ISPLATA REFERENCA NAZIV PLATIOCA 954OMIN2600000AB PETAR PETROVIĆ
-        BROJ RAČUNA PLATIOCA IZNOS TRANSAKCIJE 160000123456789070 1.070,00 RSD
-        BROJ RAČUNA PRIMAOCA NAZIV PRIMAOCA 200555000123456764 SZ DOBRIVOJA STANKOVICA 99
-        MODEL I POZIV NA BROJ ODOBRENJA - 040255500012
-    """.trimIndent()
-
-    private val qrlessSzBill = """
-        primalac SZ DOBRIVOJA STANKOVICA 99
-        racun primaoca 200-5550001234567-64
-        poziv na broj 040255500012
-        za uplatu 1.500,00
-    """.trimIndent()
-
-    private val ipsQr = mapOf(
-        "K" to "PR", "R" to "200555000123456764",
-        "N" to "SZ DOBRIVOJA STANKOVIĆA 99", "I" to "RSD1070,00", "RO" to "97040255500012"
+    private fun guess(type: DocType) = DocTypeGuess(
+        type,
+        if (type == DocType.UNKNOWN) GuessConfidence.LOW else GuessConfidence.HIGH
     )
 
-    /** 1. A real bank confirmation added via „Dodaj račun" → warn, suggest potvrda. */
+    private fun decide(type: DocType, intended: DocType?) =
+        IntakeGuard.decide(guess(type), intended)
+
+    /** Intent matches the fingerprint → straight through, both tabs. */
+    @Test
+    fun typeAgreesWithIntent_proceeds() {
+        assertEquals(IntakeAction.PROCEED, decide(DocType.BILL, DocType.BILL))
+        assertEquals(IntakeAction.PROCEED, decide(DocType.CONFIRMATION, DocType.CONFIRMATION))
+    }
+
+    /** A bank confirmation pushed through „Dodaj račun" → suggest the other tab. */
     @Test
     fun confirmationAddedAsBill_warnsWithSuggestion() {
-        val guess = registry.classifyDocType(doc(intesaConfirmation))
-        assertEquals(DocType.CONFIRMATION, guess.type)
-        assertEquals(GuessConfidence.HIGH, guess.confidence)
         assertEquals(
             IntakeAction.WARN_SUGGEST_CONFIRMATION,
-            IntakeGuard.decide(guess, intended = DocType.BILL)
+            decide(DocType.CONFIRMATION, DocType.BILL)
         )
     }
 
-    /** 2. KEY regression guard: a QR-less SZ paper bill is NOT nagged. */
+    /** The mirror, which is the one an asymmetric implementation drops. */
     @Test
-    fun qrlessSzBill_passesWithoutPrompt() {
-        val guess = registry.classifyDocType(doc(qrlessSzBill))
-        assertEquals(DocType.BILL, guess.type)
-        assertEquals(GuessConfidence.HIGH, guess.confidence)
-        assertEquals(IntakeAction.PROCEED, IntakeGuard.decide(guess, intended = DocType.BILL))
+    fun billAddedAsConfirmation_warnsWithSuggestion() {
+        assertEquals(IntakeAction.WARN_SUGGEST_BILL, decide(DocType.BILL, DocType.CONFIRMATION))
     }
 
-    /** 3. A normal bill with an IPS QR → BILL, no prompt. */
+    /**
+     * UNKNOWN asks — from either tab and from share-into alike. This is the rule
+     * that keeps a QR-less paper bill from being silently filed as a confirmation
+     * just because it carries no QR.
+     */
     @Test
-    fun ipsQrBill_passesWithoutPrompt() {
-        val guess = registry.classifyDocType(doc(text = null, ipsQr = ipsQr))
-        assertEquals(DocType.BILL, guess.type)
-        assertEquals(IntakeAction.PROCEED, IntakeGuard.decide(guess, intended = DocType.BILL))
+    fun unknownAlwaysAsks_neverRoutesOnAbsence() {
+        for (intended in listOf(DocType.BILL, DocType.CONFIRMATION, null)) {
+            assertEquals(
+                "intended=$intended",
+                IntakeAction.ASK_TYPE,
+                decide(DocType.UNKNOWN, intended)
+            )
+        }
     }
 
-    /** 4. Indeterminate/garbage → UNKNOWN → the type question is shown. */
+    /** Share-into carries no expectation, so a clear type never prompts. */
     @Test
-    fun garbage_asksForType() {
-        val contract = "Lorem ipsum dolor sit amet, ugovor o zakupu, clan 1, potpis stranaka."
-        val guess = registry.classifyDocType(doc(contract))
-        assertEquals(DocType.UNKNOWN, guess.type)
-        assertEquals(IntakeAction.ASK_TYPE, IntakeGuard.decide(guess, intended = DocType.BILL))
-        // share-into also asks — no silent routing on UNKNOWN
-        assertEquals(IntakeAction.ASK_TYPE, IntakeGuard.decide(guess, intended = null))
-    }
-
-    /** 5. Mirror: a clear bill pushed through „Dodaj potvrdu" → warn it's a bill. */
-    @Test
-    fun billAddedAsConfirmation_mirrorWarns() {
-        val slip = registry.classifyDocType(doc(qrlessSzBill))
-        assertEquals(
-            IntakeAction.WARN_SUGGEST_BILL,
-            IntakeGuard.decide(slip, intended = DocType.CONFIRMATION)
-        )
-        val qrBill = registry.classifyDocType(doc(text = null, ipsQr = ipsQr))
-        assertEquals(
-            IntakeAction.WARN_SUGGEST_BILL,
-            IntakeGuard.decide(qrBill, intended = DocType.CONFIRMATION)
-        )
-        // share-into with a clear type routes silently (no expectation to conflict with)
-        assertEquals(IntakeAction.PROCEED, IntakeGuard.decide(qrBill, intended = null))
+    fun shareIn_routesAClearTypeSilently() {
+        assertEquals(IntakeAction.PROCEED, decide(DocType.BILL, null))
+        assertEquals(IntakeAction.PROCEED, decide(DocType.CONFIRMATION, null))
     }
 }

@@ -1,0 +1,12 @@
+{
+  "note": "Same ident as the anchor-zone case, but the RO is printed WITHOUT the leading `11` model. The month suffix is read off the END, so dropping the model must not shift the month. The space id is read from the FRONT and is therefore lost — pinned here as null on purpose, so the asymmetry is a recorded fact rather than a surprise: this bill still names itself correctly, it just cannot carry a per-space sub-label.",
+  "sourceKind": "PDF_TEXT",
+  "ips": "K:PR|V:01|C:1|R:200220618010100048|N:JKP INFOSTAN TEHNOLOGIJE BEOGRAD|I:RSD970,52|SF:122|S:OBJEDINJENA NAPLATA|RO:800614276087-26050-1",
+  "provider": "infostan",
+  "addressLabel": "JA2",
+  "addressAmbiguous": false,
+  "month": "maj26",
+  "amount": 971,
+  "spaceId": null,
+  "expectedName": "infostan_JA2_maj26_971"
+}

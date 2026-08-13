@@ -11,17 +11,36 @@ Run everything:
 
 | Suite | Question it answers | Lives in |
 |---|---|---|
-| Fixture corpus | Do the shipped bill path AND template registry produce the expected fields — and the expected file name — for each known issuer? | `fixtures/{issuer}/*` + `FixtureTest` |
+| Fixture corpus | Do the shipped bill path AND template registry produce the expected fields — the file name, the address label, the document type — for each known issuer? | `fixtures/{issuer}/*` + `FixtureTest` |
 | Acceptance (pairing) | Do confirmations bind to the right bill across all three layers? | `AcceptanceTest` (#6 Intesa, #7 Erste, #8 AIK) |
 | Checksum | Are account/reference numbers proven, and are bad ones rejected? | `AccountChecksumTest` |
 | Pairing (false positives) | Do distractor numbers bind to **nothing**? | `FalsePositiveTest` |
-| Address resolution | Anchor zones, boundaries (`7` vs `71`, `46b`), and never guessing a label | `ScanAddressTest`, `NeverGuessAddressTest` |
+| Pairing / algorithm | Do references bind with and without the model prefix, and do rounding, transliteration and filename rules hold? | `ParserUnitTest` |
+| Intake routing | Given a guess and the tab the user aimed at, does the app proceed, warn, or ask? | `ClassifyDocTypeTest` |
+| Scan path wiring | Does the scan path withhold the QR from the address matcher, so a payer's own address never becomes a label? | `ScanAddressTest` |
 | IPS QR round-trip | Does generate→decode return identical fields? | `IpsQrRoundTripTest` |
 | Payee memory | Is month-2 prefilled, and cleared on reset? | `PayeeMemoryTest` |
-| Registry | Does first-match hold, and does removal fall through cleanly? | `RegistryTest`, `ClassifyDocTypeTest` |
+| Space naming | Do sub-labels bind per space, and is a collision flagged rather than silently suffixed? | `SpaceNamingTest` |
+| Registry | Does first-match hold, and does removal fall through cleanly? | `RegistryTest` |
 | Due date | Is the deadline read ONLY from its own label, and never from the issue date? | `DueDateParserTest` |
 | Report layout | Do the amounts line up by rendered WIDTH (proportional font), not by character count? | `ReportTest` |
 | Degradation (dev tool) | How bad can a photo be before the QR/OCR fails? | `tools/degradation/` (not shipped) |
+
+### What belongs in the corpus, and what does not
+
+The dividing question is: **could a port run this case with no Kotlin present?**
+
+A claim about a *document* — this text yields this label, this month, this type —
+is portable, so it goes in `fixtures/`. A claim about an *algorithm* (half-up
+rounding, transliteration, the processed-filename regex) has no document to point
+at; moving it would only wrap a Kotlin assertion in JSON. A claim about *pairing*
+needs a corpus of other bills to bind against, which a single-document fixture
+cannot carry. A claim about *wiring* — which arguments a call site passes — is
+about this app, not about the format.
+
+Those three categories are why `ParserUnitTest`, `ClassifyDocTypeTest`,
+`ScanAddressTest`, `SpaceNamingTest` and `PayeeMemoryTest` still exist in Kotlin
+after the migration, each reduced to the part a fixture genuinely cannot state.
 
 ## Coverage and known gaps
 
@@ -85,16 +104,22 @@ typo cannot silently disable an assertion.
   "ips": "K:PR|V:01|C:1|R:200220618010100048|N:JKP INFOSTAN…|RO:11800512345011-26050-1",
 
   "provider": "infostan",
+  "addressBook": "KD7=koste dragojevića 7",
   "addressLabel": "KD7",
   "addressAmbiguous": false,
   "month": "maj26",
   "amount": 11152,
+  "spaceId": "512345",
   "expectedName": "infostan_KD7_maj26_11152",
 
   "recipientAccount": "200220618010100048",
   "accountVerified": true,
   "paymentReference": "800614276087260501",
-  "spaceId": "800512345011"
+
+  "looksLikeBill": true,
+  "docType": "BILL",
+  "docTypeConfidence": "HIGH",
+  "docTypeLean": null
 }
 ```
 
@@ -102,8 +127,25 @@ typo cannot silently disable an assertion.
 - `month` is the **filename token** (`maj26`), or `null` when the bill prints none.
 - `addressLabel` resolves against the fictional `SampleAddresses` book; `null`
   means it must stay **empty** — the address is never guessed.
+- `addressBook` overrides that book for cases that are *about* the book — one
+  entry, a blank pattern. One line: `"LABEL=pattern|other;LABEL2=pattern"`,
+  entries split on `;`, label from patterns on `=`, patterns on `|`. Omit it and
+  the shared book applies.
+- `spaceId` is the per-space id **as the naming path reads it** (`SpaceId.detect`),
+  because that is what a sub-label keys on. The registry carries a field of the
+  same name whose value differs — it is `null` on a bill that has a QR — and the
+  corpus deliberately pins the one that reaches the file name.
 - `expectedName` is the whole point of most cases: it pins the end result, with
   `X` standing in for any field that could not be proven.
+- `looksLikeBill` gates what a folder scan offers the user; `docType` /
+  `docTypeConfidence` / `docTypeLean` are the intake classification. All four are
+  decided by fingerprint — **never by filename, and never by QR absence.** What
+  the app *does* with a guess is a decision table and lives in Kotlin.
+
+A folder under `fixtures/` is normally the issuer id. Three group cases that have
+no issuer: `address/` (matcher boundaries and the never-guess rule), `confirmation/`
+(bank receipts, for classification only), and `unknown/` (documents that must not
+be offered as bills at all).
 
 Rules for fixtures:
 - **Redacted text only**, never images. Personal names masked; the payer's own account masked.
@@ -138,9 +180,17 @@ For each of the 5 original sample bills: `QrEncoder.build(fields)` → `QrDecode
 
 ## Address resolution
 
+All of these are corpus cases (`fixtures/address/`, `fixtures/eps/`), not Kotlin tests:
+
 - `koste dragojevića 7` matches `koste dragojevića 7 st. 15` and `KOSTE DRAGOJEVIĆA 7 /2/15` but **not** `koste dragojevića 71`; `46b` allowed.
 - EPS metering-point anchor beats the mailing address; InfoStan `adresa:` anchor beats the postal block (the SG26-vs-KD7 case).
 - Two genuinely different labels in one zone → `ambiguous=true` → chips, no silent pick.
+- **The address is never guessed.** A one-entry book plus a document naming a
+  different street resolves to *empty*, not to the lone entry — including when an
+  anchor zone did locate an address on the page. Finding an address and
+  recognizing one are different things; only the book turns text into a label.
+- A **blank pattern matches nothing.** Compiled naively it becomes a regex that
+  matches every document, which turns a one-entry book into "always that label".
 
 ## Degradation matrix (developer harness, not shipped)
 

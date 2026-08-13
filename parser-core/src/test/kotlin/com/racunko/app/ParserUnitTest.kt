@@ -1,8 +1,6 @@
 package com.racunko.app
 
 import com.racunko.app.parser.Accounts
-import com.racunko.app.parser.AddressEntry
-import com.racunko.app.parser.AddressMatcher
 import com.racunko.app.parser.AmountParser
 import com.racunko.app.parser.BillName
 import com.racunko.app.parser.ConfirmationFields
@@ -19,6 +17,20 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
+/**
+ * What is left here after the corpus migration: **algorithm and pairing**, the
+ * two categories a fixture cannot express.
+ *
+ * An algorithm test states a rule about a function — half-up rounding,
+ * transliteration, a filename regex — and has no document to point at, so
+ * moving it to `fixtures/` would only wrap a Kotlin assertion in JSON. A pairing
+ * test needs a corpus of OTHER bills to bind against, which a single-document
+ * fixture has no way to carry.
+ *
+ * Only the address-boundary cases were document-shaped, and they now live in
+ * `fixtures/address/`. The split is documented in TESTING.md; when in doubt, ask
+ * whether a Swift port could run the case with no Kotlin present.
+ */
 class ParserUnitTest {
 
     // ---------------------------------------------------------- rounding
@@ -43,28 +55,9 @@ class ParserUnitTest {
         assertEquals("dragise lovcevica 27", Normalizer.norm("Драгише  Ловчевића 27"))
     }
 
-    // ------------------------------------------------- address boundaries
-
-    private val addresses = listOf(
-        AddressEntry("KD7", listOf("koste dragojevića 7")),
-        AddressEntry("AJ46b", listOf("arse jankovića 46b"))
-    )
-
-    @Test
-    fun address_trailingDigitBoundary() {
-        val hit = AddressMatcher.detect(addresses, null, "stan u ulici KOSTE DRAGOJEVIĆA 7 /2/15", "")
-        assertEquals("KD7", hit.label)
-        val miss = AddressMatcher.detect(addresses, null, "stan u ulici KOSTE DRAGOJEVIĆA 71", "")
-        assertEquals("", miss.label)
-        val cyr = AddressMatcher.detect(addresses, null, "Адреса: КОСТЕ ДРАГОЈЕВИЋА 7 СТ. 15", "")
-        assertEquals("KD7", cyr.label)
-    }
-
-    @Test
-    fun address_trailingLetterAllowed() {
-        val hit = AddressMatcher.detect(addresses, null, "ARSE JANKOVIĆA 46B, Beograd", "")
-        assertEquals("AJ46b", hit.label)
-    }
+    // Address boundaries (`7` vs `71`, `46b`, Cyrillic) moved to the fixture
+    // corpus — `fixtures/address/*` — because they are claims about a document,
+    // not about an algorithm, and a port must reproduce them unchanged.
 
     // ------------------------------------- pairing by RO with/without model
 

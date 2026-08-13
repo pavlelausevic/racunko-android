@@ -1,0 +1,9 @@
+{
+  "note": "A book entry saved with a blank pattern — an empty field in Settings, a stray space. Compiled naively it becomes a regex that matches every document, and the one-entry book silently turns into „always that label\" on every bill. A blank pattern must match nothing at all. Here the entry holds one whitespace pattern and one empty one, and neither may fire.",
+  "sourceKind": "PDF_TEXT",
+  "addressBook": "X= |",
+  "provider": "",
+  "addressLabel": null,
+  "addressAmbiguous": false,
+  "expectedName": "X_X_X_X"
+}

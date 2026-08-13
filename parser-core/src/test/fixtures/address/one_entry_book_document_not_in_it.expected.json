@@ -1,0 +1,10 @@
+{
+  "note": "The address is NEVER guessed. A book with exactly one entry and a document naming a different street is the case where guessing is most tempting and most wrong — there is only one candidate, so „it must be that one\" looks safe. It is not: the user would get someone else's address on the file name. The label stays empty and the app asks.",
+  "sourceKind": "PDF_TEXT",
+  "addressBook": "BDS95=bulevar dušana simića 95",
+  "provider": "",
+  "addressLabel": null,
+  "addressAmbiguous": false,
+  "amount": 1234,
+  "expectedName": "X_X_X_1234"
+}

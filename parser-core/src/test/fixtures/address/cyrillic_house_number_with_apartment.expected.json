@@ -1,0 +1,10 @@
+{
+  "note": "The same boundary read from Cyrillic, with no provider and therefore no anchor zone: transliteration happens before matching, so `КОСТЕ ДРАГОЈЕВИЋА 7 СТ. 15` resolves exactly like its Latin twin.",
+  "sourceKind": "PDF_TEXT",
+  "provider": "",
+  "addressLabel": "KD7",
+  "addressAmbiguous": false,
+  "month": null,
+  "amount": null,
+  "expectedName": "X_KD7_X_X"
+}

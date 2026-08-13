@@ -1,0 +1,10 @@
+{
+  "note": "House-number boundary, hit side: the book pattern `koste dragojevića 7` matches `7 /2/15`, because what follows the number is an apartment suffix, not another digit.",
+  "sourceKind": "PDF_TEXT",
+  "provider": "",
+  "addressLabel": "KD7",
+  "addressAmbiguous": false,
+  "month": null,
+  "amount": null,
+  "expectedName": "X_KD7_X_X"
+}

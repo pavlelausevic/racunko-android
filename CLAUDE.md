@@ -197,38 +197,60 @@ the PUBLIC RELEASE note above.)
 
 ## Fixture corpus (v1.6.2 — the portability argument)
 `parser-core/src/test/fixtures/{issuer}/{case}.{txt,expected.json}`, run by
-`FixtureTest`. 8 cases over eps/infostan/mts/sz/yettel/uplatnica. KEY FINDING
-that shaped it: the app has TWO extraction paths and they are different code —
-`Pipeline.buildBillCard` uses the DIRECT functions (ProviderDetector →
-AmountParser → MonthDetector → AddressMatcher → BillName) and that is what makes
-the FILE NAME; `registry.extract` is used only for classification and for the
-account on a QR-less bill. The old corpus tested only the registry, i.e. not the
-user-visible result. FixtureTest now runs BOTH per case and pins `expectedName`.
-Schema: every key optional except `sourceKind`, asserted only if present, and an
-UNKNOWN key fails (a typo cannot silently disable an assertion). Pairing is
-deliberately NOT expressible — it needs a corpus of other bills, so it stays in
-AcceptanceTest/FalsePositiveTest. Six bill cases were MIGRATED out of
-AcceptanceTest (its remaining 6 tests are all pairing).
-Still to migrate: ParserUnitTest, ClassifyDocTypeTest, SpaceNamingTest,
-InfostanMonthTest, LooksLikeBillTest, ScanAddressTest, NeverGuessAddressTest,
-PayeeMemoryTest. Algorithm tests (checksum, report layout, due-date labels,
-BillName parse, QR round-trip) STAY in Kotlin — that split is intentional and
-documented in TESTING.md.
+`FixtureTest`. **21 cases** over eps/infostan/mts/sz/yettel/uplatnica plus three
+issuer-less buckets: `address/` (matcher boundaries + never-guess), `confirmation/`
+(bank receipts, classification only), `unknown/` (must NOT be offered as bills).
+KEY FINDING that shaped it: the app has TWO extraction paths and they are
+different code — `Pipeline.buildBillCard` uses the DIRECT functions
+(ProviderDetector → AmountParser → MonthDetector → AddressMatcher → BillName) and
+that is what makes the FILE NAME; `registry.extract` is used only for
+classification and for the account on a QR-less bill. The old corpus tested only
+the registry, i.e. not the user-visible result. FixtureTest runs BOTH per case
+and pins `expectedName`. Schema: every key optional except `sourceKind`, asserted
+only if present, and an UNKNOWN key fails (a typo cannot silently disable an
+assertion). Fixtures are wired as a test **resources srcDir** in
+`parser-core/build.gradle.kts` — that is the ONLY reason Gradle re-runs `test`
+when a fixture changes; remove it and edits are silently not verified.
+**Schema grew in this round:** `addressBook` (compact one-line book, so a case
+about the BOOK — one entry, blank pattern — declares its own instead of using
+`SampleAddresses`), `looksLikeBill`, `docType`/`docTypeConfidence`/`docTypeLean`.
+`spaceId` was REPOINTED from `registry.extract` to `SpaceId.detect` — the
+registry's field of that name is null on any bill carrying a QR, so asserting it
+pinned nothing about the file name. No shipped fixture used the old meaning.
+**Migrated this round:** ParserUnitTest (only its 2 address-boundary tests were
+document-shaped), InfostanMonthTest (all 3), LooksLikeBillTest (all 3),
+ClassifyDocTypeTest (classification → corpus; the guard is now an EXHAUSTIVE
+decision table over type × intent, stronger than the 5 document-coupled cases it
+replaced), NeverGuessAddressTest (3 of 4; the 4th folded into PayeeMemoryTest,
+which gained the stronger "lookup is not even attempted" assertion).
+**Still in Kotlin, by the documented split:** algorithm (rounding,
+transliteration, filename regex, checksum, report layout, due-date labels,
+BillName parse, QR round-trip), pairing (needs OTHER bills as context), intake
+routing (a decision table, no document), scan-path wiring (`ScanAddressTest` —
+which arguments the call site passes is about this app, not the format), and
+space naming (`SpaceNamingTest` — sub-label/collision policy; only its
+`SpaceId.detect` half is a document claim and that is now corpus).
+The dividing question, in TESTING.md: **could a port run this case with no Kotlin
+present?**
 
 ## Tests (parser-core) — keep green
-AcceptanceTest (§10 1–8, uses SampleAddresses), AccountChecksumTest,
-IpsQrRoundTripTest, RegistryTest, FalsePositiveTest, PayeeMemoryTest,
-FixtureTest (fixtures/**/*.expected.json), InfostanMonthTest, ReportTest,
-NeverGuessAddressTest (v1.5.1: one-entry book + non-matching doc → empty label),
-ClassifyDocTypeTest (v1.5.2 A: mismatch guard incl. QR-less SZ no-nag),
+AcceptanceTest (§10 1–8, uses SampleAddresses — its remaining 6 are all pairing),
+AccountChecksumTest, IpsQrRoundTripTest, RegistryTest, FalsePositiveTest,
+PayeeMemoryTest (+ „lookup not attempted on an unproven account"),
+FixtureTest (fixtures/**/*.expected.json), BillNameParseTest,
+ParserUnitTest (algorithm + pairing only, after the corpus migration),
+ClassifyDocTypeTest (v1.5.2 A: now the EXHAUSTIVE intake decision table),
+ScanAddressTest (the QR is withheld from the address matcher on the scan path),
 SpaceNamingTest (v1.5.2 B: IDENT sub-labels, collision flagged not _2),
-DueDateParserTest (v1.6: label-anchored only, issue date never a deadline),
-ReportTest (v1.6: amounts align by WIDTH not char count; spacer never
-overshoots and never emits two ASCII spaces in a row), DueDateParserTest gained
+DueDateParserTest (v1.6: label-anchored only, issue date never a deadline) with
 per-issuer LAYOUT cases for MTS/EPS/InfoStan/SBB-Yettel/Yettel — each pinning the
 decoy that must NOT win (complaint deadline, contract expiry, discount cut-off,
 the EPS slip's „Валута" currency column). Real bills confirmed the label wording
 locally and never left the maintainer's machine; the committed text is synthetic.
-86 green.
+ReportTest (v1.6: amounts align by WIDTH not char count; spacer never overshoots
+and never emits two ASCII spaces in a row).
+**74 green + 21 fixture cases** (was 86 + 8; the drop is migration, not loss —
+every removed Kotlin test is a corpus case, and the corpus grew by 13).
+README carries the count in a badge and in the build snippet — update BOTH.
 UI has no JVM proof → device pass. A PR adding a template needs a fixture; never
 weaken a checksum/false-positive assertion.

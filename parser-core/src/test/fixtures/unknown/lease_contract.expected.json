@@ -1,0 +1,8 @@
+{
+  "note": "An ordinary document that happens to sit in the same folder. No fingerprint matches and no QR is present, so it is UNKNOWN with LOW confidence and it never reaches the user as a bill candidate. It does not even lean: none of the weak keywords appear, so the type question opens with nothing pre-highlighted.",
+  "sourceKind": "PDF_TEXT",
+  "looksLikeBill": false,
+  "docType": "UNKNOWN",
+  "docTypeConfidence": "LOW",
+  "docTypeLean": null
+}

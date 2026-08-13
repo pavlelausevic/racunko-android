@@ -46,6 +46,12 @@ class PayeeMemoryTest {
         assertFalse(r.providerSuggested)
         assertFalse(PayeeMemory.rememberable(bad))
         assertTrue(PayeeMemory.rememberable(account))
+
+        // An unproven account is not merely a lookup that misses — the lookup is
+        // not attempted at all. Prefill is the one place a remembered address can
+        // reach a file name without the document naming it, so the key it keys on
+        // has to be proven first.
+        PayeeMemory.prefill("123", "", "") { error("lookup must not be attempted") }
     }
 
     @Test

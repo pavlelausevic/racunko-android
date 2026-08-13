@@ -1,0 +1,10 @@
+{
+  "note": "A letter-suffixed house number is part of the address, not noise after it: `46b` matches. The book holds both `46b` and `46` for this entry, and they resolve to ONE label — a second pattern of the same entry is not a second address, so nothing turns ambiguous.",
+  "sourceKind": "PDF_TEXT",
+  "provider": "",
+  "addressLabel": "AJ46b",
+  "addressAmbiguous": false,
+  "month": null,
+  "amount": null,
+  "expectedName": "X_AJ46b_X_X"
+}

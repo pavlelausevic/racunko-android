@@ -1,0 +1,8 @@
+{
+  "note": "Nothing extracted at all — a scan that yielded no text and no QR. The empty document must fail loudly into the type question, never quietly into „it is probably a bill\": emptiness is the absence of evidence, not evidence.",
+  "sourceKind": "PDF_TEXT",
+  "looksLikeBill": false,
+  "docType": "UNKNOWN",
+  "docTypeConfidence": "LOW",
+  "docTypeLean": null
+}
