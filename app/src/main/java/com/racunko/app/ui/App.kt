@@ -54,6 +54,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -97,7 +98,10 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.os.LocaleListCompat
@@ -355,7 +359,7 @@ private fun MainScreen(vm: MainViewModel) {
         }
         if (state.busy) {
             LinearProgressIndicator(
-                Modifier.fillMaxWidth(), color = Palette.Amber, trackColor = Palette.Card2
+                Modifier.fillMaxWidth(), color = Palette.Blue, trackColor = Palette.Card2
             )
         }
 
@@ -492,8 +496,6 @@ private fun MainScreen(vm: MainViewModel) {
                 if (isOpen) {
                     items(cards.size, key = { cards[it].id }) { i ->
                         val card = cards[i]
-                        // v1.4.4 Change 3: both bill and confirmation cards are selectable.
-                        val selectable = card.status != CardStatus.ERROR
                         Card(
                             item = card,
                             vm = vm,
@@ -502,9 +504,13 @@ private fun MainScreen(vm: MainViewModel) {
                             onDue = { dueTarget = card.id },
                             selected = card.id in state.reportSelection,
                             selectMode = selectMode,
-                            selectable = selectable,
+                            // v1.4.4 Change 3: bills and confirmations alike are
+                            // selectable — and since v1.6.2 so are unreadable
+                            // cards, which otherwise could not be removed at all.
+                            selectable = true,
                             onLongPress = { vm.toggleReportSelection(card.id) },
-                            onSelectTap = { vm.toggleReportSelection(card.id) }
+                            onSelectTap = { vm.toggleReportSelection(card.id) },
+                            onRemove = { vm.selectOnly(card.id); showDeleteDialog = true }
                         )
                     }
                 }
@@ -674,58 +680,167 @@ private fun IntakeDialog(
         com.racunko.app.parser.registry.IntakeAction.WARN_SUGGEST_BILL -> R.string.intake_bill_title
         else -> R.string.intake_unknown_title
     }
-    // suggested choice first (highlighted), the override second
-    val suggested = pending.suggested
+    val bodyRes = when (pending.action) {
+        com.racunko.app.parser.registry.IntakeAction.WARN_SUGGEST_CONFIRMATION -> R.string.intake_conf_body
+        com.racunko.app.parser.registry.IntakeAction.WARN_SUGGEST_BILL -> R.string.intake_bill_body
+        else -> R.string.intake_unknown_body
+    }
+
+    // Which button carries the weight. On a WARNING the classifier has a real
+    // fingerprint, so its suggestion leads. On UNKNOWN nothing was recognized —
+    // and an unrecognized document is far more often a bank confirmation than a
+    // bill, because bills come from five known issuers while confirmations come
+    // from every bank there is. Leaving both buttons flat, as before, made the
+    // user choose with no help at all on exactly the case that offers none.
+    val leadMode = when {
+        warn -> pending.suggested ?: CardMode.POTVRDA
+        else -> CardMode.POTVRDA
+    }
+    val otherMode = if (leadMode == CardMode.POTVRDA) CardMode.RACUN else CardMode.POTVRDA
+    val leadLabel = when {
+        !warn -> stringResource(R.string.share_type_conf_short)
+        leadMode == CardMode.POTVRDA -> stringResource(R.string.intake_add_as_conf)
+        else -> stringResource(R.string.intake_add_as_bill)
+    }
+    val otherLabel = when {
+        !warn -> stringResource(R.string.share_type_bill)
+        otherMode == CardMode.RACUN -> stringResource(R.string.intake_keep_bill)
+        else -> stringResource(R.string.intake_keep_conf)
+    }
+
     AlertDialog(
         onDismissRequest = onCancel,
         containerColor = Palette.Card,
         title = {
-            Text(stringResource(titleRes), color = Palette.Text, fontSize = 16.sp, lineHeight = 22.sp)
-        },
-        text = {
-            Text(
-                stringResource(R.string.intake_cancel_hint),
-                color = Palette.Dim, fontSize = 11.sp
+            DialogText(
+                stringResource(titleRes),
+                color = Palette.Text, size = 18.sp, lineHeight = 24.sp,
+                weight = FontWeight.SemiBold
             )
         },
-        confirmButton = {
-            val confirmMode = when {
-                warn -> pending.suggested ?: CardMode.POTVRDA
-                else -> CardMode.RACUN
-            }
-            val confirmLabel = when {
-                !warn -> stringResource(R.string.share_type_bill)
-                confirmMode == CardMode.POTVRDA -> stringResource(R.string.intake_add_as_conf)
-                else -> stringResource(R.string.intake_add_as_bill)
-            }
-            val highlight = warn || suggested == CardMode.RACUN
-            TextButton(onClick = { onPick(confirmMode) }) {
-                Text(
-                    confirmLabel,
-                    color = if (highlight) Palette.Green else Palette.Muted,
-                    fontWeight = if (highlight) FontWeight.Bold else FontWeight.Normal
-                )
+        text = {
+            Column {
+                DialogText(stringResource(bodyRes), color = Palette.Muted, size = 13.sp, lineHeight = 19.sp)
+                Spacer(Modifier.height(10.dp))
+                DialogText(stringResource(R.string.intake_cancel_hint), color = Palette.Dim, size = 11.sp, lineHeight = 15.sp)
             }
         },
-        dismissButton = {
-            val dismissMode = when {
-                warn -> if ((pending.suggested ?: CardMode.POTVRDA) == CardMode.POTVRDA) CardMode.RACUN else CardMode.POTVRDA
-                else -> CardMode.POTVRDA
+        // Both choices live in confirmButton as one row of equal halves. Left to
+        // AlertDialog's own slots they were two text buttons of whatever width
+        // their labels happened to need, pushed to the right edge — which reads
+        // as two unrelated links rather than as one either/or.
+        confirmButton = {
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                DialogButton(otherLabel, fill = null, modifier = Modifier.weight(1f)) { onPick(otherMode) }
+                DialogButton(leadLabel, fill = Palette.Blue, modifier = Modifier.weight(1f)) { onPick(leadMode) }
             }
-            val dismissLabel = when {
-                !warn -> stringResource(R.string.share_type_conf)
-                dismissMode == CardMode.RACUN -> stringResource(R.string.intake_keep_bill)
-                else -> stringResource(R.string.intake_keep_conf)
-            }
-            val highlight = !warn && suggested == CardMode.POTVRDA
-            TextButton(onClick = { onPick(dismissMode) }) {
-                Text(
-                    dismissLabel,
-                    color = if (highlight) Palette.Green else Palette.Muted,
-                    fontWeight = if (highlight) FontWeight.Bold else FontWeight.Normal
-                )
-            }
-        }
+        },
+        dismissButton = null
+    )
+}
+
+/**
+ * One dialog button. [fill] null draws it outlined — the way out, the choice
+ * that changes nothing — and a colour fills it as the one the dialog is for.
+ */
+@Composable
+private fun DialogButton(
+    label: String,
+    fill: Color?,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
+) {
+    val shape = RoundedCornerShape(11.dp)
+    Box(
+        modifier
+            .clip(shape)
+            .background(fill ?: Color.Transparent, shape)
+            .border(1.dp, fill ?: Palette.Line, shape)
+            .clickable { onClick() }
+            .padding(vertical = 11.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            label,
+            color = if (fill != null) Palette.Bg else Palette.Text,
+            fontSize = 13.sp,
+            fontWeight = if (fill != null) FontWeight.Bold else FontWeight.Medium,
+            maxLines = 1, overflow = TextOverflow.Ellipsis
+        )
+    }
+}
+
+/**
+ * Every dialog's buttons: one row, two equal halves, the acting choice on the
+ * right. Left to AlertDialog's own slots they are two text buttons of whatever
+ * width their labels happen to need, pushed against the right edge — which
+ * reads as two unrelated links rather than as one decision, and gives a
+ * two-word label five times the target of a one-word one.
+ */
+@Composable
+private fun DialogChoices(
+    cancelLabel: String,
+    actionLabel: String,
+    actionFill: Color,
+    onCancel: () -> Unit,
+    onAction: () -> Unit
+) {
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        DialogButton(cancelLabel, fill = null, modifier = Modifier.weight(1f)) { onCancel() }
+        DialogButton(actionLabel, fill = actionFill, modifier = Modifier.weight(1f)) { onAction() }
+    }
+}
+
+/**
+ * An opt-in inside a dialog, wearing the same disc the lists select with — a
+ * square Material checkbox here was the app's second way of saying „chosen".
+ * Mark and label are centred as one group, so the dialog has a single axis
+ * instead of a left-aligned row under a centred title.
+ */
+@Composable
+private fun DialogCheck(checked: Boolean, label: String, onToggle: () -> Unit) {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(8.dp))
+            .clickable { onToggle() }
+            .padding(vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Center
+    ) {
+        SelectMark(selected = checked, modifier = Modifier.padding(end = 11.dp))
+        Text(
+            label,
+            color = Palette.Text, fontSize = 13.sp, lineHeight = 18.sp,
+            textAlign = TextAlign.Center
+        )
+    }
+}
+
+/**
+ * Dialog copy that sets its own alignment from how it actually wrapped: one line
+ * is centred, more than one is justified to both margins. A centred paragraph
+ * gives every line a different ragged start and reads as decoration; a justified
+ * one holds the block square against the dialog's own edges.
+ */
+@Composable
+private fun DialogText(
+    text: String,
+    color: Color,
+    size: TextUnit,
+    lineHeight: TextUnit,
+    weight: FontWeight = FontWeight.Normal
+) {
+    var multiline by remember(text) { mutableStateOf(false) }
+    Text(
+        text,
+        color = color, fontSize = size, lineHeight = lineHeight, fontWeight = weight,
+        textAlign = if (multiline) TextAlign.Justify else TextAlign.Center,
+        modifier = Modifier.fillMaxWidth(),
+        onTextLayout = { multiline = it.lineCount > 1 }
     )
 }
 
@@ -741,32 +856,38 @@ private fun DeleteDialog(
     AlertDialog(
         onDismissRequest = onDismiss,
         containerColor = Palette.Card,
-        title = { Text(stringResource(R.string.delete_title, count), color = Palette.Text) },
+        title = {
+            DialogText(
+                stringResource(R.string.delete_title, count),
+                color = Palette.Text, size = 18.sp, lineHeight = 24.sp,
+                weight = FontWeight.SemiBold
+            )
+        },
         text = {
             Column {
-                Row(
-                    Modifier.fillMaxWidth().clickable { alsoFiles = !alsoFiles },
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Checkbox(checked = alsoFiles, onCheckedChange = { alsoFiles = it })
-                    Text(stringResource(R.string.delete_also_files), color = Palette.Text, fontSize = 13.sp)
-                }
+                DialogCheck(
+                    checked = alsoFiles,
+                    label = stringResource(R.string.delete_also_files)
+                ) { alsoFiles = !alsoFiles }
                 if (alsoFiles) {
-                    Text(
+                    Spacer(Modifier.height(6.dp))
+                    DialogText(
                         stringResource(R.string.delete_counts, count, confirmations, qrs),
-                        color = Palette.Amber, fontSize = 12.sp, modifier = Modifier.padding(top = 4.dp)
+                        color = Palette.Amber, size = 12.sp, lineHeight = 17.sp
                     )
                 }
             }
         },
         confirmButton = {
-            TextButton(onClick = { onConfirm(alsoFiles) }) {
-                Text(stringResource(R.string.action_delete), color = Palette.Red, fontWeight = FontWeight.SemiBold)
-            }
+            DialogChoices(
+                cancelLabel = stringResource(R.string.btn_otkazi),
+                actionLabel = stringResource(R.string.action_delete),
+                actionFill = Palette.Red,
+                onCancel = onDismiss,
+                onAction = { onConfirm(alsoFiles) }
+            )
         },
-        dismissButton = {
-            TextButton(onClick = onDismiss) { Text(stringResource(R.string.btn_otkazi), color = Palette.Muted) }
-        }
+        dismissButton = null
     )
 }
 
@@ -781,19 +902,29 @@ private fun PurgeFirstDialog(
     AlertDialog(
         onDismissRequest = onDismiss,
         containerColor = Palette.Card,
-        title = { Text(stringResource(R.string.purge_title), color = Palette.Text) },
+        title = {
+            DialogText(
+                stringResource(R.string.purge_title),
+                color = Palette.Text, size = 18.sp, lineHeight = 24.sp,
+                weight = FontWeight.SemiBold
+            )
+        },
         text = {
-            Text(
+            DialogText(
                 stringResource(R.string.purge_text, bills, confirmations, qrs),
-                color = Palette.Muted, fontSize = 13.sp, lineHeight = 18.sp
+                color = Palette.Muted, size = 13.sp, lineHeight = 19.sp
             )
         },
         confirmButton = {
-            TextButton(onClick = onContinue) { Text(stringResource(R.string.purge_continue), color = Palette.Red) }
+            DialogChoices(
+                cancelLabel = stringResource(R.string.btn_otkazi),
+                actionLabel = stringResource(R.string.purge_continue),
+                actionFill = Palette.Red,
+                onCancel = onDismiss,
+                onAction = onContinue
+            )
         },
-        dismissButton = {
-            TextButton(onClick = onDismiss) { Text(stringResource(R.string.btn_otkazi), color = Palette.Muted) }
-        }
+        dismissButton = null
     )
 }
 
@@ -803,24 +934,29 @@ private fun PurgeFinalDialog(onConfirm: (Boolean) -> Unit, onDismiss: () -> Unit
     AlertDialog(
         onDismissRequest = onDismiss,
         containerColor = Palette.Card,
-        title = { Text(stringResource(R.string.purge_final_title), color = Palette.Red, fontWeight = FontWeight.Bold) },
+        title = {
+            DialogText(
+                stringResource(R.string.purge_final_title),
+                color = Palette.Red, size = 18.sp, lineHeight = 24.sp,
+                weight = FontWeight.Bold
+            )
+        },
         text = {
-            Row(
-                Modifier.fillMaxWidth().clickable { alsoPayees = !alsoPayees },
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Checkbox(checked = alsoPayees, onCheckedChange = { alsoPayees = it })
-                Text(stringResource(R.string.purge_also_payees), color = Palette.Text, fontSize = 13.sp)
-            }
+            DialogCheck(
+                checked = alsoPayees,
+                label = stringResource(R.string.purge_also_payees)
+            ) { alsoPayees = !alsoPayees }
         },
         confirmButton = {
-            TextButton(onClick = { onConfirm(alsoPayees) }) {
-                Text(stringResource(R.string.purge_final_confirm), color = Palette.Red, fontWeight = FontWeight.Bold)
-            }
+            DialogChoices(
+                cancelLabel = stringResource(R.string.btn_otkazi),
+                actionLabel = stringResource(R.string.purge_final_confirm),
+                actionFill = Palette.Red,
+                onCancel = onDismiss,
+                onAction = { onConfirm(alsoPayees) }
+            )
         },
-        dismissButton = {
-            TextButton(onClick = onDismiss) { Text(stringResource(R.string.btn_otkazi), color = Palette.Muted) }
-        }
+        dismissButton = null
     )
 }
 
@@ -1001,44 +1137,69 @@ private fun FileSection(
                     Ico(if (open) RIcons.ExpandMore else RIcons.ChevronRight, Palette.Dim, 17)
                     Spacer(Modifier.width(7.dp))
                 }
+                // v1.6.2: both texts are pinned to one line. On the confirmations
+                // tab the two trailing buttons are wider than on bills („Osveži"
+                // plus the longer picker label), which left this row too little
+                // room and wrapped the count onto a second line — on that tab
+                // only, which is why it read as a bug rather than as a squeeze.
+                // The title now gives way first, and the count never wraps.
                 Text(
                     stringResource(R.string.files_in_folder),
-                    color = Palette.Muted, fontSize = 13.sp, fontWeight = FontWeight.SemiBold
+                    color = Palette.Muted, fontSize = 13.sp, fontWeight = FontWeight.SemiBold,
+                    maxLines = 1, overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f, fill = false)
                 )
                 if (foldable) {
                     Spacer(Modifier.width(8.dp))
                     Text(
                         pluralStringResource(R.plurals.item_count, files.size, files.size),
-                        color = Palette.Dim, fontSize = 11.sp
+                        color = Palette.Dim, fontSize = 11.sp,
+                        maxLines = 1, softWrap = false
                     )
                 }
             }
+            // v1.6.2: „osveži" as a word cost this row about a fifth of its
+            // width and pushed the title into an ellipsis on the confirmations
+            // tab. It is a secondary action on an already-visible list, so an
+            // icon carries it — and the title fits again.
             if (open) {
-                TextButton(onClick = onRefresh) {
-                    Text(stringResource(R.string.refresh), color = Palette.Dim, fontSize = 12.sp)
+                IconButton(onClick = onRefresh, modifier = Modifier.size(34.dp)) {
+                    Ico(RIcons.Refresh, Palette.Dim, 17)
                 }
             }
             Box {
-                TextButton(onClick = {
-                    // Bills: a unified menu (scan / file / photo). Confirmations:
-                    // straight to the file picker (PDF or image).
-                    if (isBills) menuOpen = true else onPickFile()
-                }) {
-                    Ico(RIcons.Add, Palette.Blue, 15)
-                    Spacer(Modifier.width(5.dp))
-                    Text(stringResource(pickerLabelRes), color = Palette.Blue, fontSize = 12.sp)
+                // v1.6.2: the label is gone and the „+" carries it alone. It sits
+                // on a row already titled „Fajlovi u fascikli", so the word said
+                // what the position already says — and it was the widest thing
+                // here, which is what squeezed the title. The label survives as
+                // the content description, so screen readers still hear it.
+                val pickerLabel = stringResource(pickerLabelRes)
+                IconButton(
+                    onClick = { menuOpen = true },
+                    modifier = Modifier
+                        .size(38.dp)
+                        .semantics { contentDescription = pickerLabel }
+                ) {
+                    Ico(RIcons.Add, Palette.Blue, 20)
                 }
                 DropdownMenu(
                     expanded = menuOpen,
                     onDismissRequest = { menuOpen = false },
                     containerColor = Palette.Card2
                 ) {
-                    // 8d: live camera scanning.
-                    DropdownMenuItem(
-                        text = { Text(stringResource(R.string.add_scan), color = Palette.Text, fontSize = 13.sp) },
-                        leadingIcon = { Ico(RIcons.Camera, Palette.Blue) },
-                        onClick = { menuOpen = false; onScan() }
-                    )
+                    // v1.6.2: both tabs now open the same menu. Confirmations
+                    // used to jump straight into the file picker, which meant
+                    // the gallery was simply unreachable there — a photographed
+                    // receipt could only be added by first saving it as a file.
+                    // Scanning stays bills-only: it reads a live IPS QR, and
+                    // that always produces a bill, never a confirmation.
+                    if (isBills) {
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.add_scan), color = Palette.Text, fontSize = 13.sp) },
+                            leadingIcon = { Ico(RIcons.Camera, Palette.Blue) },
+                            onClick = { menuOpen = false; onScan() }
+                        )
+                    }
                     DropdownMenuItem(
                         text = { Text(stringResource(R.string.add_from_file), color = Palette.Text, fontSize = 13.sp) },
                         leadingIcon = { Ico(RIcons.Document, Palette.Blue) },
@@ -1066,15 +1227,18 @@ private fun FileSection(
                 if (row.processed) Modifier.fillMaxWidth().padding(vertical = 2.dp)
                 else Modifier.fillMaxWidth().clickable { onToggle(row.uriString) }.padding(vertical = 2.dp)
             Row(rowModifier, verticalAlignment = Alignment.CenterVertically) {
-                Checkbox(
-                    checked = row.uriString in selected,
-                    onCheckedChange = { onToggle(row.uriString) },
-                    enabled = !row.processed
+                // v1.6.2: the same teal disc the card list uses. Two different
+                // marks for the same act — „this one" — was the app speaking two
+                // dialects; a file picker is still picking.
+                SelectMark(
+                    selected = row.uriString in selected,
+                    enabled = !row.processed,
+                    modifier = Modifier.padding(start = 2.dp, end = 12.dp)
                 )
                 Text(
                     row.name,
                     color = if (row.processed) Palette.Dim else Palette.Text,
-                    fontSize = 13.sp, fontFamily = FontFamily.Monospace,
+                    fontSize = 13.sp,
                     maxLines = 1, overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.weight(1f)
                 )
@@ -1100,8 +1264,12 @@ private fun FileSection(
                 onClick = onProcess,
                 enabled = selected.isNotEmpty(),
                 modifier = Modifier.fillMaxWidth(),
+                // v1.6.2: teal, not amber. This is the primary action of the
+                // screen, and amber now means „something here is unproven" —
+                // a full-width amber slab read as a warning about the files
+                // rather than as the button that processes them.
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Palette.Amber, contentColor = Palette.Bg,
+                    containerColor = Palette.Blue, contentColor = Palette.Bg,
                     disabledContainerColor = Palette.Card2, disabledContentColor = Palette.Dim
                 )
             ) {
@@ -1126,7 +1294,8 @@ private fun Card(
     selectMode: Boolean = false,
     selectable: Boolean = true,
     onLongPress: () -> Unit = {},
-    onSelectTap: () -> Unit = {}
+    onSelectTap: () -> Unit = {},
+    onRemove: () -> Unit = {}
 ) {
     // v1.6: no per-card checkbox. A long press picks the card up and puts the
     // list into select mode; from then on a plain tap adds or removes cards.
@@ -1155,58 +1324,110 @@ private fun Card(
             )
     ) {
         Column(Modifier.padding(14.dp)) {
-            // top row: (selection mark) + original name + badge
+            val edit: ((String) -> Unit)? = if (selectMode) null else onEdit
+
+            // v1.6.2: the card leads with what a person came to read — WHO is
+            // asking and HOW MUCH — instead of with the file name. The four
+            // fields are still the file name and still tappable to edit; they
+            // are simply laid out by importance rather than strung together in
+            // one coloured row.
             Row(verticalAlignment = Alignment.CenterVertically) {
                 if (selectMode && selectable) {
                     SelectMark(selected)
-                    Spacer(Modifier.width(9.dp))
+                    Spacer(Modifier.width(11.dp))
                 }
-                Text(
-                    item.origName,
-                    color = Palette.Dim, fontSize = 11.sp, fontFamily = FontFamily.Monospace,
-                    maxLines = 1, overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.weight(1f)
-                )
-                Spacer(Modifier.width(8.dp))
-                Badge(item)
+                Column(Modifier.weight(1f)) {
+                    // An unreadable card has no provider to show and asking for
+                    // one is pointless — nothing was read. What identifies it is
+                    // the file name, so that leads instead.
+                    if (item.status == CardStatus.ERROR) {
+                        Text(
+                            item.currentName,
+                            color = Palette.Text, fontSize = 15.sp,
+                            fontWeight = FontWeight.SemiBold, lineHeight = 20.sp,
+                            maxLines = 2, overflow = TextOverflow.Ellipsis
+                        )
+                    } else {
+                        Seg(
+                            item.provider.ifEmpty { stringResource(R.string.seg_provider_missing) },
+                            missing = item.provider.isEmpty(),
+                            suggested = item.providerSuggested,
+                            size = 16.sp,
+                            weight = FontWeight.SemiBold,
+                            onClick = edit?.let { { it("provider") } }
+                        )
+                    }
+                    if (item.status != CardStatus.ERROR) {
+                        Spacer(Modifier.height(3.dp))
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Seg(
+                                item.address.ifEmpty { stringResource(R.string.seg_address_missing) },
+                                missing = item.address.isEmpty(),
+                                suggested = item.addressSuggested,
+                                size = 13.sp,
+                                color = Palette.Muted,
+                                onClick = edit?.let { { it("address") } }
+                            )
+                            Dot()
+                            Seg(
+                                item.month?.let { Months.token(it) }
+                                    ?: stringResource(R.string.seg_month_missing),
+                                missing = item.month == null,
+                                size = 13.sp,
+                                color = Palette.Muted,
+                                onClick = edit?.let { { it("month") } }
+                            )
+                        }
+                    }
+                }
+                if (item.status != CardStatus.ERROR) {
+                    Spacer(Modifier.width(10.dp))
+                    Column(horizontalAlignment = Alignment.End) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Seg(
+                                item.amount?.let { fmtAmount(it) }
+                                    ?: stringResource(R.string.seg_amount_missing),
+                                missing = item.amount == null,
+                                size = 19.sp,
+                                weight = FontWeight.Bold,
+                                onClick = edit?.let { { it("amount") } }
+                            )
+                            // Change 5: recipient-account checksum result.
+                            if (item.accountVerified) VerifiedTick()
+                        }
+                        Spacer(Modifier.height(3.dp))
+                        Badge(item)
+                    }
+                }
             }
             if (item.status == CardStatus.ERROR) {
                 Spacer(Modifier.height(8.dp))
-                Text(stringResource(R.string.error_read), color = Palette.Muted, fontSize = 13.sp)
+                Text(
+                    stringResource(R.string.error_read),
+                    color = Palette.Muted, fontSize = 13.sp, lineHeight = 19.sp
+                )
+                // v1.6.2: an unreadable card used to be a dead end — nothing to
+                // edit, no action, and not even selectable, so the only way out
+                // was to delete the file outside the app. It offers its own exit
+                // now, and it is selectable like any other card.
+                Spacer(Modifier.height(11.dp))
+                ActionButton(
+                    stringResource(R.string.btn_ukloni_karticu),
+                    Palette.Red,
+                    Modifier.fillMaxWidth(),
+                    RIcons.Delete
+                ) { onRemove() }
                 return@Column
             }
-            Spacer(Modifier.height(8.dp))
 
-            // filename segments — inert while selecting, so a tap selects
-            val edit: ((String) -> Unit)? = if (selectMode) null else onEdit
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(5.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
-                if (item.mode == CardMode.POTVRDA) {
-                    Seg("uplata", Palette.Green, missing = false, onClick = null)
-                    Underscore()
-                }
-                Seg(item.provider.ifEmpty { stringResource(R.string.seg_provider_missing) },
-                    Palette.Amber, item.provider.isEmpty(), suggested = item.providerSuggested,
-                    onClick = edit?.let { { it("provider") } })
-                Underscore()
-                Seg(item.address.ifEmpty { stringResource(R.string.seg_address_missing) },
-                    Palette.Blue, item.address.isEmpty(), suggested = item.addressSuggested,
-                    onClick = edit?.let { { it("address") } })
-                Underscore()
-                Seg(item.month?.let { Months.token(it) } ?: stringResource(R.string.seg_month_missing),
-                    Palette.Violet, item.month == null,
-                    onClick = edit?.let { { it("month") } })
-                Underscore()
-                Seg(item.amount?.toString() ?: stringResource(R.string.seg_amount_missing),
-                    Palette.Green, item.amount == null,
-                    onClick = edit?.let { { it("amount") } })
-                // Change 5: recipient-account checksum result, next to the amount.
-                if (item.accountVerified) VerifiedTick()
-                Text(
-                    "." + item.currentName.substringAfterLast('.', "pdf"),
-                    color = Palette.Dim, fontSize = 12.sp, fontFamily = FontFamily.Monospace,
-                    modifier = Modifier.align(Alignment.CenterVertically)
-                )
-            }
+            // The file name itself, once, as the quiet record of what the four
+            // fields above produced — no longer the headline it used to be.
+            Spacer(Modifier.height(9.dp))
+            Text(
+                item.currentName,
+                color = Palette.Dim, fontSize = 11.sp,
+                maxLines = 1, overflow = TextOverflow.Ellipsis
+            )
 
             // v1.6: deadline + reminder. Empty and optional when the bill
             // prints no deadline — never invented.
@@ -1218,9 +1439,9 @@ private fun Card(
             // Change 6: legend for any payee-memory-prefilled segment above.
             if (item.providerSuggested || item.addressSuggested) {
                 Text(
-                    "• " + stringResource(R.string.suggested),
-                    color = Palette.Violet, fontSize = 10.sp,
-                    modifier = Modifier.padding(top = 4.dp)
+                    stringResource(R.string.suggested),
+                    color = Palette.Amber, fontSize = 10.sp,
+                    modifier = Modifier.padding(top = 5.dp)
                 )
             }
 
@@ -1312,7 +1533,7 @@ private fun Card(
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 if (item.mode == CardMode.RACUN && item.hasQr) {
                     ActionButton(
-                        stringResource(R.string.btn_qr_slika), Palette.Violet,
+                        stringResource(R.string.btn_qr_slika), Palette.Blue,
                         Modifier.weight(1f), RIcons.QrCode
                     ) { vm.saveQrToGallery(item.id) }
                 }
@@ -1414,32 +1635,49 @@ private fun Badge(item: CardItem) {
     }
 }
 
+/**
+ * One editable field of the file name, rendered as plain text rather than as a
+ * boxed chip.
+ *
+ * Every segment used to be a bordered box in its own hue, which made a card look
+ * like a form even when nothing was wrong with it. A value we can prove needs no
+ * decoration at all; only the two states that want a person get marked, and both
+ * get the SAME mark, because "look at this" is one idea:
+ *
+ *  - **missing** — the placeholder in amber, underlined. We could not prove it
+ *    and will not guess it.
+ *  - **suggested** — a real value, underlined. It came from payee memory rather
+ *    than from this document, so it is worth a glance before it becomes a name.
+ */
 @Composable
 private fun Seg(
     text: String,
-    color: Color,
     missing: Boolean,
+    onClick: (() -> Unit)?,
     suggested: Boolean = false,
-    onClick: (() -> Unit)?
+    size: TextUnit = 13.sp,
+    weight: FontWeight = FontWeight.Normal,
+    color: Color = Palette.Text
 ) {
-    val shape = RoundedCornerShape(9.dp)
-    // A "predloženo" (payee-memory) value is tinted violet with a violet border
-    // so the user sees it was filled for them and can safely overwrite it.
-    val borderColor = when {
-        missing -> Palette.Red
-        suggested -> Palette.Violet
-        else -> Palette.Line
-    }
-    var m = Modifier
-        .background(Palette.Card2, shape)
-        .border(1.dp, borderColor, shape)
+    val marked = missing || suggested
+    var m = Modifier.clip(RoundedCornerShape(6.dp))
     if (onClick != null) m = m.clickable { onClick() }
     Text(
         text,
-        color = if (missing) Palette.Red else if (suggested) Palette.Violet else color,
-        fontSize = 14.sp, fontFamily = FontFamily.Monospace,
-        modifier = m.padding(horizontal = 9.dp, vertical = 5.dp)
+        color = if (missing) Palette.Amber else color,
+        fontSize = size,
+        fontWeight = weight,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+        textDecoration = if (marked) TextDecoration.Underline else null,
+        modifier = m.padding(horizontal = 3.dp, vertical = 2.dp)
     )
+}
+
+/** The „·" that separates address from month. */
+@Composable
+private fun Dot() {
+    Text("·", color = Palette.Dim, fontSize = 13.sp, modifier = Modifier.padding(horizontal = 5.dp))
 }
 
 /** „Napravi QR" — enabled only when the core gate holds; otherwise says why. */
@@ -1489,10 +1727,6 @@ private fun VerifiedTick() {
     )
 }
 
-@Composable
-private fun Underscore() {
-    Text("_", color = Palette.Dim, fontSize = 13.sp, fontFamily = FontFamily.Monospace)
-}
 
 @Composable
 private fun Chip(text: String, color: Color, onClick: () -> Unit) {
@@ -1843,9 +2077,13 @@ private fun SettingsScreen(vm: MainViewModel, onPurge: () -> Unit, onDismiss: ()
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(vertical = 3.dp)) {
                     // „sz" is the filename token, not a word anybody recognizes on
                     // sight — the row is labelled with what it stands for.
+                    // Muted, not amber: these five are what Računko already
+                    // recognizes, which is the calmest fact on the screen. Amber
+                    // now means „something here wants you", and five steady
+                    // labels wearing it made the section look like a problem.
                     Text(
                         providerRowLabel(overrides[i].first),
-                        color = Palette.Amber, fontSize = 13.sp, fontFamily = FontFamily.Monospace,
+                        color = Palette.Muted, fontSize = 13.sp, fontFamily = FontFamily.Monospace,
                         lineHeight = 15.sp,
                         modifier = Modifier.width(92.dp)
                     )
@@ -1955,17 +2193,24 @@ private fun SpaceTagPrompt(canRemember: Boolean, onApply: (String, Boolean) -> U
             )
             if (canRemember) {
                 Row(
-                    Modifier.fillMaxWidth().clickable { rememberBind = !rememberBind },
+                    Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(8.dp))
+                        .clickable { rememberBind = !rememberBind }
+                        .padding(vertical = 6.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Checkbox(checked = rememberBind, onCheckedChange = { rememberBind = it })
+                    // The last square checkbox in the app. It sits inline on a
+                    // card rather than in a dialog, so it stays left-aligned —
+                    // only the mark itself is unified.
+                    SelectMark(selected = rememberBind, modifier = Modifier.padding(end = 11.dp))
                     Text(stringResource(R.string.space_tag_remember), color = Palette.Text, fontSize = 12.sp)
                 }
             } else {
                 Spacer(Modifier.height(6.dp))
             }
             ActionButton(
-                stringResource(R.string.btn_sacuvaj), Palette.Amber, Modifier.fillMaxWidth()
+                stringResource(R.string.btn_sacuvaj), Palette.Blue, Modifier.fillMaxWidth()
             ) { if (value.isNotBlank()) onApply(value, canRemember && rememberBind) }
         }
     }
@@ -2092,17 +2337,33 @@ private fun <T> FlowRowChips(
 
 // ------------------------------------------------ selection · due · reminder
 
-/** The teal disc that replaced the per-card checkbox. */
+/**
+ * The teal disc that replaced every checkbox in the app — on a card and in the
+ * folder list alike, so selecting means one thing and looks like one thing.
+ *
+ * [enabled] false is the already-processed file: still visible, so the row does
+ * not jump when it becomes selectable again, but drawn as an outline the eye
+ * skips.
+ */
 @Composable
-private fun SelectMark(selected: Boolean) {
+private fun SelectMark(
+    selected: Boolean,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true
+) {
+    val ring = when {
+        !enabled -> Palette.Line
+        selected -> Palette.Blue
+        else -> Palette.Dim
+    }
     Box(
-        Modifier
+        modifier
             .size(20.dp)
-            .background(if (selected) Palette.Blue else Color.Transparent, CircleShape)
-            .border(1.5.dp, if (selected) Palette.Blue else Palette.Dim, CircleShape),
+            .background(if (selected && enabled) Palette.Blue else Color.Transparent, CircleShape)
+            .border(1.5.dp, ring, CircleShape),
         contentAlignment = Alignment.Center
     ) {
-        if (selected) Ico(RIcons.Check, Palette.Bg, 13)
+        if (selected && enabled) Ico(RIcons.Check, Palette.Bg, 13)
     }
 }
 
@@ -2380,52 +2641,48 @@ private fun SummaryCard(bills: List<CardItem>) {
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp)
     ) {
-        Row(Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
-            Box(
-                Modifier
-                    .size(38.dp)
-                    .background(Palette.Blue.copy(alpha = 0.13f), CircleShape),
-                contentAlignment = Alignment.Center
-            ) { Ico(RIcons.Clock, Palette.Blue, 18) }
-            Spacer(Modifier.width(12.dp))
-            Column(Modifier.weight(1f)) {
-                SummaryLine(
-                    stringResource(R.string.summary_unpaid),
-                    unpaid.sumOf { it.amount ?: 0L }, unpaid.size,
-                    Palette.Text, Palette.Blue
+        // v1.6.2: one number leads. What is still owed is the only figure a
+        // person opens this app to see, so it gets the size; what is already
+        // paid is reassurance and sits under a rule, quiet. The two used to be
+        // near-equal rows behind a clock icon, which made the eye choose.
+        Column(Modifier.padding(horizontal = 16.dp, vertical = 15.dp)) {
+            Row(verticalAlignment = Alignment.Bottom) {
+                Text(
+                    fmtAmount(unpaid.sumOf { it.amount ?: 0L }),
+                    color = Palette.Text, fontSize = 30.sp, fontWeight = FontWeight.Bold
                 )
-                Spacer(Modifier.height(5.dp))
-                SummaryLine(
+                Spacer(Modifier.width(6.dp))
+                Text(
+                    "RSD",
+                    color = Palette.Muted, fontSize = 13.sp, fontWeight = FontWeight.Medium,
+                    modifier = Modifier.padding(bottom = 4.dp)
+                )
+            }
+            Spacer(Modifier.height(2.dp))
+            Text(
+                stringResource(R.string.summary_unpaid) + "  ·  " +
+                    pluralStringResource(R.plurals.bill_count, unpaid.size, unpaid.size),
+                color = Palette.Muted, fontSize = 13.sp
+            )
+            Spacer(Modifier.height(13.dp))
+            HorizontalDivider(color = Palette.Line)
+            Spacer(Modifier.height(11.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
                     stringResource(R.string.summary_paid),
-                    paid.sumOf { it.amount ?: 0L }, paid.size,
-                    Palette.Muted, Palette.Green
+                    color = Palette.Muted, fontSize = 13.sp, modifier = Modifier.weight(1f)
+                )
+                Text(
+                    fmtAmount(paid.sumOf { it.amount ?: 0L }),
+                    color = Palette.Green, fontSize = 15.sp, fontWeight = FontWeight.SemiBold
+                )
+                Spacer(Modifier.width(5.dp))
+                Text(
+                    pluralStringResource(R.plurals.bill_count, paid.size, paid.size),
+                    color = Palette.Dim, fontSize = 11.sp, maxLines = 1, softWrap = false
                 )
             }
         }
-    }
-}
-
-@Composable
-private fun SummaryLine(
-    label: String,
-    amount: Long,
-    count: Int,
-    labelColor: Color,
-    valueColor: Color
-) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Text(label, color = labelColor, fontSize = 12.5.sp, modifier = Modifier.weight(1f))
-        Text(
-            fmtAmount(amount),
-            color = valueColor, fontSize = 14.sp,
-            fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace
-        )
-        Text(" RSD", color = Palette.Dim, fontSize = 10.sp)
-        Spacer(Modifier.width(7.dp))
-        Text(
-            pluralStringResource(R.plurals.bill_count, count, count),
-            color = Palette.Dim, fontSize = 10.5.sp
-        )
     }
 }
 
@@ -2469,8 +2726,8 @@ private fun FilterPill(text: String, count: Int, active: Boolean, onClick: () ->
         Text(
             text,
             color = if (active) Palette.Blue else Palette.Muted,
-            fontSize = 12.sp, fontFamily = FontFamily.Monospace,
-            fontWeight = if (active) FontWeight.Bold else FontWeight.Normal
+            fontSize = 12.5.sp,
+            fontWeight = if (active) FontWeight.SemiBold else FontWeight.Normal
         )
         Spacer(Modifier.width(5.dp))
         Text(
@@ -2503,15 +2760,19 @@ private fun AddressGroupHeader(
         ) {
             Ico(if (expanded) RIcons.ExpandMore else RIcons.ChevronRight, Palette.Dim, 17)
             Spacer(Modifier.width(7.dp))
+            // The address label is a heading, not a value: it reads as type, in
+            // the ordinary text colour. Teal here made every section header look
+            // like a link to somewhere else.
             Text(
                 label.ifEmpty { stringResource(R.string.group_no_address) },
-                color = if (label.isEmpty()) Palette.Red else Palette.Blue,
-                fontSize = 14.sp, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold
+                color = if (label.isEmpty()) Palette.Amber else Palette.Text,
+                fontSize = 15.sp, fontWeight = FontWeight.SemiBold,
+                maxLines = 1, overflow = TextOverflow.Ellipsis
             )
             Spacer(Modifier.width(9.dp))
             Text(
                 pluralStringResource(R.plurals.item_count, cards.size, cards.size),
-                color = Palette.Dim, fontSize = 11.sp
+                color = Palette.Dim, fontSize = 11.sp, maxLines = 1, softWrap = false
             )
             Spacer(Modifier.weight(1f))
             if (unpaid > 0) {
@@ -2524,11 +2785,18 @@ private fun AddressGroupHeader(
                 )
                 Spacer(Modifier.width(7.dp))
             }
-            Text(
-                fmtAmount(cards.sumOf { it.amount ?: 0L }),
-                color = Palette.Green, fontSize = 13.sp,
-                fontFamily = FontFamily.Monospace, fontWeight = FontWeight.SemiBold
-            )
+            // Sum only what was actually read. `it.amount ?: 0` turned „we could
+            // not read a single amount here" into „this section costs 0", which
+            // is the one thing the app must never do: state a number it does not
+            // have. With nothing proven, the column stays empty.
+            val known = cards.mapNotNull { it.amount }
+            if (known.isNotEmpty()) {
+                Text(
+                    fmtAmount(known.sum()),
+                    color = Palette.Text, fontSize = 15.sp, fontWeight = FontWeight.SemiBold,
+                    maxLines = 1, softWrap = false
+                )
+            }
         }
         HorizontalDivider(color = Palette.Line, modifier = Modifier.padding(horizontal = 16.dp))
     }

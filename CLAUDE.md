@@ -92,6 +92,38 @@ nothing a user depends on broke, so it is not 2.0. Reserve 2.0 for the JSON
 fixture corpus / a consumable `:parser-core` artifact / real system
 notifications.
 
+**v1.6.2 executed 2026-08-13** — second visual pass + the corpus migration.
+THE RULE that drives the repaint: **colour marks state, never category.** The
+old palette gave each filename segment its own hue (gold provider / teal address
+/ lime month / emerald amount) on green-tinted surfaces — legible once explained,
+busy otherwise. Now: neutral near-black surfaces, teal the ONLY accent, and just
+two things marked, both the same way — a field we could not prove (amber,
+underlined) and a value from payee memory (underlined). `Palette.Violet` is GONE;
+its 5 usages moved to amber/teal. Card leads with provider + amount as the hero,
+address · month muted under it, file name once and quiet; every field still taps
+to edit. `Seg` is plain text, not a bordered chip. SummaryCard leads with ONE
+number. Proportional font everywhere EXCEPT machine values (accounts, references,
+QR payloads, filename tokens in Settings) — that split is deliberate.
+**`themes.xml` hardcodes windowBackground/statusBarColor/navigationBarColor and
+must be kept equal to `Palette.Bg`** — it paints before Compose starts, so a
+stale value shows as a tinted strip that no repaint fixes (cost me one device
+pass to find).
+**Dialogs now share one language**: `DialogChoices` (one row, two EQUAL halves,
+action filled / exit outlined), `DialogCheck` (the same teal disc the lists use,
+centred with its label), `DialogText` (sets its own alignment from `onTextLayout`
+— one line centred, more justified). Applied to intake, delete, and both purge
+steps. On UNKNOWN the intake dialog leads with **Potvrda**, because bills come
+from five known issuers while confirmations come from every bank.
+**Two real bugs found only on the device:** (1) an unreadable card was a dead end
+— not selectable (`selectable = card.status != ERROR`) and it `return@Column`-ed
+before any action, so it could not be removed from the app at all; it now carries
+„Ukloni ovu karticu" + `MainViewModel.selectOnly`. (2) the Potvrde „+" jumped
+straight to the file picker, so the GALLERY was unreachable there; both tabs now
+open the same menu, scan stays bills-only (live QR always yields a bill).
+Section totals sum only amounts that were READ (`?: 0` claimed „this section
+costs 0"); messages no longer say „PDF" when the file is an image.
+versionCode 10 / versionName 1.6.2, `## [1.6.2]` in CHANGELOG.
+
 **v1.6.0 executed 2026-08-12** — full visual redesign + deadlines. UI: Theme.kt
 repainted (deep green + turquoise; the names in `Palette` deliberately KEPT —
 `Amber`→gold, `Blue`→turquoise, `Violet`→lemon, `Green`→emerald; `Palette.Dot`

@@ -787,6 +787,16 @@ class MainViewModel(
         )
     }
 
+    /**
+     * Selects exactly one card, discarding whatever was selected before. The
+     * „Ukloni" action on an unreadable card uses it: that card offers no other
+     * action, so its button has to mean THAT card and nothing that happened to
+     * be ticked earlier.
+     */
+    fun selectOnly(cardId: String) {
+        applySelection(setOf(cardId))
+    }
+
     fun clearReport() {
         _state.value = _state.value.copy(reportText = null)
         applySelection(emptySet())

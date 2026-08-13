@@ -69,6 +69,13 @@ object RIcons {
         moveTo(9.5f, 6.5f); lineTo(15f, 12f); lineTo(9.5f, 17.5f)
     }
 
+    /** Circular arrow, open at the top-right, with the arrowhead on that gap. */
+    val Refresh: ImageVector = stroked("refresh") {
+        moveTo(19f, 12f)
+        arcToRelative(7f, 7f, 0f, true, true, -2.05f, -4.95f)
+        moveTo(19f, 4.2f); lineTo(19f, 8f); lineTo(15.2f, 8f)
+    }
+
     val ArrowBack: ImageVector = stroked("arrow_back") {
         moveTo(19f, 12f); lineTo(5f, 12f)
         moveTo(11f, 6f); lineTo(5f, 12f); lineTo(11f, 18f)

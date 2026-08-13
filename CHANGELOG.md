@@ -1,5 +1,58 @@
 # Changelog
 
+## [1.6.2] — 2026-08-13
+
+Mirnije lice i jedan izlaz koji je nedostajao. Aplikacija radi isto — samo se
+lakše čita, i više ne ume da te zaključa pred nečitljivim dokumentom.
+
+### Promenjeno
+- **Boja sada označava stanje, ne vrstu polja.** Svaki deo imena fajla je ranije
+  imao svoju boju — zlatna pružalac, tirkiz adresa, limun mesec, smaragd iznos —
+  uz zeleno tonirane površine. To je bilo čitljivo onome kome je značenje boja
+  objašnjeno, a bučno svima ostalima. Sada je površina neutralno crna, tirkiz je
+  jedini akcenat, a obeležava se **samo ono što traži tebe**: nedokazano polje i
+  vrednost preuzeta iz memorije primalaca. Oboje istom oznakom, jer je „pogledaj
+  ovo" jedna ideja.
+- **Kartica vodi sa onim zbog čega joj prilaziš** — ko traži i koliko. Pružalac
+  levo, iznos desno, adresa i mesec ispod prigušeno; ime fajla se prikazuje
+  jednom, tiho. Svako polje se i dalje tapka radi izmene.
+- **Zaglavlje liste** vodi jednim brojem umesto dva skoro jednaka reda.
+- **Svi dijalozi govore jednim jezikom**: dva dugmeta jednake širine umesto dva
+  teksta različite dužine gurnuta uz ivicu, isti okrugli marker izbora kao u
+  listama umesto kvadratnog polja, i tekst koji sam bira poravnanje — jedan red
+  centriran, više redova ravno na obe margine.
+- **Upit „račun ili potvrda?"** je skraćen na jednu frazu, a kad se dokument ne
+  prepozna vodi **Potvrda** — računi dolaze od pet poznatih izdavalaca, a potvrde
+  od svih banaka redom.
+- **Traka „Fajlovi u fascikli"** više ne prelama broj stavki: dugmad su postala
+  ikonice, pa naslov opet staje.
+- Na kartici Potvrde **„+" sada nudi i galeriju**. Ranije je skakao pravo u birač
+  fajlova, pa se fotografisana potvrda mogla dodati samo ako je prethodno
+  sačuvana kao fajl. Skeniranje ostaje samo uz račune, jer čita QR uživo.
+
+### Popravljeno
+- **Nečitljiv dokument se sada može ukloniti iz aplikacije.** Takva kartica nije
+  bila selektabilna i nije imala nijedno dugme, pa se jedini izlaz bio obrisati
+  fajl van aplikacije. Sada nosi „Ukloni ovu karticu" i bira se kao svaka druga.
+- Kartica sa greškom kaže **koji je fajl** u pitanju; ranije je vodila sa
+  „pružalac?", a ime fajla se nije videlo.
+- Poruke više ne tvrde da je dokument PDF kada je slika.
+- Zbir sekcije se **ne izmišlja**: ako nijedan iznos nije pročitan, kolona ostaje
+  prazna umesto da piše `0`.
+- Statusna i navigaciona traka prate boju aplikacije; ostajale su u staroj.
+
+### Za one koji rade na kodu
+- **Fixture korpus: 8 → 21 slučaj**, uz tri nove grupe bez izdavaoca —
+  `address/` (granice poklapanja i pravilo da se adresa nikad ne pogađa),
+  `confirmation/` i `unknown/`. Schema je dobila `addressBook`, `looksLikeBill`,
+  `docType`/`docTypeConfidence`/`docTypeLean`; `spaceId` je prevezan na put koji
+  zaista pravi ime fajla.
+- Testovi 86 → 74. **To je selidba, ne gubitak** — svaki uklonjen Kotlin test
+  postoji kao slučaj u korpusu, a ono što je ostalo u Kotlinu ostalo je iz
+  zapisanog razloga: algoritam, uparivanje i wiring fixtura ne može da izrazi.
+  Merilo je zapisano u TESTING.md: *može li port da pusti ovaj slučaj bez ijedne
+  linije Kotlina?*
+
 ## [1.6.1] — 2026-08-13
 
 Bez izmena u ponašanju aplikacije — samo je APK skoro upola manji.

@@ -24,7 +24,7 @@
     <string name="refresh">osveži</string>
 
     <string name="processing">Čitam %1$s …</string>
-    <string name="error_read">Ne mogu da pročitam ovaj PDF. Proveri da li je fajl ispravan.</string>
+    <string name="error_read">Ne mogu da pročitam ovaj fajl. Proveri da li je ispravan i da li je pravog tipa.</string>
 
     <string name="badge_qr_ok">QR ✓</string>
     <string name="badge_ok">prepoznato</string>
@@ -49,7 +49,7 @@
     <string name="hide_qr">sakrij QR</string>
     <string name="share_qr">podeli QR sliku</string>
     <string name="add_confirmation">dodaj potvrdu</string>
-    <string name="qr_missing">QR kod nije pronađen u ovom PDF-u</string>
+    <string name="qr_missing">QR kod nije pronađen u ovom dokumentu</string>
     <string name="pick_bill_to_pair">Upari sa računom:</string>
     <string name="pick_confirmation">Izaberi potvrdu iz fascikle „potvrde":</string>
     <string name="no_unpaired_bills">Nema zapamćenih neuparenih računa.</string>
@@ -148,13 +148,18 @@
     <string name="cta_sifarnik_title">Napravi šifarnik adresa</string>
     <string name="cta_sifarnik_text">Adrese su jedino što Računko ne može sam da izvede. Sa šifarnikom (skraćenica + tekst adrese sa računa) fajlovi se sami imenuju po lokaciji, npr. infostan_BDS95_maj26_11152. Možeš da nastaviš i bez njega — adresa ostaje „adresa?" za ručni unos.</string>
     <string name="cta_sifarnik_btn">Napravi šifarnik</string>
-    <string name="intake_conf_title">Ovaj dokument izgleda kao potvrda o plaćanju, ne kao račun. Šta želiš?</string>
-    <string name="intake_bill_title">Ovaj dokument izgleda kao račun, ne kao potvrda. Šta želiš?</string>
-    <string name="intake_unknown_title">Nismo uspeli da prepoznamo tip dokumenta. Je li ovo račun ili potvrda?</string>
+    <string name="intake_conf_title">Izgleda kao potvrda</string>
+    <string name="intake_bill_title">Izgleda kao račun</string>
+    <string name="intake_unknown_title">Račun ili potvrda?</string>
+    <string name="intake_conf_body">Dodaješ ga među račune.</string>
+    <string name="intake_bill_body">Dodaješ ga među potvrde.</string>
+    <string name="intake_unknown_body">Nismo prepoznali tip ovog dokumenta.</string>
+    <string name="btn_ukloni_karticu">Ukloni ovu karticu</string>
+    <string name="share_type_conf_short">Potvrda</string>
     <string name="intake_add_as_conf">Dodaj kao potvrdu</string>
     <string name="intake_add_as_bill">Dodaj kao račun</string>
-    <string name="intake_keep_bill">Ipak dodaj kao račun</string>
-    <string name="intake_keep_conf">Ipak dodaj kao potvrdu</string>
+    <string name="intake_keep_bill">Ipak kao račun</string>
+    <string name="intake_keep_conf">Ipak kao potvrdu</string>
     <string name="intake_cancel_hint">Dodir van prozora otkazuje ovaj fajl.</string>
     <string name="space_tag_title">Isti naziv već postoji — dodaj oznaku prostora</string>
     <string name="space_tag_hint">npr. G1, STAN, LOKAL</string>
@@ -164,7 +169,7 @@
     <string name="toast_deleted">Obrisano: %1$d</string>
     <string name="toast_purged">Fascikla ispražnjena</string>
     <string name="delete_title">Obriši izabrane (%1$d)?</string>
-    <string name="delete_also_files">Obriši i fajlove iz fascikle (PDF/slike + QR)</string>
+    <string name="delete_also_files">Obriši i fajlove (PDF, slike, QR)</string>
     <string name="delete_counts">Brišem: %1$d računa, %2$d potvrda, %3$d QR kodova</string>
     <string name="settings_purge">Isprazni fasciklu</string>
     <string name="purge_title">Isprazni fasciklu?</string>
@@ -200,7 +205,7 @@
     <string name="btn_make_qr">Napravi QR</string>
     <string name="make_qr_need_account">potrebna potvrda računa</string>
     <string name="make_qr_need_amount">nedostaje iznos</string>
-    <string name="suggested">predloženo</string>
+    <string name="suggested">• predloženo, proveri</string>
     <string name="add_scan">Skeniraj račun</string>
     <string name="add_from_file">Dodaj iz fajla</string>
     <string name="add_photo">Dodaj fotografiju</string>

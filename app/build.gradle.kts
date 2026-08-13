@@ -16,8 +16,8 @@ android {
         applicationId = "com.racunko.app"
         minSdk = 29
         targetSdk = 36
-        versionCode = 9
-        versionName = "1.6.1"
+        versionCode = 10
+        versionName = "1.6.2"
 
         // Size: the x86/x86_64 slices of ML Kit and Tesseract are ~35 MB of the
         // gms APK and ~16 MB of the foss one, and they exist for emulators only —

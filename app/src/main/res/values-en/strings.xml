@@ -24,7 +24,7 @@
     <string name="refresh">refresh</string>
 
     <string name="processing">Reading %1$s …</string>
-    <string name="error_read">Cannot read this PDF. Check that the file is valid.</string>
+    <string name="error_read">Cannot read this file. Check that it is valid and of the expected type.</string>
 
     <string name="badge_qr_ok">QR ✓</string>
     <string name="badge_ok">recognized</string>
@@ -49,7 +49,7 @@
     <string name="hide_qr">hide QR</string>
     <string name="share_qr">share QR image</string>
     <string name="add_confirmation">add confirmation</string>
-    <string name="qr_missing">No QR code found in this PDF</string>
+    <string name="qr_missing">No QR code found in this document</string>
     <string name="pick_bill_to_pair">Pair with bill:</string>
     <string name="pick_confirmation">Pick a confirmation from the "potvrde" folder:</string>
     <string name="no_unpaired_bills">No remembered unpaired bills.</string>
@@ -142,13 +142,18 @@
     <string name="cta_sifarnik_title">Build your address book</string>
     <string name="cta_sifarnik_text">Addresses are the one thing Računko cannot derive on its own. With the address book (short label + address text from the bill) files are named by location automatically, e.g. infostan_BDS95_maj26_11152. You can continue without it — the address stays an editable "address?" chip.</string>
     <string name="cta_sifarnik_btn">Build address book</string>
-    <string name="intake_conf_title">This document looks like a payment confirmation, not a bill. What would you like?</string>
-    <string name="intake_bill_title">This document looks like a bill, not a confirmation. What would you like?</string>
-    <string name="intake_unknown_title">We could not recognize the document type. Is this a bill or a confirmation?</string>
+    <string name="intake_conf_title">Looks like a confirmation</string>
+    <string name="intake_bill_title">Looks like a bill</string>
+    <string name="intake_unknown_title">Bill or confirmation?</string>
+    <string name="intake_conf_body">You are adding it to bills.</string>
+    <string name="intake_bill_body">You are adding it to confirmations.</string>
+    <string name="intake_unknown_body">We could not recognize this document type.</string>
+    <string name="btn_ukloni_karticu">Remove this card</string>
+    <string name="share_type_conf_short">Confirmation</string>
     <string name="intake_add_as_conf">Add as confirmation</string>
     <string name="intake_add_as_bill">Add as bill</string>
-    <string name="intake_keep_bill">Add as bill anyway</string>
-    <string name="intake_keep_conf">Add as confirmation anyway</string>
+    <string name="intake_keep_bill">Bill instead</string>
+    <string name="intake_keep_conf">Confirmation instead</string>
     <string name="intake_cancel_hint">Tapping outside skips this file.</string>
     <string name="space_tag_title">This name already exists — add a space tag</string>
     <string name="space_tag_hint">e.g. G1, STAN, LOKAL</string>
@@ -158,7 +163,7 @@
     <string name="toast_deleted">Deleted: %1$d</string>
     <string name="toast_purged">Folder emptied</string>
     <string name="delete_title">Delete selected (%1$d)?</string>
-    <string name="delete_also_files">Also delete the files (PDFs/images + QR)</string>
+    <string name="delete_also_files">Delete the files too (PDF, images, QR)</string>
     <string name="delete_counts">Deleting: %1$d bills, %2$d confirmations, %3$d QR codes</string>
     <string name="settings_purge">Empty the folder</string>
     <string name="purge_title">Empty the folder?</string>
@@ -194,7 +199,7 @@
     <string name="btn_make_qr">Make QR</string>
     <string name="make_qr_need_account">account needs confirmation</string>
     <string name="make_qr_need_amount">amount missing</string>
-    <string name="suggested">suggested</string>
+    <string name="suggested">• suggested, check it</string>
     <string name="add_scan">Scan bill</string>
     <string name="add_from_file">Add from file</string>
     <string name="add_photo">Add photo</string>

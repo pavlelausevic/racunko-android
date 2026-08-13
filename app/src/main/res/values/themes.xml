@@ -1,9 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!--
+        These three must stay equal to Palette.Bg in Theme.kt. They paint the
+        window before Compose starts and the system bars after it does, so a
+        stale value here shows up as a tinted strip behind the header and above
+        the navigation bar — the rest of the app repaints, this does not.
+        v1.6.2: #0B1512 (deep green) -> #0C0C0D (neutral near-black).
+    -->
     <style name="Theme.Racunko" parent="Theme.AppCompat.DayNight.NoActionBar">
-        <item name="android:windowBackground">#0B1512</item>
-        <item name="android:statusBarColor">#0B1512</item>
-        <item name="android:navigationBarColor">#0B1512</item>
+        <item name="android:windowBackground">#0C0C0D</item>
+        <item name="android:statusBarColor">#0C0C0D</item>
+        <item name="android:navigationBarColor">#0C0C0D</item>
     </style>
 
     <!-- ShareTargetActivity: exists for one frame and must never be seen. -->
