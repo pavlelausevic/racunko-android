@@ -16,8 +16,8 @@ android {
         applicationId = "com.racunko.app"
         minSdk = 29
         targetSdk = 36
-        versionCode = 8
-        versionName = "1.6.0"
+        versionCode = 9
+        versionName = "1.6.1"
 
         // Size: the x86/x86_64 slices of ML Kit and Tesseract are ~35 MB of the
         // gms APK and ~16 MB of the foss one, and they exist for emulators only —
@@ -75,21 +75,24 @@ android {
 
     buildTypes {
         release {
-            // R8 is OFF until it is proven on a device.
+            // R8 on, device-proven (Samsung SM-S948B, Android 16): gms 62.4 →
+            // 35.9 MB, foss 49.2 → 23.7 MB. Unshrunk, the release shipped ~32 MB
+            // of dex that was almost entirely library code nothing calls.
             //
-            // It was switched on in this round and took the release APK from
-            // 103 MB to 35 MB — but that build installed and would not launch,
-            // so it is not shippable no matter how small it is. The keep rules in
-            // proguard-rules.pro are written and the obvious suspects have been
-            // cleared by inspection (Room's _Impl, the ViewModel constructors,
-            // ML Kit's ComponentRegistrars, androidx.startup's Initializers and
-            // the manifest themes all survive with their names). Re-enabling
-            // needs a logcat from the failing build, not another guess.
+            // The first attempt at this installed and would not launch. The cause
+            // was ML Kit, not any of the usual suspects — see the ML Kit block in
+            // proguard-rules.pro, which is the one part of that file you must not
+            // trim without a device pass behind it.
             //
-            // Everything else in this file is a size win that does not depend on
-            // R8 and is verified: the ABI filter, the BouncyCastle and CMap
-            // exclusions, the locale filter.
-            isMinifyEnabled = false
+            // Debug stays unminified, so a debug device pass proves NOTHING about
+            // R8. Test the RELEASE APK whenever these rules or the ML Kit / PDFBox
+            // / Tesseract versions change.
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
             isCrunchPngs = false
             signingConfig = signingConfigs.findByName("release")
                 ?: signingConfigs.getByName("debug")

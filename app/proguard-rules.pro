@@ -48,8 +48,25 @@
 -keep class com.googlecode.leptonica.android.** { *; }
 
 # -------------------------------------------------------------- ML Kit (gms)
-# ML Kit ships its own consumer rules; these only silence the optional
-# Play-services surfaces the bundled (offline) artifacts do not use.
+# THIS is what crashed the first R8 build at Application.onCreate:
+#
+#   RacunkoApp.onCreate → EngineFactory.create → MlKitQrDecoder.<init>
+#   → BarcodeScanning.getClient() → NullPointerException
+#
+# ML Kit finds its components by CLASS NAME in manifest meta-data, instantiates
+# them through a no-arg constructor, and then keys them in a registry by Class
+# object. R8 breaks that twice over: it drops the constructor of a class that is
+# only ever created reflectively, and — the one that actually bit — it MERGES
+# classes, which collapses two distinct registry keys into one so the lookup
+# returns null. Keeping the vision surface whole stops both. The registrars
+# themselves ship with `-keepnames`, which prevents renaming but NOT removal,
+# so their constructors are spelled out here.
+-keep class * implements com.google.firebase.components.ComponentRegistrar { <init>(); }
+-keep class com.google.mlkit.common.internal.** { *; }
+-keep class com.google.mlkit.vision.barcode.** { *; }
+-keep class com.google.mlkit.vision.text.** { *; }
+-keep class com.google.mlkit.vision.common.** { *; }
+-keep class com.google.android.gms.internal.mlkit_** { *; }
 -dontwarn com.google.android.gms.**
 -dontwarn com.google.mlkit.**
 

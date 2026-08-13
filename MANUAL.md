@@ -15,7 +15,7 @@ Računko is not (yet) on Google Play. It installs from an APK file — the norma
 way to install Android apps outside the store:
 
 1. On your phone, open the project page, tap **Releases**, and download the
-   newest file ending in **`.apk`** (~62 MB).
+   newest file ending in **`.apk`** (~36 MB).
 2. When the download finishes, open the file from the notification shade or
    from your *Download* folder.
 3. Android will say installs from this source aren't allowed — tap

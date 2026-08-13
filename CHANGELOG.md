@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.6.1] — 2026-08-13
+
+Bez izmena u ponašanju aplikacije — samo je APK skoro upola manji.
+
+### Promenjeno
+- **APK je manji: 62,4 MB → 35,9 MB** (i 49,2 MB → 23,7 MB za foss varijantu).
+  Uključeno je skraćivanje koda: sve iz biblioteka što aplikacija nikad ne
+  pozove sada izlazi iz APK-a. U odnosu na 1.5.2 to je ukupno **−65 %**.
+
+  U 1.6.0 je ovo bilo pripremljeno ali isključeno, jer se aplikacija tada
+  instalirala a nije pokretala. Uzrok je bio ML Kit: on svoje delove pronalazi
+  po imenu klase i pamti ih po samoj klasi, pa ih skraćivač nije smeo dirati.
+  Sada je to zapisano kao pravilo i provereno na telefonu.
+
 ## [1.6.0] — 2026-08-12
 
 Najveća promena od prvog javnog izdanja: aplikacija je dobila novo lice, računi

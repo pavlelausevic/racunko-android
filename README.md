@@ -28,7 +28,7 @@ Ne moraš da znaš ništa o GitHub-u niti o programiranju:
 
 1. Otvori stranicu **[Releases](../../releases/latest)** (dugme „Releases" desno
    na ovoj stranici).
-2. Preuzmi fajl **`Racunko-X.Y.Z.apk`** na telefon (~62 MB — u sebi nosi sve
+2. Preuzmi fajl **`Racunko-X.Y.Z.apk`** na telefon (~36 MB — u sebi nosi sve
    modele za čitanje, zato i radi bez interneta).
 3. Otvori preuzeti fajl i instaliraj (Android će pitati da dozvoliš instalaciju
    iz ovog izvora — potvrdi).
@@ -113,7 +113,7 @@ the device. Details: [PRIVACY.md](PRIVACY.md).
 No GitHub or programming knowledge needed:
 
 1. Open the **[Releases](../../releases/latest)** page.
-2. Download **`Racunko-X.Y.Z.apk`** to your phone (~62 MB — it bundles all
+2. Download **`Racunko-X.Y.Z.apk`** to your phone (~36 MB — it bundles all
    recognition models, which is why it works offline).
 3. Open the downloaded file and install (Android will ask you to allow
    installs from this source — confirm).
@@ -185,7 +185,7 @@ especially new bank templates with **redacted** samples.
 Знания GitHub или программирования не нужны:
 
 1. Откройте страницу **[Releases](../../releases/latest)**.
-2. Скачайте на телефон файл **`Racunko-X.Y.Z.apk`** (~62 МБ — внутри все
+2. Скачайте на телефон файл **`Racunko-X.Y.Z.apk`** (~36 МБ — внутри все
    модели распознавания, поэтому приложение работает без интернета).
 3. Откройте скачанный файл и установите (Android попросит разрешить установку
    из этого источника — подтвердите).

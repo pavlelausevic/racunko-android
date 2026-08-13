@@ -42,9 +42,28 @@ class ShareTargetActivity : Activity() {
         val uris = incomingUris(intent)
         if (uris.isNotEmpty()) {
             bringOwnTaskForward()
-            startActivity(forwardIntent(uris))
+            deliver(uris)
         }
         finish()
+    }
+
+    /**
+     * Hand the payload to [MainActivity], and never die trying.
+     *
+     * Re-granting a uri through ClipData makes the system verify that WE hold a
+     * grant for it. A sender that hands over a uri we cannot pass on — a stale
+     * one, or a provider that refused the grant — makes `startActivity` throw
+     * SecurityException, which used to take the whole app down before the user
+     * saw anything. So the grant is an attempt, not a requirement: without it
+     * the uri still travels in the extras, and if the read then fails the
+     * pipeline reports a bad file, which is a far better answer than a crash.
+     */
+    private fun deliver(uris: List<Uri>) {
+        runCatching { startActivity(forwardIntent(uris, grant = true)) }
+            .recoverCatching { startActivity(forwardIntent(uris, grant = false)) }
+            // Last resort: no payload survived, but the user asked for Računko,
+            // so at least open it instead of appearing to do nothing.
+            .recoverCatching { startActivity(forwardIntent(emptyList(), grant = false)) }
     }
 
     /** The shared payload, whichever of the two SEND actions delivered it. */
@@ -77,23 +96,25 @@ class ShareTargetActivity : Activity() {
     }
 
     /**
-     * The uris are re-granted to [MainActivity] through ClipData — extras alone
-     * carry no permission, so the receiving window would see a uri it may not
-     * read. FLAG_GRANT_READ_URI_PERMISSION forwards the grant we hold for as
-     * long as this activity lives, which is long enough: the grant is created
-     * inside `startActivity`, before `finish()`.
+     * With [grant] the uris are re-granted to [MainActivity] through ClipData —
+     * extras alone carry no permission, so the receiving window would otherwise
+     * see a uri it may not read. The grant we hold lasts as long as this
+     * activity, which is long enough: it is created inside `startActivity`,
+     * before `finish()`. Without [grant] the uris travel in the extras only —
+     * see [deliver] for when that is worth trying.
      */
-    private fun forwardIntent(uris: List<Uri>): Intent =
+    private fun forwardIntent(uris: List<Uri>, grant: Boolean): Intent =
         Intent(this, MainActivity::class.java).apply {
             action = MainActivity.ACTION_SHARED_IN
-            addFlags(
-                Intent.FLAG_ACTIVITY_NEW_TASK or
-                    Intent.FLAG_ACTIVITY_CLEAR_TOP or
-                    Intent.FLAG_GRANT_READ_URI_PERMISSION
-            )
-            putParcelableArrayListExtra(MainActivity.EXTRA_SHARED_URIS, ArrayList(uris))
-            clipData = ClipData.newRawUri(null, uris[0]).apply {
-                for (i in 1 until uris.size) addItem(ClipData.Item(uris[i]))
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+            if (uris.isNotEmpty()) {
+                putParcelableArrayListExtra(MainActivity.EXTRA_SHARED_URIS, ArrayList(uris))
+                if (grant) {
+                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    clipData = ClipData.newRawUri(null, uris[0]).apply {
+                        for (i in 1 until uris.size) addItem(ClipData.Item(uris[i]))
+                    }
+                }
             }
         }
 }

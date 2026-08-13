@@ -16,7 +16,7 @@ tzv. APK fajla — to je normalan način instalacije Android aplikacija van
 prodavnice:
 
 1. Na telefonu otvori stranicu projekta i klikni **Releases** (izdanja), pa
-   preuzmi najnoviji fajl koji se završava na **`.apk`** (~62 MB).
+   preuzmi najnoviji fajl koji se završava na **`.apk`** (~36 MB).
 2. Kad se preuzimanje završi, otvori fajl iz trake obaveštenja ili iz fascikle
    *Download*.
 3. Android će reći da instalacija iz ovog izvora nije dozvoljena — klikni

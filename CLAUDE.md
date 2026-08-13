@@ -126,12 +126,23 @@ emulator-only weight), BouncyCastle pqc `.properties` excluded (4.15 MB,
 resources so R8 never touches them), PDFBox CJK CMaps excluded (1.2 MB, 92
 files, all CJK; PdfText failure already falls back to OCR), locale filter
 sr/en/ru, `ui-tooling-preview` dropped (no @Preview anywhere).
-**R8 is OFF.** Turning it on gave 35.1 MB but the APK installed and would not
-launch. Keep rules are written in `app/proguard-rules.pro` and the obvious
-suspects were CLEARED by inspecting mapping.txt (Room `_Impl`, ViewModel ctors,
-ML Kit ComponentRegistrars, androidx.startup Initializers, manifest themes all
-survive by name). Re-enabling needs a logcat from the failing build — or try
-`-dontobfuscate` first, since a name-based lookup is the likeliest cause.
+**R8 is ON and device-proven** (SM-S948B / Android 16): gms 62.4 -> 35.9 MB,
+foss 49.2 -> 23.7 MB. The first attempt installed and would not launch; the
+cause was NOT any of the usual suspects (Room `_Impl`, ViewModel ctors,
+androidx.startup, manifest themes all survived by name). Retraced stack:
+`RacunkoApp.onCreate -> EngineFactory.create -> MlKitQrDecoder.<init> ->
+BarcodeScanning.getClient() -> NPE`. ML Kit discovers components by class NAME
+from manifest meta-data, builds them via a no-arg ctor, and keys them in a
+registry BY CLASS OBJECT — R8 both drops reflective-only ctors and MERGES
+classes, and merging collapses two registry keys into one so the lookup returns
+null. Fixed by keeping the vision surface whole (`com.google.mlkit.vision.**`,
+`common.internal.**`, `com.google.android.gms.internal.mlkit_**`) plus
+`-keep class * implements ComponentRegistrar { <init>(); }` — the registrars
+ship with `-keepnames`, which stops renaming but NOT removal. Cost of those
+keeps: +0.8 MB. Do not trim the ML Kit block without a device pass.
+Verified on device under R8: card list from Room, address sections, QR render
+(PdfRenderer + ML Kit decode + ZXing encode), Settings + DataStore. Zero
+ClassNotFound/NoSuchMethod/VerifyError in logcat.
 Docs: РУКОВОДСТВО.md added (full Russian manual), README gained a 🇷🇺 section,
 UPUTSTVO/MANUAL gained the deadline + list-ordering + report sections.
 
