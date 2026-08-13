@@ -1,4 +1,5 @@
 {
+  "note": "QR-less paper uplatnica: the registry recovers the account from the printed labels.",
   "sourceKind": "IMAGE_OCR",
   "provider": "sz",
   "recipientAccount": "200555000123456764",
@@ -6,7 +7,6 @@
   "amount": 1500,
   "month": null,
   "paymentReference": "040255500012",
-  "addressLabel": null,
-  "pairsWith": "sz_DS99_*_1500",
-  "mustNotPairWith": []
+  "addressLabel": "DS99",
+  "expectedName": "sz_DS99_X_1500"
 }

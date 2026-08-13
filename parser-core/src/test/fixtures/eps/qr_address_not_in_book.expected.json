@@ -1,0 +1,11 @@
+{
+  "note": "Address absent from the book: the label stays EMPTY and the name carries X. Never guessed.",
+  "sourceKind": "QR_ONLY",
+  "ips": "K:PR|V:01|C:1|R:190000000009987010|N:EPS AD Beograd|I:RSD7028,82|SF:289|S:Uplata po računu za el. energiju|RO:9719020055555552605",
+  "provider": "eps",
+  "addressLabel": null,
+  "addressAmbiguous": false,
+  "month": "maj26",
+  "amount": 7029,
+  "expectedName": "eps_X_maj26_7029"
+}

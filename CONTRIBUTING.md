@@ -2,6 +2,16 @@
 
 Thank you for helping make bill-paying less painful. The most valuable contributions are **new document templates** (banks, utilities, payment slips) and **fixtures** for documents Računko doesn't yet handle. You do **not** need an Android device to contribute to the parser.
 
+**Most wanted right now** — see `TESTING.md` → *Coverage and known gaps* for what
+is already handled:
+
+- a redacted bill from an issuer outside the recognized five (vodovod, gradska
+  toplana, another telco);
+- a redacted payment confirmation from a bank other than Intesa, Erste or AIK;
+- **the wording of a payment-deadline label** we don't match yet. This one needs
+  no document at all — just the line as printed, e.g. `Rok za plaćanje: …`. It is
+  usually a one-pattern fix.
+
 Please read `ARCHITECTURE.md` first — especially "The template registry" and "Numbers you can trust."
 
 ## Ground rules

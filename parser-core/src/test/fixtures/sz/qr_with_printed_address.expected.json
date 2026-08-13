@@ -1,0 +1,11 @@
+{
+  "note": "QR + printed issuer line; address resolves from the address book.",
+  "sourceKind": "PDF_TEXT",
+  "ips": "K:PR|V:01|C:1|R:200555000123456764|N:SZ DOBRIVOJA STANKOVIĆA 99 Beograd|I:RSD1070,00|SF:189|S:Jun 2026|RO:97040255500012",
+  "provider": "sz",
+  "addressLabel": "DS99",
+  "addressAmbiguous": false,
+  "month": "jun26",
+  "amount": 1070,
+  "expectedName": "sz_DS99_jun26_1070"
+}

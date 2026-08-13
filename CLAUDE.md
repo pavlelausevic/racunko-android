@@ -195,6 +195,26 @@ then need debugging in the activity window itself, not the sheet. (Device pass
 later CONFIRMED; the era's tags were removed with the pre-public history — see
 the PUBLIC RELEASE note above.)
 
+## Fixture corpus (v1.6.2 — the mani argument)
+`parser-core/src/test/fixtures/{issuer}/{case}.{txt,expected.json}`, run by
+`FixtureTest`. 8 cases over eps/infostan/mts/sz/yettel/uplatnica. KEY FINDING
+that shaped it: the app has TWO extraction paths and they are different code —
+`Pipeline.buildBillCard` uses the DIRECT functions (ProviderDetector →
+AmountParser → MonthDetector → AddressMatcher → BillName) and that is what makes
+the FILE NAME; `registry.extract` is used only for classification and for the
+account on a QR-less bill. The old corpus tested only the registry, i.e. not the
+user-visible result. FixtureTest now runs BOTH per case and pins `expectedName`.
+Schema: every key optional except `sourceKind`, asserted only if present, and an
+UNKNOWN key fails (a typo cannot silently disable an assertion). Pairing is
+deliberately NOT expressible — it needs a corpus of other bills, so it stays in
+AcceptanceTest/FalsePositiveTest. Six bill cases were MIGRATED out of
+AcceptanceTest (its remaining 6 tests are all pairing).
+Still to migrate: ParserUnitTest, ClassifyDocTypeTest, SpaceNamingTest,
+InfostanMonthTest, LooksLikeBillTest, ScanAddressTest, NeverGuessAddressTest,
+PayeeMemoryTest. Algorithm tests (checksum, report layout, due-date labels,
+BillName parse, QR round-trip) STAY in Kotlin — that split is intentional and
+documented in TESTING.md.
+
 ## Tests (parser-core) — keep green
 AcceptanceTest (§10 1–8, uses SampleAddresses), AccountChecksumTest,
 IpsQrRoundTripTest, RegistryTest, FalsePositiveTest, PayeeMemoryTest,
@@ -204,6 +224,11 @@ ClassifyDocTypeTest (v1.5.2 A: mismatch guard incl. QR-less SZ no-nag),
 SpaceNamingTest (v1.5.2 B: IDENT sub-labels, collision flagged not _2),
 DueDateParserTest (v1.6: label-anchored only, issue date never a deadline),
 ReportTest (v1.6: amounts align by WIDTH not char count; spacer never
-overshoots and never emits two ASCII spaces in a row). 86 green.
+overshoots and never emits two ASCII spaces in a row), DueDateParserTest gained
+per-issuer LAYOUT cases for MTS/EPS/InfoStan/SBB-Yettel/Yettel — each pinning the
+decoy that must NOT win (complaint deadline, contract expiry, discount cut-off,
+the EPS slip's „Валута" currency column). Real bills confirmed the label wording
+locally and never left the maintainer's machine; the committed text is synthetic.
+86 green.
 UI has no JVM proof → device pass. A PR adding a template needs a fixture; never
 weaken a checksum/false-positive assertion.

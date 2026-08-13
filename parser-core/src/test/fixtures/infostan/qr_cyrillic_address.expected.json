@@ -1,0 +1,11 @@
+{
+  "note": "Cyrillic address text; month comes from the InfoStan RO suffix, not the S field.",
+  "sourceKind": "PDF_TEXT",
+  "ips": "K:PR|V:01|C:1|R:200220618010100048|N:JKP INFOSTAN TEHNOLOGIJE BEOGRAD|I:RSD11151,71|SF:122|S:OBJEDINJENA NAPLATA|RO:11800512345011-26050-1",
+  "provider": "infostan",
+  "addressLabel": "KD7",
+  "addressAmbiguous": false,
+  "month": "maj26",
+  "amount": 11152,
+  "expectedName": "infostan_KD7_maj26_11152"
+}

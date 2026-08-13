@@ -67,6 +67,104 @@ class DueDateParserTest {
         assertEquals(LocalDate.of(2026, 9, 5), DueDateParser.parse("Platiti do 5-9-2026"))
     }
 
+    // ------------------------------------------------- per-issuer layouts
+    //
+    // v1.6.2: one case per issuer Računko actually meets, each mirroring that
+    // bill's real LAYOUT — the deadline label in its printed position, and the
+    // decoy dates that sit around it. Every issuer prints at least one date that
+    // must NOT win, and they are all different: a complaint deadline, a contract
+    // expiry, a discount cut-off. Those decoys are the reason these tests exist;
+    // reading the right label out of a clean one-line string proves nothing.
+    //
+    // The text is SYNTHETIC — reconstructed structure with invented names,
+    // addresses, numbers and dates. Real bills were used to confirm the label
+    // wording and field order, and never left the maintainer's machine.
+
+    @Test
+    fun mts_complaintDeadlineDoesNotWin() {
+        val text = """
+            Racun broj: 10-000-000-0000000
+            Mesto i datum izdavanja:
+            Beograd, 01.08.2026.
+            Datum prometa:
+            31.07.2026.
+            Rok za placanje:
+            15.08.2026.
+            Za period: 01.07.2026. - 31.07.2026.
+            UKUPNO ZA PLACANJE: 3.559,41
+            Ovaj racun je punovazan bez potpisa i pecata.
+            Rok za prigovor: 14.09.2026. god.
+        """.trimIndent()
+        assertEquals(LocalDate.of(2026, 8, 15), DueDateParser.parse(text))
+    }
+
+    @Test
+    fun eps_cyrillicDeadlineAmongIssueDates() {
+        val text = """
+            РАЧУН ЗА ЕЛЕКТРИЧНУ ЕНЕРГИЈУ
+            Период обрачуна: 02.07.2026 - 04.08.2026.
+            Датум издавања рачуна: 06.08.2026.
+            Датум промета и акцизе: 04.08.2026.
+            В ЗА УПЛАТУ ЗА ЕЛЕКТРИЧНУ ЕНЕРГИЈУ (А+Б) 5.232,50 дин
+            Рок за плаћање: 28.08.2026.
+            Рок за приговор је 8 дана од дана пријема рачуна.
+        """.trimIndent()
+        assertEquals(LocalDate.of(2026, 8, 28), DueDateParser.parse(text))
+    }
+
+    /** The payment slip alone prints „Валута РСД" — a currency, not a value date. */
+    @Test
+    fun eps_slipCurrencyColumnIsNotADeadline() {
+        val slipOnly = """
+            Шиф. плаћ. 189   Валута  РСД   Износ
+            Шиф. ком. 114    Текући рачун примаоца
+            Број модела 97   Позив на број
+        """.trimIndent()
+        assertNull(DueDateParser.parse(slipOnly))
+    }
+
+    @Test
+    fun infostan_discountCutoffDoesNotBeatDospece() {
+        val text = """
+            Датум испоруке добара и услуга: 31.07.2026. године
+            Датум доспећа: 31.08.2026. године
+            Стање обавеза на дан 31.07.2026. године са уплатама
+            евидентираним до 20.07.2026. године
+            Попуст за наредни месец остварује се уплатом укупних обавеза до
+            15.08.2026. године, а право на субвенцију уплатом свих обавеза
+            доспелих до 30.06.2026. године.
+        """.trimIndent()
+        assertEquals(LocalDate.of(2026, 8, 31), DueDateParser.parse(text))
+    }
+
+    @Test
+    fun sbbYettel_rokPlacanjaAmongServiceDates() {
+        val text = """
+            Racun broj: 0000000000
+            Rok placanja: 25.08.2026
+            Period izvrsenja usluga: 01.07.2026 - 31.07.2026
+            Datum prometa usluga: 31.07.2026
+            Datum izdavanja racuna: 31.07.2026
+            Rok za podnosenje prigovora: 30 DANA
+        """.trimIndent()
+        assertEquals(LocalDate.of(2026, 8, 25), DueDateParser.parse(text))
+    }
+
+    /** Yettel prints a CONTRACT expiry a year out; it must never be the deadline. */
+    @Test
+    fun yettel_contractExpiryDoesNotWin() {
+        val text = """
+            Obracunski period: 01.07.2026. - 31.07.2026.
+            Datum izrade racuna: 31.07.2026.
+            Datum prometa: 31.07.2026.
+            Rok za placanje: 20.08.2026.
+            Ugovorna obaveza istice: 31.03.2027.
+            Datum dospeca ili rok za uplatu racuna je 20 dana od datuma izrade racuna.
+            UKUPNO ZA PLACANJE 2.999,00
+        """.trimIndent()
+        assertEquals(LocalDate.of(2026, 8, 20), DueDateParser.parse(text))
+    }
+
     @Test
     fun daysUntil_andReminderWindow() {
         val today = LocalDate.of(2026, 9, 12)

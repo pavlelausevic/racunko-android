@@ -1,0 +1,11 @@
+{
+  "note": "The metering-point address wins over the mailing address; month from the EPS RO tail.",
+  "sourceKind": "PDF_TEXT",
+  "ips": "K:PR|V:01|C:1|R:845000000040848487|N:EPS AD Beograd|I:RSD3962,69|SF:289|S:Uplata po računu za el. energiju|RO:9725020055555552605",
+  "provider": "eps",
+  "addressLabel": "BDS95",
+  "addressAmbiguous": false,
+  "month": "maj26",
+  "amount": 3963,
+  "expectedName": "eps_BDS95_maj26_3963"
+}

@@ -1,0 +1,11 @@
+{
+  "note": "No month in the QR; it is taken from the billing period's END date.",
+  "sourceKind": "PDF_TEXT",
+  "ips": "K:PR|V:01|C:1|R:160000000100510845|N:Yettel d.o.o. Beograd|I:RSD2699,00|SF:221|P:PETROVIĆ PETAR\r\nKOSTE DRAGOJEVIĆA 7 /2/15\r\n11000 BEOGRAD|S:Usluge|RO:97202012345161",
+  "provider": "yettel",
+  "addressLabel": "KD7",
+  "addressAmbiguous": false,
+  "month": "maj26",
+  "amount": 2699,
+  "expectedName": "yettel_KD7_maj26_2699"
+}

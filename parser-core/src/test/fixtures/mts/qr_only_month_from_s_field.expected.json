@@ -1,0 +1,11 @@
+{
+  "note": "QR only, no page text at all: month from the S field, address from the P field.",
+  "sourceKind": "QR_ONLY",
+  "ips": "K:PR|V:01|C:1|R:160000000100223963|N:Telekom Srbija A.D. Beograd|I:RSD3282,21|SF:221|P:PETAR PETROVIĆ\r\nKOSTE DRAGOJEVIĆA 7\r\n11000 BEOGRAD 35|S:MTS Račun 05/2026 12345678/1|RO:97742911111115870",
+  "provider": "mts",
+  "addressLabel": "KD7",
+  "addressAmbiguous": false,
+  "month": "maj26",
+  "amount": 3282,
+  "expectedName": "mts_KD7_maj26_3282"
+}

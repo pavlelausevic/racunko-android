@@ -1,0 +1,11 @@
+{
+  "note": "TWO known addresses in one text; the labelled anchor zone decides, without ambiguity.",
+  "sourceKind": "PDF_TEXT",
+  "ips": "K:PR|V:01|C:1|R:200220618010100048|N:JKP INFOSTAN TEHNOLOGIJE BEOGRAD|I:RSD970,52|SF:122|S:OBJEDINJENA NAPLATA|RO:11800614276087-26050-1",
+  "provider": "infostan",
+  "addressLabel": "SG26",
+  "addressAmbiguous": false,
+  "month": "maj26",
+  "amount": 971,
+  "expectedName": "infostan_SG26_maj26_971"
+}

@@ -11,47 +11,108 @@ Run everything:
 
 | Suite | Question it answers | Lives in |
 |---|---|---|
-| Template extraction | Does each template read the right fields from real (redacted) documents? | `fixtures/{issuer}/*` + parameterized test |
-| Acceptance (pinned) | Do the historical cases still produce the exact expected names? | §10 originals, #7 Erste, #8 AIK |
+| Fixture corpus | Do the shipped bill path AND template registry produce the expected fields — and the expected file name — for each known issuer? | `fixtures/{issuer}/*` + `FixtureTest` |
+| Acceptance (pairing) | Do confirmations bind to the right bill across all three layers? | `AcceptanceTest` (#6 Intesa, #7 Erste, #8 AIK) |
 | Checksum | Are account/reference numbers proven, and are bad ones rejected? | `AccountChecksumTest` |
-| Pairing (true positives) | Do confirmations bind to the right bill across all three layers? | `PairingTest` |
 | Pairing (false positives) | Do distractor numbers bind to **nothing**? | `FalsePositiveTest` |
-| Address resolution | Anchor zones, boundaries (`7` vs `71`, `46b`), ambiguity chips | `AddressTest` |
+| Address resolution | Anchor zones, boundaries (`7` vs `71`, `46b`), and never guessing a label | `ScanAddressTest`, `NeverGuessAddressTest` |
 | IPS QR round-trip | Does generate→decode return identical fields? | `IpsQrRoundTripTest` |
 | Payee memory | Is month-2 prefilled, and cleared on reset? | `PayeeMemoryTest` |
-| Registry | Does first-match hold, and does removal fall through cleanly? | `RegistryTest` |
+| Registry | Does first-match hold, and does removal fall through cleanly? | `RegistryTest`, `ClassifyDocTypeTest` |
 | Due date | Is the deadline read ONLY from its own label, and never from the issue date? | `DueDateParserTest` |
 | Report layout | Do the amounts line up by rendered WIDTH (proportional font), not by character count? | `ReportTest` |
 | Degradation (dev tool) | How bad can a photo be before the QR/OCR fails? | `tools/degradation/` (not shipped) |
 
+## Coverage and known gaps
+
+What is covered is deliberately narrow, and the gaps below are **not bugs** —
+they are documents nobody has supplied a sample of yet. Računko asks the user
+rather than guessing, so an unrecognized issuer degrades into manual entry, not
+into a wrong value.
+
+**Bill issuers recognized by name** (`ProviderDetector.PROVIDERS`): `infostan`,
+`eps`, `mts`, `yettel` (incl. SBB), `sz` (stambena zajednica). Each has its own
+regex; the list is hard-coded on purpose. Any other issuer — vodovod, gradska
+toplana, another telco — is read as far as the generic uplatnica template gets
+(amount, account, reference from the IPS QR) and the provider is typed by hand.
+**Wanted:** one redacted bill per missing issuer.
+
+**Payment deadline** (`DueDateParser`) is verified against the printed layout of
+MTS, EPS, InfoStan, SBB/Yettel and Yettel, including each one's decoy dates —
+see the per-issuer cases in `DueDateParserTest`. Issuers outside that list are
+unverified: if a deadline is not picked up, the fix is one label pattern, and
+the useful bug report is **the exact wording of the label**, not the document.
+
+**Bank confirmation templates**: Banca Intesa, Erste, AIK, plus a generic
+fallback. Everything else pairs through the generic template, which works but
+leans on the payment reference alone; when it cannot decide, the app asks.
+**Wanted:** redacted confirmations from other banks — Raiffeisen is the next one
+expected.
+
+**Not covered at all, by design:** issuers outside Serbia, and any document
+without either an IPS QR or printed labels (a photo of a handwritten slip).
+
 ## Fixture format (the contribution unit)
 
-Each case is two files, side by side, matching the in-app "Prijavi neprepoznat dokument" export 1:1:
+The corpus **is the specification.** A Kotlin test proves the Kotlin code works;
+a fixture proves *an* implementation works, in a form a Swift or any other port
+runs unchanged. That is why vectors belong here rather than in Kotlin strings.
+
+Each case is two files side by side:
 
 ```
-parser-core/src/test/fixtures/{issuer}/{case}.txt            # redacted OCR/extracted text
-parser-core/src/test/fixtures/{issuer}/{case}.expected.json  # expected ExtractedFields
+parser-core/src/test/fixtures/{issuer}/{case}.txt            # redacted extracted text ("" if QR-only)
+parser-core/src/test/fixtures/{issuer}/{case}.expected.json  # what must come out
 ```
 
-`{case}.expected.json`:
+`FixtureTest` runs **both** extraction paths per case, because the app uses both
+and they are different code:
+
+| path | code | what it decides |
+|---|---|---|
+| bill path | ProviderDetector → AmountParser → MonthDetector → AddressMatcher → BillName | the card fields and the **file name the user sees** (`Pipeline.buildBillCard`) |
+| template registry | `TemplateRegistry.extract` | document classification, and the recipient account on a **QR-less** bill |
+
+`{case}.expected.json` — every key is optional except `sourceKind`; **a fixture
+asserts only the keys it contains**, so a case that knows nothing about the
+address book simply omits `addressLabel`. An **unknown key fails the test**, so a
+typo cannot silently disable an assertion.
+
 ```json
 {
-  "sourceKind": "IMAGE_OCR",
+  "note": "free text: what this case is here to prove",
+  "sourceKind": "PDF_TEXT",
+  "ips": "K:PR|V:01|C:1|R:200220618010100048|N:JKP INFOSTAN…|RO:11800512345011-26050-1",
+
   "provider": "infostan",
+  "addressLabel": "KD7",
+  "addressAmbiguous": false,
+  "month": "maj26",
+  "amount": 11152,
+  "expectedName": "infostan_KD7_maj26_11152",
+
   "recipientAccount": "200220618010100048",
   "accountVerified": true,
-  "amount": 971,
-  "month": "maj26",
   "paymentReference": "800614276087260501",
-  "addressLabel": null,
-  "pairsWith": "infostan_SG26_maj26_971",
-  "mustNotPairWith": ["5670260000000017", "900"]
+  "spaceId": "800512345011"
 }
 ```
+
+- `ips` is the raw IPS QR payload; omit it for a document that carries none.
+- `month` is the **filename token** (`maj26`), or `null` when the bill prints none.
+- `addressLabel` resolves against the fictional `SampleAddresses` book; `null`
+  means it must stay **empty** — the address is never guessed.
+- `expectedName` is the whole point of most cases: it pins the end result, with
+  `X` standing in for any field that could not be proven.
+
 Rules for fixtures:
 - **Redacted text only**, never images. Personal names masked; the payer's own account masked.
 - Any account present must be **synthetic but checksum-valid** (helper: `mkaccount`), so `accountVerified` is meaningful.
 - Keep OCR noise in the fixture (status bars, mangled diacritics like `Raéun`) — that's what the parser must survive.
+
+**Pairing is deliberately not expressible here.** Pairing needs a corpus of other
+bills to pair against — context a single-document fixture does not have — so it
+lives in `AcceptanceTest` / `FalsePositiveTest`, where that context can be built.
 
 ## Checksum vectors (pin the algorithm)
 

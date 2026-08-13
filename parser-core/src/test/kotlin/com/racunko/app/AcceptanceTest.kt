@@ -65,48 +65,6 @@ class AcceptanceTest {
     private val payload1 =
         "K:PR|V:01|C:1|R:200555000123456764|N:SZ DOBRIVOJA STANKOVIĆA 99 Beograd|I:RSD1070,00|SF:189|S:Jun 2026|RO:97040255500012"
 
-    @Test
-    fun test1_szBill() {
-        val a = analyseBill(payload1, "Stambena zajednica DOBRIVOJA STANKOVIĆA 99 /30 Beograd")
-        assertEquals("sz_DS99_jun26_1070", a.name)
-    }
-
-    @Test
-    fun test2_infostanBill_cyrillic() {
-        val a = analyseBill(
-            "K:PR|V:01|C:1|R:200220618010100048|N:JKP INFOSTAN TEHNOLOGIJE BEOGRAD|I:RSD11151,71|SF:122|S:OBJEDINJENA NAPLATA|RO:11800512345011-26050-1",
-            "ЈКП ИНФОСТАН ТЕХНОЛОГИЈЕ Адреса: КОСТЕ ДРАГОЈЕВИЋА 7 СТ. 15"
-        )
-        assertEquals("infostan_KD7_maj26_11152", a.name)
-    }
-
-    @Test
-    fun test3_epsBill_meteringPointBeatsMailing() {
-        val a = analyseBill(
-            "K:PR|V:01|C:1|R:845000000040848487|N:EPS AD Beograd|I:RSD3962,69|SF:289|S:Uplata po računu za el. energiju|RO:9725020055555552605",
-            "Адреса мерног места: БУЛЕВАР ДУШАНА СИМИЋА 95"
-        )
-        assertEquals("eps_BDS95_maj26_3963", a.name)
-    }
-
-    @Test
-    fun test4_yettelBill_periodEndDate() {
-        val a = analyseBill(
-            "K:PR|V:01|C:1|R:160000000100510845|N:Yettel d.o.o. Beograd|I:RSD2699,00|SF:221|P:PETROVIĆ PETAR\r\nKOSTE DRAGOJEVIĆA 7 /2/15\r\n11000 BEOGRAD|S:Usluge|RO:97202012345161",
-            "Račun za period 01.05.2026 - 31.05.2026"
-        )
-        assertEquals("yettel_KD7_maj26_2699", a.name)
-    }
-
-    @Test
-    fun test5_mtsBill_monthFromSField() {
-        val a = analyseBill(
-            "K:PR|V:01|C:1|R:160000000100223963|N:Telekom Srbija A.D. Beograd|I:RSD3282,21|SF:221|P:PETAR PETROVIĆ\r\nKOSTE DRAGOJEVIĆA 7\r\n11000 BEOGRAD 35|S:MTS Račun 05/2026 12345678/1|RO:97742911111115870",
-            null
-        )
-        assertEquals("mts_KD7_maj26_3282", a.name)
-    }
-
     // ------------------------------------------- test 6: Intesa confirmation
 
     private val intesaText = """
@@ -252,17 +210,6 @@ class AcceptanceTest {
         900,01 RSD
         << O III
     """.trimIndent()
-
-    @Test
-    fun test8_aikBill_anchorZoneWinsWithoutAmbiguity() {
-        val a = analyseBill(aikBillPayload, aikBillText)
-        assertEquals("infostan_SG26_maj26_971", a.name)
-        // adresa: anchor resolves SG26 even though KOSTE DRAGOJEVIĆA 7 is in the full text
-        assertEquals("SG26", a.address)
-        assertFalse(a.ambiguous)
-        assertEquals(MonthYear(5, 26), a.month)
-        assertEquals(971L, a.amount)
-    }
 
     @Test
     fun test8_aikImageConfirmation() {
