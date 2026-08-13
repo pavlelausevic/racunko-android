@@ -75,7 +75,7 @@ android {
 
     buildTypes {
         release {
-            // R8 on, device-proven (Samsung SM-S948B, Android 16): gms 62.4 →
+            // R8 on, device-proven (Android 16, arm64): gms 62.4 →
             // 35.9 MB, foss 49.2 → 23.7 MB. Unshrunk, the release shipped ~32 MB
             // of dex that was almost entirely library code nothing calls.
             //

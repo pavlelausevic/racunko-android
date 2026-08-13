@@ -50,9 +50,9 @@ object Palette {
     val Red = Color(0xFFF87171)
 
     /**
-     * The orange dot in „računko." — deliberately kept from the pre-mani
-     * identity. It is the one mark that is ours and not borrowed, so it stays
-     * its original orange rather than drifting into the gold above.
+     * The orange dot in „računko." — deliberately kept from the identity this
+     * palette replaced. It is the one mark that is ours rather than adopted, so
+     * it stays its original orange instead of drifting into the gold above.
      */
     val Dot = Color(0xFFE8A93D)
 }

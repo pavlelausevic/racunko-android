@@ -124,7 +124,7 @@ data class CardRecordEntity(
     val timestamp: Long,
     /** v1.6: payment deadline as an epoch day; null when the bill prints none. */
     val dueDateEpochDay: Long? = null,
-    /** v1.6: per-bill reminder, mirroring mani's „Podseti me da se približava plaćanje". */
+    /** v1.6: per-bill reminder — „Podseti me da se približava plaćanje". */
     val remindEnabled: Boolean = true,
     val remindDaysBefore: Int = 3,
     /** Kept for the future system notification; the in-app banner shows on open. */

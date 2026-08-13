@@ -92,12 +92,12 @@ nothing a user depends on broke, so it is not 2.0. Reserve 2.0 for the JSON
 fixture corpus / a consumable `:parser-core` artifact / real system
 notifications.
 
-**v1.6.0 executed 2026-08-12** — mani-form redesign + deadlines. UI: Theme.kt
+**v1.6.0 executed 2026-08-12** — full visual redesign + deadlines. UI: Theme.kt
 repainted (deep green + turquoise; the names in `Palette` deliberately KEPT —
 `Amber`→gold, `Blue`→turquoise, `Violet`→lemon, `Green`→emerald; `Palette.Dot`
-stays orange as the one mark not borrowed from mani), `RIcons` (20 Material
-Symbols drawn in code, NO material-icons-extended, zero emoji), mani building
-blocks in App.kt (SheetTitle/FieldLabel/SheetRow/ToggleRow/FlowRowChips).
+stays orange as the one mark not adopted from the reference design), `RIcons`
+(20 Material Symbols drawn in code, NO material-icons-extended, zero emoji), the
+shared sheet building blocks in App.kt (SheetTitle/FieldLabel/SheetRow/ToggleRow/FlowRowChips).
 List: summary card, address filter chips (>1 address), folding per-address
 sections that START FOLDED when >1 address and open under a filter, no-address
 group FIRST, cards ordered `BY_MONTH_DESC` (newest first, unreadable month
@@ -126,7 +126,7 @@ emulator-only weight), BouncyCastle pqc `.properties` excluded (4.15 MB,
 resources so R8 never touches them), PDFBox CJK CMaps excluded (1.2 MB, 92
 files, all CJK; PdfText failure already falls back to OCR), locale filter
 sr/en/ru, `ui-tooling-preview` dropped (no @Preview anywhere).
-**R8 is ON and device-proven** (SM-S948B / Android 16): gms 62.4 -> 35.9 MB,
+**R8 is ON and device-proven** (Android 16, arm64): gms 62.4 -> 35.9 MB,
 foss 49.2 -> 23.7 MB. The first attempt installed and would not launch; the
 cause was NOT any of the usual suspects (Room `_Impl`, ViewModel ctors,
 androidx.startup, manifest themes all survived by name). Retraced stack:
@@ -195,7 +195,7 @@ then need debugging in the activity window itself, not the sheet. (Device pass
 later CONFIRMED; the era's tags were removed with the pre-public history — see
 the PUBLIC RELEASE note above.)
 
-## Fixture corpus (v1.6.2 — the mani argument)
+## Fixture corpus (v1.6.2 — the portability argument)
 `parser-core/src/test/fixtures/{issuer}/{case}.{txt,expected.json}`, run by
 `FixtureTest`. 8 cases over eps/infostan/mts/sz/yettel/uplatnica. KEY FINDING
 that shaped it: the app has TWO extraction paths and they are different code —

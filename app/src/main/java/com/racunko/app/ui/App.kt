@@ -1971,7 +1971,7 @@ private fun SpaceTagPrompt(canRemember: Boolean, onApply: (String, Boolean) -> U
     }
 }
 
-// ------------------------------------------------------- mani form language
+// ------------------------------------------------------ sheet form language
 //
 // The four primitives every sheet and the Settings screen are built from, so
 // one change of mind about the form changes the whole app: a sheet heading, the
@@ -2058,7 +2058,7 @@ private fun ToggleRow(label: String, checked: Boolean, onChange: (Boolean) -> Un
     }
 }
 
-/** mani's „Na dan · 1 dana ranije · 3 dana ranije" selector. */
+/** The „Na dan · 1 dana ranije · 3 dana ranije" selector. */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun <T> FlowRowChips(
