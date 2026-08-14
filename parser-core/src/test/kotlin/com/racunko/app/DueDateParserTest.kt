@@ -112,6 +112,34 @@ class DueDateParserTest {
         assertEquals(LocalDate.of(2026, 8, 28), DueDateParser.parse(text))
     }
 
+    /**
+     * v1.7: „Датум валуте" is a printed value date and IS the deadline — the
+     * genitive ending is the only thing separating it from the bare label, and
+     * without it an SZ bill's deadline went unread on the device.
+     */
+    @Test
+    fun sz_datumValuteIsTheDeadline() {
+        val text = """
+            Задужење за услуге за месец ЈУЛ 2026
+            Датум промета: 31.07.2026.
+            Датум валуте: 15.08.2026.
+        """.trimIndent()
+        assertEquals(LocalDate.of(2026, 8, 15), DueDateParser.parse(text))
+    }
+
+    /**
+     * The same widening must not revive the decoy: „Валута РСД" is a currency
+     * column. What stops it is the requirement for a real date, not the ending.
+     */
+    @Test
+    fun valuteEndingStillRejectsTheCurrencyColumn() {
+        val slip = """
+            Валута  РСД   Износ  1.234,00
+            Датум промета: 31.07.2026.
+        """.trimIndent()
+        assertNull(DueDateParser.parse(slip))
+    }
+
     /** The payment slip alone prints „Валута РСД" — a currency, not a value date. */
     @Test
     fun eps_slipCurrencyColumnIsNotADeadline() {

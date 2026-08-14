@@ -27,9 +27,14 @@ object DueDateParser {
         "datum dospec[ae]",
         "dospeva (?:za )?placanj[ea]",
         "dospece",
-        "valuta placanj[ea]",
+        "valut[ae] placanj[ea]",
         "(?:uplatiti|platiti|plativo|placanje) do",
-        "\\bvaluta\\b"
+        // Both the bare label and „datum valute" occur; the genitive ending is
+        // the whole difference between them, and without it an SZ bill's value
+        // date went unread (found on device 14.08.2026). Widening the ending
+        // cannot revive the „Валута РСД" decoy — that one is stopped by the date
+        // requirement below, not by the ending.
+        "\\bvalut[ae]\\b"
     )
 
     private val PATTERNS = LABELS.map { label ->
