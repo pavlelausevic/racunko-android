@@ -11,9 +11,24 @@
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-feature android:name="android.hardware.camera.any" android:required="false" />
 
+    <!--
+        Auto Backup is OFF, and with private storage that is not a preference but
+        a requirement. Since v1.7 the archive lives in `filesDir`, which Android's
+        automatic backup uploads to the user's Google Drive by default — together
+        with the database and the address book. An app that declares itself fully
+        on-device, and that strips INTERNET from its own manifest, must not have
+        its users' bills leave the phone through a system service either.
+
+        It also explains a surprise on the device: after an uninstall/reinstall
+        the address book and the chosen language came back. That was the restore,
+        not persistence.
+
+        Getting data off the phone is export's job — deliberate, visible, and
+        aimed at a folder the user picked.
+    -->
     <application
         android:name=".RacunkoApp"
-        android:allowBackup="true"
+        android:allowBackup="false"
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"

@@ -56,6 +56,21 @@ object Gallery {
         return if (uris.isEmpty()) null else uris.joinToString(SEPARATOR)
     }
 
+    /**
+     * Writes the captioned PNG to [target] — the temp copy behind „Podeli QR",
+     * which lives in `cacheDir/share` and is handed out through FileProvider.
+     * Same caption band as a saved copy: a QR that lands in a bank app or a chat
+     * has to say which bill it is.
+     */
+    fun writeCaptionedPng(bitmap: Bitmap, caption: String?, target: java.io.File): Boolean =
+        runCatching {
+            val out = if (caption.isNullOrBlank()) bitmap
+            else runCatching { withCaption(bitmap, caption) }.getOrDefault(bitmap)
+            target.outputStream().use { out.compress(Bitmap.CompressFormat.PNG, 100, it) }
+            if (out != bitmap) out.recycle()
+            true
+        }.getOrDefault(false)
+
     /** Adds a white bottom band with the file name; the QR itself is untouched. */
     private fun withCaption(qr: Bitmap, caption: String): Bitmap {
         val band = max(40, qr.width / 8)

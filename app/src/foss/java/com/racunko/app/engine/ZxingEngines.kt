@@ -31,14 +31,32 @@ private class ZxingEngines(context: Context) : PlatformEngines {
 }
 
 private class ZxingQrDecoder : QrDecoder {
-    override fun decode(bitmap: Bitmap): List<String> {
+
+    override fun decode(bitmap: Bitmap): List<String> = read(bitmap, tryHarder = false)
+
+    /**
+     * TRY_HARDER makes ZXing sweep more rows and rotations. On a live camera
+     * frame that cost lands on every frame that has no code — which is most of
+     * them — so it is deliberately NOT the default; here it is right, because a
+     * rendered page is decoded once and a miss means the app has to rebuild the
+     * payment code from stored fields instead of reading the issuer's own.
+     */
+    override fun decodeThorough(bitmap: Bitmap): List<String> {
+        val fast = read(bitmap, tryHarder = false)
+        return if (fast.isNotEmpty()) fast else read(bitmap, tryHarder = true)
+    }
+
+    private fun read(bitmap: Bitmap, tryHarder: Boolean): List<String> {
         val width = bitmap.width
         val height = bitmap.height
         val pixels = IntArray(width * height)
         bitmap.getPixels(pixels, 0, width, 0, 0, width, height)
         val source = RGBLuminanceSource(width, height, pixels)
         val binary = BinaryBitmap(HybridBinarizer(source))
-        val hints = mapOf(DecodeHintType.POSSIBLE_FORMATS to listOf(com.google.zxing.BarcodeFormat.QR_CODE))
+        val hints = buildMap<DecodeHintType, Any> {
+            put(DecodeHintType.POSSIBLE_FORMATS, listOf(com.google.zxing.BarcodeFormat.QR_CODE))
+            if (tryHarder) put(DecodeHintType.TRY_HARDER, true)
+        }
         return try {
             listOf(MultiFormatReader().decode(binary, hints).text)
         } catch (e: Exception) {

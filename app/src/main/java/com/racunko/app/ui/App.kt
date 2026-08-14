@@ -154,106 +154,9 @@ fun App(vm: MainViewModel) {
     }
 
     if (!state.loaded) return
-    // rc1 Change 1: no working folder yet → first-run grant screen before anything.
-    if (state.needsOnboarding) { OnboardingScreen(vm); return }
+    // v1.7: nothing stands between launch and the list. Storage is the app's own,
+    // so there is no folder to grant and no first-run screen to get through.
     MainScreen(vm)
-}
-
-// ------------------------------------------------------------ onboarding (rc2)
-
-/**
- * v1.5.0-rc2 Change 1: Računko needs ONE folder to store bills/confirmations/QRs.
- * Android 11+ greys out "USE THIS FOLDER" on the Downloads ROOT, so we pre-point
- * the SAF tree picker at the `Download/Racunko` SUBFOLDER (allowed) and explain,
- * via an info popup, how to confirm it (and that files from other apps come in
- * through „Dodaj iz fajla", a no-permission file picker). This is the only
- * permission prompt in the whole flow.
- */
-@Composable
-private fun OnboardingScreen(vm: MainViewModel) {
-    // Show the how-to popup on entry; the ⓘ button reopens it, and a cancelled
-    // grant re-shows it so the user never dead-ends.
-    var showInfo by remember { mutableStateOf(true) }
-    val treeLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.OpenDocumentTree()
-    ) { uri -> if (uri != null) vm.onTreeGranted(uri) else showInfo = true }
-    val launchGrant = {
-        treeLauncher.launch(
-            android.provider.DocumentsContract.buildDocumentUri(
-                "com.android.externalstorage.documents", "primary:Download/Racunko"
-            )
-        )
-    }
-    Surface(color = Palette.Bg, modifier = Modifier.fillMaxSize()) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .statusBarsPadding()
-                .navigationBarsPadding()
-                .padding(28.dp),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(
-                stringResource(R.string.app_name),
-                fontSize = 30.sp, fontWeight = FontWeight.Bold, color = Palette.Blue
-            )
-            Spacer(Modifier.height(16.dp))
-            Text(
-                stringResource(R.string.onboarding_title),
-                fontSize = 20.sp, fontWeight = FontWeight.SemiBold,
-                color = Palette.Text, textAlign = androidx.compose.ui.text.style.TextAlign.Center
-            )
-            Spacer(Modifier.height(14.dp))
-            Text(
-                stringResource(R.string.onboarding_body),
-                fontSize = 15.sp, color = Palette.Muted, lineHeight = 22.sp,
-                textAlign = androidx.compose.ui.text.style.TextAlign.Center
-            )
-            Spacer(Modifier.height(32.dp))
-            Button(
-                onClick = launchGrant,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Palette.Blue, contentColor = Palette.Bg
-                )
-            ) { Text(stringResource(R.string.onboarding_grant), fontWeight = FontWeight.SemiBold) }
-            Spacer(Modifier.height(6.dp))
-            TextButton(onClick = { showInfo = true }) {
-                Ico(RIcons.Info, Palette.Blue, 15)
-                Spacer(Modifier.width(6.dp))
-                Text(stringResource(R.string.onboarding_info_btn), color = Palette.Blue, fontSize = 13.sp)
-            }
-            Spacer(Modifier.height(10.dp))
-            Text(
-                stringResource(R.string.onboarding_hint),
-                fontSize = 12.sp, color = Palette.Muted,
-                textAlign = androidx.compose.ui.text.style.TextAlign.Center
-            )
-        }
-    }
-    if (showInfo) {
-        AlertDialog(
-            onDismissRequest = { showInfo = false },
-            containerColor = Palette.Card,
-            title = { Text(stringResource(R.string.onboarding_info_title), color = Palette.Text, fontWeight = FontWeight.SemiBold) },
-            text = {
-                Text(
-                    stringResource(R.string.onboarding_info),
-                    color = Palette.Muted, fontSize = 14.sp, lineHeight = 20.sp
-                )
-            },
-            confirmButton = {
-                TextButton(onClick = { showInfo = false; launchGrant() }) {
-                    Text(stringResource(R.string.onboarding_grant), color = Palette.Blue, fontWeight = FontWeight.SemiBold)
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showInfo = false }) {
-                    Text(stringResource(R.string.btn_ok), color = Palette.Muted)
-                }
-            }
-        )
-    }
 }
 
 // ------------------------------------------------------------ main screen
@@ -436,9 +339,6 @@ private fun MainScreen(vm: MainViewModel) {
                 onDismiss = { bannerDismissed = true }
             )
         }
-        if (dueOnly) {
-            DueFilterNotice(visibleIds.size) { dueOnly = false }
-        }
         // Change 2–4 / v1.4.4: contextual action bar. v1.6: „Izaberi sve" is
         // scoped to the current view, not to every card in the tab.
         if (selectMode) {
@@ -466,14 +366,25 @@ private fun MainScreen(vm: MainViewModel) {
             if (state.tab == 0 && tabItems.isNotEmpty()) {
                 item(key = "summary") { SummaryCard(tabItems) }
             }
-            if (allLabels.size > 1) {
+            // Bills only, like the summary above: a confirmation is paid by
+            // definition, so it can never be „pred rokom" and the pill would be
+            // an offer to filter by nothing.
+            val dueFilterable = if (state.tab == 0) dueIds.size else 0
+            // The row earns its place with more than one address OR with a
+            // deadline to filter by — with a single address the bell pill is
+            // still the only way back out of that filter.
+            if (allLabels.size > 1 || dueFilterable > 0) {
                 item(key = "addr_filter") {
                     AddressFilterRow(
                         labels = allLabels,
                         counts = tabItems.groupingBy { it.address }.eachCount(),
                         total = tabItems.size,
                         selected = activeFilter,
-                        onSelect = { addressFilter = it }
+                        dueCount = dueFilterable,
+                        overdue = overdueCount,
+                        dueActive = dueOnly,
+                        onDue = { dueOnly = !dueOnly; addressFilter = null },
+                        onSelect = { addressFilter = it; dueOnly = false }
                     )
                 }
             }
@@ -1478,8 +1389,19 @@ private fun Card(
 
             Spacer(Modifier.height(12.dp))
 
-            // QR preview
-            var showQr by remember(item.id) { mutableStateOf(false) }
+            // QR preview. An UNPAID bill leads with its code open — that is the
+            // moment it is needed — while a paid one keeps it folded, so the
+            // height of the card marks the state on its own.
+            val opensQr = item.mode == CardMode.RACUN && !item.paired
+            // Keyed on the default too, not just the id: when a confirmation
+            // arrives the card keeps its id, and without this the QR of a bill
+            // that was just paid would stay open until the next list rebuild.
+            var showQr by remember(item.id, opensQr) { mutableStateOf(opensQr) }
+            // Nothing is stored: the bytes are derived on demand, and only for a
+            // card that is actually going to show them.
+            LaunchedEffect(item.id, showQr, item.hasQr) {
+                if (showQr && item.hasQr && item.qrPng == null) vm.ensureQr(item.id)
+            }
             val qrBitmap = remember(item.qrPng) {
                 item.qrPng?.let { BitmapFactory.decodeByteArray(it, 0, it.size)?.asImageBitmap() }
             }
@@ -1494,13 +1416,41 @@ private fun Card(
                     )
                 }
                 // Change 1: permanent verify line under a GENERATED QR only.
+                // Set with the same rule as the dialogs — one line centred, more
+                // than one justified — so a block of text under the code reads as
+                // a block and not as a ragged afterthought.
                 if (item.qrGenerated) {
-                    Text(
+                    Spacer(Modifier.height(6.dp))
+                    DialogText(
                         stringResource(R.string.qr_disclaimer_short),
-                        color = Palette.Amber, fontSize = 11.sp, lineHeight = 15.sp,
-                        modifier = Modifier.fillMaxWidth().padding(top = 6.dp)
+                        Palette.Amber, 11.sp, 15.sp
                     )
                 }
+                // Two ways out, side by side and equal. Empirically: Intesa takes
+                // a shared PNG straight to payment, AIK never appears in the
+                // share sheet — and the app cannot know which bank this is. The
+                // user tries once and then knows which button is theirs.
+                if (item.mode == CardMode.RACUN) {
+                    Spacer(Modifier.height(10.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        ActionButton(
+                            stringResource(R.string.share_qr), Palette.Blue,
+                            Modifier.weight(1f), RIcons.Share
+                        ) { vm.shareQr(item.id) }
+                        ActionButton(
+                            stringResource(R.string.btn_qr_slika), Palette.Blue,
+                            Modifier.weight(1f), RIcons.QrCode
+                        ) { vm.saveQrToGallery(item.id) }
+                    }
+                }
+                Spacer(Modifier.height(10.dp))
+            } else if (showQr && item.hasQr && item.qrUnavailable) {
+                // An open slot must never be silently empty — 1.6.2 already cost
+                // one device pass to a card that offered no way forward.
+                DialogText(
+                    stringResource(R.string.qr_regen_failed),
+                    Palette.Dim, 11.sp, 15.sp
+                )
                 Spacer(Modifier.height(10.dp))
             }
 
@@ -1529,14 +1479,9 @@ private fun Card(
                 Spacer(Modifier.height(8.dp))
             }
 
-            // actions
+            // actions — „QR slika" now sits next to the code itself, so this row
+            // is only about the bill FILE.
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                if (item.mode == CardMode.RACUN && item.hasQr) {
-                    ActionButton(
-                        stringResource(R.string.btn_qr_slika), Palette.Blue,
-                        Modifier.weight(1f), RIcons.QrCode
-                    ) { vm.saveQrToGallery(item.id) }
-                }
                 ActionButton(
                     stringResource(R.string.btn_podeli), Palette.Blue,
                     Modifier.weight(1f), RIcons.Share
@@ -1579,17 +1524,20 @@ private fun Card(
                 }
             }
 
-            // links row
-            if (item.mode == CardMode.RACUN) {
+            // links row. Only a card that STARTS folded needs the link: an unpaid
+            // bill already shows its code, so „prikaži QR" would point at what is
+            // on screen. With neither link nor notice there is no row at all —
+            // that is where the height an unpaid card gains is partly paid back.
+            if (item.mode == CardMode.RACUN && (!item.hasQr || !opensQr)) {
                 Row(
                     Modifier.fillMaxWidth().padding(top = 4.dp),
                     horizontalArrangement = Arrangement.Center
                 ) {
-                    if (item.hasQr) {
+                    if (item.hasQr && !opensQr) {
                         LinkButton(stringResource(if (showQr) R.string.hide_qr else R.string.show_qr)) {
                             showQr = !showQr
                         }
-                    } else {
+                    } else if (!item.hasQr) {
                         Text(
                             stringResource(R.string.qr_missing),
                             color = Palette.Dim, fontSize = 11.sp,
@@ -1786,7 +1734,12 @@ private fun ActionButton(
             Ico(icon, color, 15)
             Spacer(Modifier.width(7.dp))
         }
-        Text(text, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, maxLines = 1)
+        // Two of these share a row under the QR, so a long label must taper off
+        // rather than be cut mid-glyph.
+        Text(
+            text, fontSize = 13.sp, fontWeight = FontWeight.SemiBold,
+            maxLines = 1, overflow = TextOverflow.Ellipsis
+        )
     }
 }
 
@@ -1949,7 +1902,13 @@ private fun SettingsScreen(vm: MainViewModel, onPurge: () -> Unit, onDismiss: ()
         ProviderDetector.PROVIDERS.map { it to (state.providerOverrides[it] ?: "") }.toMutableStateList()
     }
     val custom = remember { state.customProviders.toMutableStateList() }
-    val treeLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
+    val exportLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
+        if (uri != null) vm.exportArchive(uri)
+    }
+    val importLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
+        if (uri != null) vm.importArchive(uri)
+    }
+    val mirrorLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
         if (uri != null) vm.chooseCustomLocation(uri)
     }
     // Belt and braces: clear focus + controller hide + raw InputMethodManager.
@@ -2012,16 +1971,51 @@ private fun SettingsScreen(vm: MainViewModel, onPurge: () -> Unit, onDismiss: ()
             )
             Spacer(Modifier.height(18.dp))
 
-            // storage location
+            // storage location. v1.7: the archive is the app's own — there is no
+            // folder to choose and no permission to give. Saying so plainly beats
+            // a row that opens a picker for something that is no longer storage.
             FieldLabel(stringResource(R.string.settings_folder))
+            SheetRow(icon = RIcons.Document, text = stringResource(R.string.settings_storage_private))
+            Text(
+                stringResource(R.string.settings_storage_private_note),
+                fontSize = 10.5.sp, color = Palette.Dim, lineHeight = 15.sp,
+                modifier = Modifier.padding(top = 5.dp, start = 2.dp)
+            )
+            Spacer(Modifier.height(18.dp))
+
+            // v1.7: export and import, side by side and equally weighted — the
+            // archive is inside the app, so getting it out has to be as ordinary
+            // as putting it in.
+            FieldLabel(stringResource(R.string.settings_backup))
+            SheetRow(
+                icon = RIcons.Share,
+                text = stringResource(R.string.settings_export)
+            ) { exportLauncher.launch(null) }
+            Spacer(Modifier.height(8.dp))
+            SheetRow(
+                icon = RIcons.Add,
+                text = stringResource(R.string.settings_import)
+            ) { importLauncher.launch(null) }
+            Text(
+                stringResource(R.string.settings_backup_note),
+                fontSize = 10.5.sp, color = Palette.Dim, lineHeight = 15.sp,
+                modifier = Modifier.padding(top = 5.dp, start = 2.dp)
+            )
+            Spacer(Modifier.height(18.dp))
+
+            // v1.7 step 4: the visible folder, back as a CHOICE. Tapping the row
+            // picks a folder; tapping it again while one is bound turns it off.
+            FieldLabel(stringResource(R.string.settings_mirror))
+            val mirrorOn = state.downloadsTreeUri != null
             SheetRow(
                 icon = RIcons.Document,
-                text = state.locationLabel,
-                onClick = { treeLauncher.launch(null) }
-            )
+                text = if (mirrorOn) state.locationLabel
+                else stringResource(R.string.settings_mirror_off),
+                tint = if (mirrorOn) Palette.Text else Palette.Muted
+            ) { if (mirrorOn) vm.resetLocation() else mirrorLauncher.launch(null) }
             Text(
-                stringResource(R.string.settings_choose_location),
-                fontSize = 10.5.sp, color = Palette.Dim,
+                stringResource(R.string.settings_mirror_note),
+                fontSize = 10.5.sp, color = Palette.Dim, lineHeight = 15.sp,
                 modifier = Modifier.padding(top = 5.dp, start = 2.dp)
             )
             Spacer(Modifier.height(18.dp))
@@ -2246,7 +2240,10 @@ private fun SheetRow(
     icon: ImageVector?,
     text: String,
     tint: Color = Palette.Text,
-    onClick: () -> Unit
+    // v1.7: null = the row states a fact rather than offering an action. It then
+    // takes no ripple and shows no chevron, so nothing invites a tap that does
+    // nothing.
+    onClick: (() -> Unit)? = null
 ) {
     val shape = RoundedCornerShape(12.dp)
     Row(
@@ -2255,7 +2252,7 @@ private fun SheetRow(
             .background(Palette.Card2, shape)
             .border(1.dp, Palette.Line, shape)
             .clip(shape)
-            .clickable { onClick() }
+            .then(if (onClick != null) Modifier.clickable { onClick() } else Modifier)
             .padding(horizontal = 12.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -2267,7 +2264,7 @@ private fun SheetRow(
             text, color = tint, fontSize = 14.sp, maxLines = 1,
             overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f)
         )
-        Ico(RIcons.ChevronRight, Palette.Dim, 16)
+        if (onClick != null) Ico(RIcons.ChevronRight, Palette.Dim, 16)
     }
 }
 
@@ -2594,30 +2591,6 @@ private fun DueBanner(count: Int, overdue: Int, onShow: () -> Unit, onDismiss: (
     }
 }
 
-/** Shown while the list is narrowed to the bills near their deadline. */
-@Composable
-private fun DueFilterNotice(count: Int, onClear: () -> Unit) {
-    Row(
-        Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Ico(RIcons.Bell, Palette.Amber, 13)
-        Spacer(Modifier.width(7.dp))
-        Text(
-            pluralStringResource(R.plurals.due_banner, count, count),
-            color = Palette.Amber, fontSize = 11.5.sp, modifier = Modifier.weight(1f)
-        )
-        Text(
-            stringResource(R.string.due_show_all),
-            color = Palette.Blue, fontSize = 11.5.sp,
-            modifier = Modifier
-                .clip(RoundedCornerShape(99.dp))
-                .clickable { onClear() }
-                .padding(horizontal = 9.dp, vertical = 4.dp)
-        )
-    }
-}
-
 // ------------------------------------------- summary · filter · group header
 
 /** Thousands-separated integer amount, in the device's locale. */
@@ -2686,13 +2659,27 @@ private fun SummaryCard(bills: List<CardItem>) {
     }
 }
 
-/** „Sve · KD7 · SG26 …" — narrows the list to one address without collapsing the rest. */
+/**
+ * „Sve · pred rokom · KD7 · SG26 …" — narrows the list without collapsing the rest.
+ *
+ * v1.7: the deadline filter is a pill in THIS row rather than a separate notice.
+ * It used to be a bare text link under the list, quieter than the banner that
+ * opened it, so the way back out was hard to find (reported on device
+ * 14.08.2026). As a pill it carries its own on/off state and „Sve" clears it,
+ * which is the way every other filter here already behaves. The two axes stay
+ * mutually exclusive: picking an address drops the deadline filter and vice
+ * versa, so „Sve" always means all.
+ */
 @Composable
 private fun AddressFilterRow(
     labels: List<String>,
     counts: Map<String, Int>,
     total: Int,
     selected: String?,
+    dueCount: Int,
+    overdue: Int,
+    dueActive: Boolean,
+    onDue: () -> Unit,
     onSelect: (String?) -> Unit
 ) {
     LazyRow(
@@ -2701,7 +2688,19 @@ private fun AddressFilterRow(
         horizontalArrangement = Arrangement.spacedBy(6.dp)
     ) {
         item(key = "all") {
-            FilterPill(stringResource(R.string.filter_all), total, selected == null) { onSelect(null) }
+            FilterPill(
+                stringResource(R.string.filter_all), total,
+                selected == null && !dueActive
+            ) { onSelect(null) }
+        }
+        if (dueCount > 0) {
+            item(key = "due") {
+                FilterPill(
+                    stringResource(R.string.filter_due), dueCount, dueActive,
+                    accent = if (overdue > 0) Palette.Red else Palette.Amber,
+                    icon = RIcons.Bell
+                ) { onDue() }
+            }
         }
         items(labels.size, key = { labels[it] }) { i ->
             val label = labels[i]
@@ -2713,26 +2712,41 @@ private fun AddressFilterRow(
 }
 
 @Composable
-private fun FilterPill(text: String, count: Int, active: Boolean, onClick: () -> Unit) {
+private fun FilterPill(
+    text: String,
+    count: Int,
+    active: Boolean,
+    accent: Color = Palette.Blue,
+    icon: ImageVector? = null,
+    onClick: () -> Unit
+) {
     val shape = RoundedCornerShape(99.dp)
     Row(
         Modifier
-            .background(if (active) Palette.Blue.copy(alpha = 0.16f) else Palette.Card2, shape)
-            .border(1.dp, if (active) Palette.Blue else Palette.Line, shape)
+            .background(if (active) accent.copy(alpha = 0.16f) else Palette.Card2, shape)
+            .border(1.dp, if (active) accent else Palette.Line, shape)
             .clickable { onClick() }
             .padding(horizontal = 11.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(
-            text,
-            color = if (active) Palette.Blue else Palette.Muted,
-            fontSize = 12.5.sp,
-            fontWeight = if (active) FontWeight.SemiBold else FontWeight.Normal
-        )
+        // A glyph instead of a word where the glyph already says it: the bell is
+        // the same mark the deadline banner leads with, so the pill reads as that
+        // banner's filter without spending a word on it. `text` stays the
+        // accessible label.
+        if (icon != null) {
+            Ico(icon, if (active) accent else Palette.Muted, 14, text)
+        } else {
+            Text(
+                text,
+                color = if (active) accent else Palette.Muted,
+                fontSize = 12.5.sp,
+                fontWeight = if (active) FontWeight.SemiBold else FontWeight.Normal
+            )
+        }
         Spacer(Modifier.width(5.dp))
         Text(
             "$count",
-            color = if (active) Palette.Blue.copy(alpha = 0.75f) else Palette.Dim,
+            color = if (active) accent.copy(alpha = 0.75f) else Palette.Dim,
             fontSize = 10.sp
         )
     }
@@ -2749,7 +2763,11 @@ private fun AddressGroupHeader(
     expanded: Boolean,
     onToggle: () -> Unit
 ) {
-    val unpaid = cards.count { !it.paired }
+    // A bill is settled when its confirmation arrives (`paired`); a confirmation
+    // is settled when it finds its bill (`matched`). Counting `paired` for both
+    // made every confirmation on the Potvrde tab read „neplaćeno" — including the
+    // ones sitting under a bill already marked paid.
+    val unpaid = cards.count { if (it.mode == CardMode.POTVRDA) !it.matched else !it.paired }
     Column {
         Row(
             Modifier

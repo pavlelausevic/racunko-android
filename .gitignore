@@ -28,5 +28,6 @@ HANDOFF.md
 /Racunko-prezentacija.zip
 *.apk
 
-# foss OCR models are fetched at build time (tessdata_fast), never committed
-/app/src/foss/assets/tessdata/
+# OCR models are fetched at build time (tessdata_fast), never committed.
+# v1.7: both flavors bundle them, so they live in the shared source set.
+/app/src/main/assets/tessdata/

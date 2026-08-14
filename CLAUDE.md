@@ -27,10 +27,22 @@ models; see the size notes in app/build.gradle.kts). Keep APKs,
 - **:app** — Compose UI + domain + data + flavor engine impls.
 
 ## Flavors (engine swap, compile-time)
-- `gms` (Play): ML Kit barcode+text (bundled, offline) + ZXing encode.
-- `foss` (F-Droid): ZXing decode+encode + Tesseract (tessdata_fast bundled at
-  build time by `fetchTessdata` task → git-ignored; zero runtime network).
-Engine impls live ONLY in `app/src/{gms,foss}/java/com/racunko/app/engine/`.
+- `gms` (Play): ML Kit **barcode** (bundled, offline) + ZXing encode.
+- `foss` (F-Droid): ZXing decode+encode.
+- **OCR is Tesseract in BOTH since v1.7.** ML Kit's recognizer is Latin-script
+  and no Cyrillic model exists for it, while every bill a public utility prints
+  here is Cyrillic — on a screenshot of one it returned nothing usable. Measured
+  before swapping: ML Kit OCR 18.2 MB (no Cyrillic) vs Tesseract 16.1 MB with
+  `srp`+`srp_latn`+`eng`, so the swap SHRANK gms 37.1 → 33.5 MB. ML Kit stays
+  for QR decoding, where it is better and has no substitute in that flavor.
+  If OCR comes up again, this is the decision — see the handoff's decision
+  register.
+- tessdata_fast is bundled at build time by `fetchTessdata` → git-ignored, zero
+  runtime network, both flavors.
+Flavor engine impls live ONLY in `app/src/{gms,foss}/java/com/racunko/app/engine/`.
+`TesseractTextRecognizer` is the ONE exception and sits in `main`: that rule
+exists to keep a PROPRIETARY engine out of shared code, and Tesseract is
+Apache-2.0.
 `RacunkoApp` sets `Engines.instance = EngineFactory.create(ctx)` (per-flavor).
 
 ## Key files (one-liners; sizes: App.kt is the big one ~1170 LOC)
@@ -86,6 +98,140 @@ app:
   ("a..b main -> main") confirms success; check `git rev-parse HEAD == origin/main`.
 
 ## Version / phase state (update as it moves)
+
+**Storage round, test pass 2026-08-14 (SM-S948B, release APK, gms).** Not
+released, version NOT bumped. Tesseract in `gms` is DEVICE-PROVEN under R8 (D1):
+the native libs load, `Initialized Tesseract API with language=srp+srp_latn+eng`,
+init 88–117 ms, and a Cyrillic InfoStan screenshot yields ~4400 characters whose
+address matches and whose deadline parses. OCR costs ~2.6 s per pass at 1080 px
+and ~3.4 s at double that — the work tracks the TEXT FOUND, not the pixel count.
+**OCR runs TWICE per image on purpose** — `classifyDocument` then
+`processImageBill`. Left in deliberately (owner's call: *accuracy over speed*).
+Do not "optimise" it by skipping OCR when an IPS QR is present: `classifyDocType`
+returns BILL on the QR alone, so a bank confirmation that prints the paid QR
+would classify as a bill. The only correct saving is to MEMOISE the text from the
+classify pass and thread it through `processPicked` (the source uri differs from
+the imported file's uri) — that changes nothing observable; skipping does.
+**`Pipeline.scaledForOcr` — images are enlarged before OCR, by a WHOLE-NUMBER
+factor.** `PdfOcr` has always rendered pages at >= 2000 px; plain images went in
+at native size, so a phone screenshot of an A4 bill reached Tesseract at ~130 DPI
+and the smallest rows never appeared in the output — which is why the deadline
+read as absent while everything else was right. It was never a parser fault:
+`datum dospec[ae]` is in `DueDateParser.LABELS` and `Normalizer` maps `ć`->`c`.
+The factor MUST be an integer: `createScaledBitmap` is bilinear, and at 1.85x
+(1080 -> exactly 2000) glyph edges fall between source pixels and smear, which
+read WORSE than not scaling at all — it lost the `adresa:` anchor and named a
+bill onto the wrong address. At 2x every source pixel maps to a whole block, the
+anchor is found, and the same bill reads both its address and its deadline. Round
+the factor UP; never aim at the target width exactly.
+**`AddressMatcher` zone order: the property anchor now outranks the QR `P`
+field.** `P` is the PAYER's postal address; the provider anchor (`adresa:` for
+infostan, `mernog mesta` for eps) is the PROPERTY the bill is for, and for
+InfoStan those are routinely two different addresses kept as two labels. With
+only one of them in the book a bill named itself correctly; adding the other
+silently moved it onto the postal one. The rule is the owner's: **always the
+property address**. Providers with no anchor (mts, yettel, sz) are untouched —
+there `P` IS the subscriber's address and stays the first zone. The rest of the
+app already knew this: `buildBillCard` withholds the QR from the matcher on the
+scan path for exactly this reason. Pinned by
+`infostan/qr_payer_field_does_not_beat_property_anchor`; the pre-existing
+`qr_anchor_zone_resolves_two_addresses` did NOT cover it because its `ips` has no
+`P` field. Measured aside: an InfoStan IPS QR carries no `P` at all, so that
+issuer depends entirely on the anchor — which is why the two fixes above are one
+story. **Corpus 21 -> 22, tests 74 -> 76.**
+UI: the deadline filter is a bell pill in the address-chip row (amber, red when
+something is overdue) instead of a text link quieter than the banner that opened
+it; `DueFilterNotice` is gone, the banner stays, and the pill is bills-only.
+Translations stay 178 = 178 = 178 (`due_show_all` -> `filter_due`).
+
+**Storage round step 1 — QR, DEVICE-PROVEN 2026-08-14 (SM-S948B, Android 16,
+release APK, both flavors).** Not released, version NOT bumped.
+Measured: cold derive from the document **~130–400 ms**, cache hit **0–4 ms**, and
+with 14 cards on screen exactly **ONE** derive — the „open only when unpaid" rule
+is what keeps the cost proportional to unpaid bills instead of list length.
+Processing a bill wrote **zero** files to the gallery (1.6.2 wrote two).
+Delete-on-pairing removed only the QR booked for THAT bill.
+Three defects the device found, all fixed here:
+(1) the share sheet could not read the FileProvider uri to draw its preview — the
+grant rides on `ClipData`, not on the extra, so `startShare` now sets it;
+(2) nothing wrote `qrImageUri` to the BILL row any more, so `markPaired` had
+nothing to delete and Odluka 5 was silently dead — `Pipeline.recordSavedQr` books
+it when the user saves, and `savedQrUris` drops the previous copy first;
+(3) **foss/ZXing missed the InfoStan layout** that ML Kit reads (rebuilt instead
+of read, on the same PDF). `QrDecoder.decodeThorough` (default = `decode`) is
+overridden in the ZXing flavor with `TRY_HARDER` after a plain pass fails, and is
+used by the ONE-SHOT call sites only — `QrExtractor` and the image intakes. The
+live scanner keeps the fast path: it sees ~30 frames a second and most carry no
+code at all. After the fix foss reads that bill in 224 ms vs ML Kit's 245 ms.
+The rule: **the QR is derived, never stored.**
+Three levels, nothing above the first by default — shown on the card (memory
+only), „Podeli QR" (`cacheDir/share` + FileProvider, the system cleans it),
+„U galeriju" (`Pictures/Racunko`, the user asked). The automatic `Gallery.save`
+in `buildBillCard` and `generateQr` is GONE; `applyEdits` redoes a gallery copy
+only when one already exists. `Gallery.kt` stays whole — a bank that never
+appears in the share sheet needs it.
+New `domain/QrCache.kt`: PNGs in `cacheDir/qr`, keyed by reference number (it
+survives a rename) else file name, `.gen` in the file name recording whether the
+code was REBUILT rather than read from the document. `Pipeline.qrFor` replaces
+`qrBytesFor` and is cache-first; `deriveQr` reads the DOCUMENT first and rebuilds
+only as a fallback, because a rebuilt payload is not the issuer's (payee name /
+payment code / model are not reconstructed) — a fallback therefore raises
+`qrGenerated`, so the verify-before-paying notice appears. It skips the document
+for an already-generated QR: a `processScannedQr` artifact DOES contain a
+decodable QR, and reading it back would silently drop that notice.
+`MainViewModel.ensureQr` is lazy (card-visible + unpaid only) and **deliberately
+does not persist** — the record holds no bitmap, and a source file that was
+briefly unreachable must not mark a bill generated for good.
+`showQr` = `!item.paired`, `remember`ed on (id, default) so pairing folds it.
+Timing goes to logcat as `RacunkoQr qr source=cache|document|rebuilt|none ms=N`
+— **no key, no file name**: a reference number identifies an account.
+Test on a RELEASE APK (the regeneration path is ML Kit decoding, exactly what R8
+broke in 1.6.1); `adb shell pm trim-caches 999999999999` clears `cacheDir/qr`
+without touching the database, which is how the same bill is measured cold twice.
+**`ignoreAssetsPatterns += "cmap"` SILENTLY BROKE PDF TEXT FOR THREE RELEASES —
+reverted 2026-08-14. Never strip PDFBox's cmap assets.** v1.6.0 dropped them for
+1.21 MB on the claim that "every one of them is CJK". There are 94, and two are
+**Identity-H / Identity-V** — the encoding of every subset CID font, which is
+what Serbian issuers' PDFs use (`FontFile2` + hex strings, zero literals).
+The failure was not an exception and not empty text: PDFBox kept returning
+~4500 characters of glyph soup, „ЈАВНО КОМУНАЛНО" as `jabho komyhanho`. That
+sailed past `OcrPolicy.needsOcr` (which measures LENGTH), the `adresa:` anchor
+was not found, the address matcher returned nothing, and `PayeeMemory.prefill`
+filled the blank from the RECIPIENT ACCOUNT — one institutional account shared
+by every InfoStan customer and flat, so what it returned was whichever address
+was seen last. A bill was renamed onto someone else's address; the deadline
+vanished the same way (label-anchored, no readable label).
+**How it was caught, and the method worth reusing:** the user said the OLD
+version read these bills. The PDFs were identical in structure (16 fonts, 2
+`/ToUnicode`, ~420 hex strings) whether they had worked or not — so the change
+was in the APP, not the input. Re-processing bills that had been correct BEFORE
+v1.6.0 reproduced the failure; that is what turned "these fonts are broken" into
+"we broke the reader". Verify with `zipfile` on the built APK: `cmap` entries
+must be 92 and include Identity-H/V. Restored size: gms 35.9 → **37.1 MB**.
+Do not attempt the saving again without excluding the CJK families BY NAME and
+re-processing a CID-keyed bill to prove it.
+**Kept as defence in depth**, since the guess is what turned a parsing failure
+into a wrong file name: `Pipeline.buildBillCard` skips payee-memory prefill when
+`textIsReadable(text)` is false — the same shape as the existing
+`sourceKind == QR_ONLY` refusal, at the CALL SITE, not in parser-core.
+`textIsReadable` wants ≥2 of `BILL_WORDS` in the NORMALIZED text (`Normalizer`
+transliterates Cyrillic, so one list covers both scripts; glyph soup matches
+none). It gates only the GUESS, never the reading — a false negative costs one
+manual tap on the address, never a wrong name. Device-confirmed in both states:
+with cmaps missing the card fell back to `adresa?` + „dopuni ručno" instead of a
+wrong label; with cmaps restored all four test bills read their address straight
+from the document (`sidro=true`, matcher non-empty).
+**Note for a future round:** payee memory can never learn an address for an
+issuer whose recipient account is institutional. The key that would work is the
+InfoStan IDENT (`SpaceId.detect` reads it from the QR reference), but §5's
+`ro_without_model_prefix` shows the IDENT is itself lost without the `118`
+prefix. Moot while text extraction works; relevant if it ever degrades again.
+
+**Unrelated defect found in passing and fixed:** Android drops an unescaped `"`
+from a string resource, so every Serbian „…" pair in `strings.xml` was rendering
+without its closing quote (5 strings in `values`, 2 in `values-en`). Fixed by
+using the real closing quotes („…” and “…”) rather than escaping — `values-ru`
+was already correct because it uses «…».
 Repo `github.com/pavlelausevic/racunko-android`, branch main. From here every
 round is a point release (1.5.1, 1.5.2 …); 1.6.0 is the first MINOR bump —
 nothing a user depends on broke, so it is not 2.0. Reserve 2.0 for the JSON
@@ -229,7 +375,7 @@ the PUBLIC RELEASE note above.)
 
 ## Fixture corpus (v1.6.2 — the portability argument)
 `parser-core/src/test/fixtures/{issuer}/{case}.{txt,expected.json}`, run by
-`FixtureTest`. **21 cases** over eps/infostan/mts/sz/yettel/uplatnica plus three
+`FixtureTest`. **22 cases** over eps/infostan/mts/sz/yettel/uplatnica plus three
 issuer-less buckets: `address/` (matcher boundaries + never-guess), `confirmation/`
 (bank receipts, classification only), `unknown/` (must NOT be offered as bills).
 KEY FINDING that shaped it: the app has TWO extraction paths and they are
@@ -281,7 +427,7 @@ the EPS slip's „Валута" currency column). Real bills confirmed the label
 locally and never left the maintainer's machine; the committed text is synthetic.
 ReportTest (v1.6: amounts align by WIDTH not char count; spacer never overshoots
 and never emits two ASCII spaces in a row).
-**74 green + 21 fixture cases** (was 86 + 8; the drop is migration, not loss —
+**76 green + 22 fixture cases** (was 86 + 8; the drop is migration, not loss —
 every removed Kotlin test is a corpus case, and the corpus grew by 13).
 README carries the count in a badge and in the build snippet — update BOTH.
 UI has no JVM proof → device pass. A PR adding a template needs a fixture; never

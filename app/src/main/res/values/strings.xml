@@ -9,15 +9,15 @@
     <string name="btn_obradi">Obradi</string>
     <string name="btn_podeli">Podeli</string>
     <string name="btn_podeli_sve">Podeli sve</string>
-    <string name="btn_qr_slika">QR slika</string>
+    <string name="btn_qr_slika">U galeriju</string>
     <string name="btn_sacuvaj">Sačuvaj</string>
     <string name="btn_otkazi">Otkaži</string>
     <string name="btn_add_address">Dodaj adresu</string>
 
     <string name="files_in_folder">Fajlovi u fascikli</string>
     <string name="empty_folder">Nema PDF fajlova u ovoj fascikli.</string>
-    <string name="empty_racuni">Računko čita PDF račune iz fascikle Download (podrazumevano).\n\nDodaj račune dugmetom „+", a Računko ih čita, preimenuje i izdvaja NBS IPS QR kôd za plaćanje. Potvrdu o plaćanju dodaješ na svaki račun preko „+" na njegovoj kartici.</string>
-    <string name="empty_potvrde">Potvrde stižu deljenjem iz banke u Računko (Podeli → Računko) ili preko „+" na kartici računa.</string>
+    <string name="empty_racuni">Računko čita PDF račune iz fascikle Download (podrazumevano).\n\nDodaj račune dugmetom „+”, a Računko ih čita, preimenuje i izdvaja NBS IPS QR kôd za plaćanje. Potvrdu o plaćanju dodaješ na svaki račun preko „+” na njegovoj kartici.</string>
+    <string name="empty_potvrde">Potvrde stižu deljenjem iz banke u Računko (Podeli → Računko) ili preko „+” na kartici računa.</string>
     <string name="system_picker">sistemski birač fajlova</string>
     <string name="btn_add_bill">Dodaj račun</string>
     <string name="btn_add_potvrda">Dodaj potvrdu</string>
@@ -47,11 +47,12 @@
 
     <string name="show_qr">prikaži QR</string>
     <string name="hide_qr">sakrij QR</string>
-    <string name="share_qr">podeli QR sliku</string>
+    <string name="share_qr">Podeli QR</string>
     <string name="add_confirmation">dodaj potvrdu</string>
+    <string name="qr_regen_failed">QR se ne može obnoviti — izvorni fajl nije dostupan, a podaci sa računa nisu dovoljni.</string>
     <string name="qr_missing">QR kod nije pronađen u ovom dokumentu</string>
     <string name="pick_bill_to_pair">Upari sa računom:</string>
-    <string name="pick_confirmation">Izaberi potvrdu iz fascikle „potvrde":</string>
+    <string name="pick_confirmation">Izaberi potvrdu iz fascikle „potvrde”:</string>
     <string name="no_unpaired_bills">Nema zapamćenih neuparenih računa.</string>
 
     <string name="settings_title">Podešavanja</string>
@@ -60,7 +61,19 @@
     <string name="settings_providers">Nazivi pružalaca (za naziv fajla)</string>
     <string name="settings_language">Jezik</string>
     <string name="settings_folder">Lokacija čuvanja</string>
-    <string name="settings_choose_location">Izaberi drugu lokaciju čuvanja</string>
+    <string name="settings_storage_private">Računi i potvrde su u aplikaciji</string>
+    <string name="settings_storage_private_note">Ništa se ne traži od telefona i ništa nije vidljivo drugim aplikacijama. Izvezi arhivu da bi je zadržao i van Računka.</string>
+    <string name="settings_backup">Arhiva</string>
+    <string name="settings_export">Izvezi u fasciklu</string>
+    <string name="settings_import">Uvezi iz fascikle</string>
+    <string name="settings_backup_note">Izvoz upisuje račune, potvrde i racunko.json u fasciklu koju izabereš — fajlovi ostaju čitljivi i bez Računka. Uvoz ih vraća, zajedno sa rokovima, uparivanjima i šifarnikom.</string>
+    <string name="settings_mirror">Čuvaj i kopiju u mojoj fascikli</string>
+    <string name="settings_mirror_off">isključeno</string>
+    <string name="settings_mirror_note">Kad je uključeno, svaki račun i potvrda se upisuju i u fasciklu koju izabereš, pa ih vidiš i van Računka. Arhiva u aplikaciji ostaje glavna — fascikla je njena senka.</string>
+    <string name="toast_mirror_on">Kopija uključena — prepisano %1$d fajlova</string>
+    <string name="toast_mirror_off">Kopija isključena — fascikla ostaje kakva jeste</string>
+    <string name="toast_exported">Izvezeno: %1$d fajlova + racunko.json</string>
+    <string name="toast_imported">Uvezeno: %1$d fajlova</string>
     <string name="settings_reset_location">Vrati na podrazumevano (Download/Racunko)</string>
     <string name="legacy_folder_notice">Stara struktura foldera se više ne koristi. Nove fascikle su u Download/Racunko.</string>
     <string name="settings_clear_history">Obriši istoriju uparivanja</string>
@@ -117,7 +130,7 @@
     <string name="due_time_label">U koje vreme</string>
     <string name="due_time_note">Podsetnik se za sada prikazuje u aplikaciji kada je otvoriš. Vreme se pamti za sistemsko obaveštenje, kada ga uvedemo.</string>
     <string name="due_banner_show">Prikaži</string>
-    <string name="due_show_all">Prikaži sve</string>
+    <string name="filter_due">pred rokom</string>
     <plurals name="due_banner">
         <item quantity="one">%d račun je pred rokom</item>
         <item quantity="few">%d računa su pred rokom</item>
@@ -146,7 +159,7 @@
     <string name="settings_danger">Brisanje podataka</string>
     <string name="tag_processed">već obrađen</string>
     <string name="cta_sifarnik_title">Napravi šifarnik adresa</string>
-    <string name="cta_sifarnik_text">Adrese su jedino što Računko ne može sam da izvede. Sa šifarnikom (skraćenica + tekst adrese sa računa) fajlovi se sami imenuju po lokaciji, npr. infostan_BDS95_maj26_11152. Možeš da nastaviš i bez njega — adresa ostaje „adresa?" za ručni unos.</string>
+    <string name="cta_sifarnik_text">Adrese su jedino što Računko ne može sam da izvede. Sa šifarnikom (skraćenica + tekst adrese sa računa) fajlovi se sami imenuju po lokaciji, npr. infostan_BDS95_maj26_11152. Možeš da nastaviš i bez njega — adresa ostaje „adresa?” za ručni unos.</string>
     <string name="cta_sifarnik_btn">Napravi šifarnik</string>
     <string name="intake_conf_title">Izgleda kao potvrda</string>
     <string name="intake_bill_title">Izgleda kao račun</string>
@@ -197,7 +210,7 @@
     <string name="toast_no_selection">Izaberi bar jedan fajl</string>
     <string name="toast_received">Potvrda primljena</string>
     <string name="toast_folder_error">Ne mogu da pristupim fascikli — izaberi je ponovo</string>
-    <string name="toast_qr_generated">QR za plaćanje napravljen — sačuvan u galeriju</string>
+    <string name="toast_qr_generated">QR za plaćanje napravljen</string>
     <string name="toast_payees_cleared">Zapamćeni primaoci obrisani</string>
 
     <!-- 8c: verified account, generate QR, payee-memory hint, unified + menu -->
@@ -211,12 +224,4 @@
     <string name="add_photo">Dodaj fotografiju</string>
     <string name="settings_clear_payees">Obriši zapamćene primaoce</string>
 
-    <!-- v1.5.0-rc1/rc2 Change 1: first-run folder grant (onboarding) -->
-    <string name="onboarding_title">Računku treba jedna fascikla</string>
-    <string name="onboarding_body">Računko je napravio fasciklu Download/Racunko za tvoje račune. Na sledećem ekranu samo je potvrdi — jedan tap.</string>
-    <string name="onboarding_grant">Potvrdi fasciklu</string>
-    <string name="onboarding_hint">Bez interneta. Ništa ne napušta telefon.</string>
-    <string name="onboarding_info_btn">Kako ovo radi?</string>
-    <string name="onboarding_info_title">Potvrda fascikle</string>
-    <string name="onboarding_info">Računko je već napravio fasciklu Download/Racunko. Na sledećem ekranu samo tapni „Koristi ovu fasciklu".\n\nAko dijalog otvori Download a dugme je sivo — uđi u Racunko pa potvrdi.\n\nFajlove iz drugih aplikacija (mejl, EPS…) dodaješ preko „Dodaj iz fajla".</string>
 </resources>

@@ -1,11 +1,10 @@
 package com.racunko.app.data
 
-import android.content.ContentValues
 import android.content.Context
 import android.graphics.Bitmap
 import android.net.Uri
-import android.provider.MediaStore
 import androidx.documentfile.provider.DocumentFile
+import java.io.File
 
 /**
  * v1.5.0-rc1 — a single file-access model: SAF.
@@ -28,8 +27,10 @@ enum class FileKind { RACUN, POTVRDA }
 data class StoredFile(val uri: Uri, val name: String, val lastModified: Long)
 
 object RacunkoTree {
-    /** Human-readable default location, shown in onboarding / Settings. */
+    /** Human-readable label for the OPTIONAL visible folder, shown in Settings. */
     const val LABEL = "Download/Racunko"
+    /** What Settings says when storage is the app's own (the default). */
+    const val PRIVATE_LABEL = "u aplikaciji"
     /** MediaStore.Images RELATIVE_PATH for the gallery-visible QR copy. */
     const val PICTURES_REL = "Pictures/Racunko"
 }
@@ -52,17 +53,73 @@ interface FileStore {
     fun delete(uri: Uri): Boolean
 }
 
+// -------------------------------------------------------------- private store
+
 /**
- * Fallback used only before onboarding binds a real tree. Never touches disk;
- * the UI blocks all file actions until a grant exists, so this is inert.
+ * v1.7 — THE DEFAULT STORE. Bills and confirmations live in the app's own
+ * `filesDir`, so a person installs Računko and it works: no permission, no
+ * grant dialog, no first-run screen, and nothing of theirs visible to any other
+ * app. The visible folder still exists as an OPTION (see the SAF store below),
+ * because a folder you can open is what makes an archive feel owned — but it is
+ * a choice now, not the price of entry.
+ *
+ *   filesDir/racuni/    → renamed bill PDFs/images
+ *   filesDir/potvrde/   → renamed confirmation PDFs/images
+ *
+ * Simpler than [SafStore] on purpose: plain `java.io.File`, no document tree, no
+ * grant that can be revoked. Uris are `file://` — every reader in the app goes
+ * through `ContentResolver`, which handles that scheme; the one place that
+ * cannot is an outgoing share, where the file must be handed over as a
+ * `FileProvider` uri instead (`MainViewModel.shareableUri`).
+ *
+ * THE TRADE this makes: uninstalling the app deletes the archive. That is why
+ * export/import is not optional and must ship in the same release.
  */
-object NoopStore : FileStore {
-    override val locationLabel: String get() = RacunkoTree.LABEL
-    override fun list(kind: FileKind): List<StoredFile> = emptyList()
-    override fun existingNames(kind: FileKind): Set<String> = emptySet()
-    override fun rename(uri: Uri, currentName: String, newName: String, kind: FileKind): Uri? = null
-    override fun importFile(kind: FileKind, src: Uri, name: String, mime: String): StoredFile? = null
-    override fun delete(uri: Uri): Boolean = false
+class PrivateStore(private val context: Context) : FileStore {
+
+    private fun dir(kind: FileKind): File {
+        val name = if (kind == FileKind.RACUN) "racuni" else "potvrde"
+        return File(context.filesDir, name).apply { mkdirs() }
+    }
+
+    /** Both folders, for the exporter and for whole-archive operations. */
+    fun folders(): List<File> = listOf(dir(FileKind.RACUN), dir(FileKind.POTVRDA))
+
+    private fun fileOf(uri: Uri): File? = uri.path?.let { File(it) }
+
+    override val locationLabel: String get() = RacunkoTree.PRIVATE_LABEL
+
+    override fun list(kind: FileKind): List<StoredFile> =
+        dir(kind).listFiles()?.filter { it.isFile }
+            ?.map { StoredFile(Uri.fromFile(it), it.name, it.lastModified()) }
+            ?: emptyList()
+
+    override fun existingNames(kind: FileKind): Set<String> =
+        dir(kind).listFiles()?.filter { it.isFile }?.map { it.name }?.toSet() ?: emptySet()
+
+    override fun rename(uri: Uri, currentName: String, newName: String, kind: FileKind): Uri? {
+        if (currentName == newName) return uri
+        val src = fileOf(uri) ?: return null
+        val dst = File(dir(kind), newName)
+        if (!src.exists() || dst.exists()) return null
+        return if (src.renameTo(dst)) Uri.fromFile(dst) else null
+    }
+
+    override fun importFile(kind: FileKind, src: Uri, name: String, mime: String): StoredFile? {
+        val dst = File(dir(kind), name)
+        return try {
+            context.contentResolver.openInputStream(src)?.use { input ->
+                dst.outputStream().use { input.copyTo(it) }
+            } ?: return null
+            StoredFile(Uri.fromFile(dst), dst.name, dst.lastModified())
+        } catch (_: Exception) {
+            runCatching { dst.delete() }
+            null
+        }
+    }
+
+    override fun delete(uri: Uri): Boolean =
+        runCatching { fileOf(uri)?.delete() ?: false }.getOrDefault(false)
 }
 
 // ----------------------------------------------------------------- SAF tree
@@ -124,6 +181,10 @@ class SafStore(private val context: Context, private val treeUri: Uri) : FileSto
         false
     }
 
+    /** Locate a file by name in one of the two folders — the mirror needs this. */
+    fun uriFor(kind: FileKind, name: String): Uri? =
+        folder(kind)?.findFile(name)?.takeIf { it.isFile }?.uri
+
     /**
      * Writes a QR PNG into the `Racunko` container; returns its uri or null.
      * [fileName] must include the `.png` extension. A stale same-named file is
@@ -147,51 +208,79 @@ class SafStore(private val context: Context, private val treeUri: Uri) : FileSto
 
 // ------------------------------------------------------------------ manager
 
-/** The single [FileStore], backed by the persisted SAF tree grant. */
+// ------------------------------------------------------------------- mirror
+
+/**
+ * v1.7 step 4 — „Čuvaj i kopiju u mojoj fascikli".
+ *
+ * The app's own storage stays the source of truth; the visible folder is a
+ * SHADOW of it. Reads never touch the mirror, so a revoked grant or a folder the
+ * user emptied by hand can slow nothing down and lose nothing. Writes are
+ * best-effort: if the mirror fails, the archive is still correct and the only
+ * consequence is that the folder is stale until the next export.
+ *
+ * Wrapping the primary is what keeps this honest — every path that writes goes
+ * through `FileStore`, so there is no second place to remember to mirror from.
+ */
+private class MirrorStore(
+    private val primary: PrivateStore,
+    private val mirror: SafStore
+) : FileStore {
+
+    override val locationLabel: String get() = primary.locationLabel
+
+    override fun list(kind: FileKind): List<StoredFile> = primary.list(kind)
+    override fun existingNames(kind: FileKind): Set<String> = primary.existingNames(kind)
+
+    override fun rename(uri: Uri, currentName: String, newName: String, kind: FileKind): Uri? {
+        val out = primary.rename(uri, currentName, newName, kind) ?: return null
+        runCatching {
+            mirror.uriFor(kind, currentName)?.let { mirror.rename(it, currentName, newName, kind) }
+        }
+        return out
+    }
+
+    override fun importFile(kind: FileKind, src: Uri, name: String, mime: String): StoredFile? {
+        val out = primary.importFile(kind, src, name, mime) ?: return null
+        // Copy from the file we just wrote, not from [src]: a one-shot content
+        // uri may already be spent by the time the primary copy is done.
+        runCatching { mirror.importFile(kind, out.uri, name, mime) }
+        return out
+    }
+
+    override fun delete(uri: Uri): Boolean {
+        val name = uri.lastPathSegment?.substringAfterLast('/')
+        val out = primary.delete(uri)
+        if (name != null) runCatching {
+            FileKind.entries.forEach { k -> mirror.uriFor(k, name)?.let { mirror.delete(it) } }
+        }
+        return out
+    }
+}
+
+/**
+ * v1.7: the store is ALWAYS backed by [PrivateStore]. A SAF tree, when the user
+ * turns the optional copy on in Settings, only adds a mirror on top — never the
+ * primary, and never something the app waits for. `store()` therefore has no
+ * failure mode and no "not ready yet": there is nothing to grant and nothing to
+ * lose.
+ */
 class StorageManager(private val context: Context) {
+
+    private val private = PrivateStore(context)
 
     @Volatile
     private var saf: SafStore? = null
 
-    fun store(): FileStore = saf ?: NoopStore
+    fun store(): FileStore = saf?.let { MirrorStore(private, it) } ?: private
 
-    /** The SAF store when a tree is bound — needed for QR writes into the tree. */
+    /** The app's own storage, typed — the exporter needs the real folders. */
+    fun privateStore(): PrivateStore = private
+
+    /** The optional visible folder, when the user has turned it on. */
     fun racunkoStore(): SafStore? = saf
 
-    fun isReady(): Boolean = saf != null
-
-    /**
-     * v1.5.0-rc3: create `Download/Racunko` up-front via MediaStore (API 29+, no
-     * permission) so the folder EXISTS before onboarding. The SAF grant dialog can
-     * then land on it with an ENABLED "Use this folder" button (the Downloads ROOT
-     * would be greyed). Best-effort and idempotent — leaves one small readme so the
-     * folder is non-empty/visible; if it already exists, does nothing.
-     */
-    fun ensurePublicFolder() {
-        val resolver = context.contentResolver
-        val collection = MediaStore.Downloads.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
-        val already = runCatching {
-            resolver.query(
-                collection, arrayOf(MediaStore.MediaColumns._ID),
-                "${MediaStore.MediaColumns.RELATIVE_PATH} LIKE ?", arrayOf("Download/Racunko/%"), null
-            )?.use { it.count > 0 } ?: false
-        }.getOrDefault(false)
-        if (already) return
-        val values = ContentValues().apply {
-            put(MediaStore.MediaColumns.DISPLAY_NAME, "O_fascikli.txt")
-            put(MediaStore.MediaColumns.MIME_TYPE, "text/plain")
-            put(MediaStore.MediaColumns.RELATIVE_PATH, "Download/Racunko")
-        }
-        runCatching {
-            resolver.insert(collection, values)?.let { uri ->
-                resolver.openOutputStream(uri)?.use {
-                    it.write("Racunko cuva vase racune i potvrde u ovoj fascikli (Racuni, Potvrde).".toByteArray())
-                }
-            }
-        }
-    }
-
-    /** Binds the granted tree; false when it's inaccessible (permission lost). */
+    /** Binds the optional tree; false when it's inaccessible (permission lost). */
     fun setTree(treeUri: Uri?): Boolean {
         if (treeUri == null) {
             saf = null

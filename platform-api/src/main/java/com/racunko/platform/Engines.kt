@@ -16,6 +16,24 @@ import android.graphics.Bitmap
 interface QrDecoder {
     /** @return raw payload strings; the caller keeps only those starting `K:PR`. */
     fun decode(bitmap: Bitmap): List<String>
+
+    /**
+     * The same decode, but for a ONE-SHOT image where spending more time is
+     * cheap and a miss is expensive — a rendered PDF page or a photographed
+     * bill, as opposed to a camera frame of which there are thirty a second.
+     *
+     * Exists because the two engines are not equally strong: on a full A4 page
+     * render the IPS code occupies a small corner, and ZXing's default pass
+     * misses layouts that ML Kit reads (measured on device: an InfoStan bill
+     * read by ML Kit in 245 ms, missed entirely by plain ZXing). A missed
+     * decode is not fatal — the app rebuilds the code from the stored fields —
+     * but the rebuilt payload is not the issuer's, so it is worth some effort
+     * to avoid.
+     *
+     * Defaults to [decode]; a flavor overrides it only if it has something
+     * slower and better to offer.
+     */
+    fun decodeThorough(bitmap: Bitmap): List<String> = decode(bitmap)
 }
 
 /** Renders an NBS IPS payload (built by parser-core's `IpsQrPayload`) to a QR bitmap. */

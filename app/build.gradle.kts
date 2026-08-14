@@ -29,14 +29,40 @@ android {
     // Only the three languages the app actually speaks. Without this every
     // AppCompat/Compose string ships in ~80 locales the UI has no words for.
     androidResources {
-        localeFilters += listOf("sr", "en", "ru")
+        // `b+sr+Latn` must be listed EXPLICITLY. Android does not fall back from
+        // sr-Latn to sr — the bare `sr` qualifier means Cyrillic Serbian, and
+        // showing Cyrillic to a Latin-script user is exactly what that rule
+        // prevents. Leaving it out of this list made aapt drop the folder
+        // entirely: the app then had only `values/` (unqualified) and
+        // `values-en`, and on a sr-Latn-RS phone a QUALIFIED match on the user's
+        // second locale (en-US) beat the unqualified default. The app came up in
+        // English on a Serbian phone.
+        localeFilters += listOf("b+sr+Latn", "sr", "en", "ru")
 
-        // PDFBox ships 92 predefined CMap files (1.21 MB) and every one of them
-        // is CJK — Adobe-Japan1, Adobe-GB1, Adobe-CNS1, Adobe-Korea1 and the Uni*
-        // families. A Serbian uplatnica does not use them. If some PDF ever did,
-        // Pipeline.extractTextWithOcrFallback already catches the failure and
-        // falls back to OCR, so the worst case is slower, not broken.
-        ignoreAssetsPatterns += "cmap"
+        // Declares which locales the app actually speaks, and — via
+        // res/resources.properties — that the unqualified `values/` folder is
+        // Serbian LATIN. Without that declaration a phone set to sr-Latn-RS
+        // matched none of our folders and fell through to en-US.
+        generateLocaleConfig = true
+
+        // DO NOT strip PDFBox's `cmap` assets. v1.6.0 did (`ignoreAssetsPatterns
+        // += "cmap"`, 1.21 MB) on the claim that all 92 files are CJK. They are
+        // 94, and two of them — **Identity-H and Identity-V** — are not CJK at
+        // all: they are the encoding every modern PDF uses for a subset CID font.
+        // Serbian bills are full of them.
+        //
+        // Removing them did not fail loudly. PDFBox kept returning text, only it
+        // was glyph soup — „ЈАВНО КОМУНАЛНО" came out as `jabho komyhanho`, 4500
+        // characters of it. That sailed past `OcrPolicy.needsOcr`, which measures
+        // LENGTH; the address matcher found nothing, payee memory filled the
+        // blank from the recipient account, and an InfoStan bill was renamed onto
+        // someone else's address. Cost: three releases where every InfoStan bill
+        // was quietly misread. Found 2026-08-14 by comparing bills processed
+        // before v1.6.0 (correct) with the same PDFs re-processed after (wrong).
+        //
+        // The saving was never worth it. If it is ever attempted again, exclude
+        // the CJK families BY NAME and keep Identity-*, and prove it by
+        // re-processing a bill with a CID-keyed font.
     }
 
     packaging {
@@ -102,8 +128,9 @@ android {
     // Change 2: engine flavors. Same platform-api interfaces, different engines,
     // selected at compile time so neither the domain nor parser-core references
     // a concrete engine.
-    //   gms  → Play Store: ML Kit barcode + text-recognition (bundled) + ZXing encode
-    //   foss → F-Droid:    ZXing decode + encode + Tesseract OCR
+    //   gms  → Play Store: ML Kit barcode decode + ZXing encode
+    //   foss → F-Droid:    ZXing decode + encode
+    // OCR is Tesseract in BOTH since v1.7 — see fetchTessdata above for why.
     flavorDimensions += "engine"
     productFlavors {
         create("gms") { dimension = "engine" }
@@ -119,14 +146,18 @@ android {
     }
 }
 
-// foss OCR models are BUNDLED in the APK (user choice: zero network, ever —
-// foss keeps the no-INTERNET guarantee). The tessdata_fast files are fetched at
-// BUILD time on the dev/CI machine into the foss assets (never at app runtime,
+// OCR models are BUNDLED in the APK — zero network, ever. The tessdata_fast
+// files are fetched at BUILD time on the dev/CI machine (never at app runtime,
 // never committed to git). F-Droid runs this same task from source.
+//
+// v1.7: BOTH flavors now, not just foss. Every bill from a public utility here
+// is printed in CYRILLIC, and ML Kit's on-device recognizer is Latin-script —
+// it has no Cyrillic model and cannot be given one. Tesseract has `srp`. See
+// the decision register in the handoff before revisiting this.
 val fetchTessdata = tasks.register("fetchTessdata") {
     // Locals only (no script/Project references) so the task is
     // configuration-cache compatible.
-    val outDir = layout.projectDirectory.dir("src/foss/assets/tessdata").asFile
+    val outDir = layout.projectDirectory.dir("src/main/assets/tessdata").asFile
     val langs = listOf("srp", "srp_latn", "eng")
     val version = "4.1.0" // tessdata_fast tag
     outputs.dir(outDir)
@@ -143,12 +174,12 @@ val fetchTessdata = tasks.register("fetchTessdata") {
         }
     }
 }
-// Only foss bundles the models — gms stays lean and never triggers the download.
-tasks.matching { it.name.startsWith("merge") && it.name.contains("Foss") && it.name.endsWith("Assets") }
+// Both flavors bundle the models now (see above).
+tasks.matching { it.name.startsWith("merge") && it.name.endsWith("Assets") }
     .configureEach { dependsOn(fetchTessdata) }
-// Lint (vital) also scans the foss assets dir, so it must see the same ordering,
+// Lint (vital) also scans the assets dir, so it must see the same ordering,
 // otherwise release builds fail Gradle's implicit-dependency validation.
-tasks.matching { it.name.contains("Foss") && it.name.contains("lint", ignoreCase = true) }
+tasks.matching { it.name.contains("lint", ignoreCase = true) }
     .configureEach { dependsOn(fetchTessdata) }
 
 dependencies {
@@ -181,14 +212,17 @@ dependencies {
     implementation(libs.androidx.camera.view)
 
     // gms flavor engines (proprietary ML Kit stays out of main / parser-core)
+    // v1.7: ONE OCR engine for both flavors. ML Kit stays for barcode decoding
+    // only — it reads a QR better than ZXing, but it cannot read Cyrillic text
+    // at all, and Cyrillic is what these bills are printed in.
+    implementation(libs.tesseract4android)
+
     "gmsImplementation"(libs.mlkit.barcode.scanning)
-    "gmsImplementation"(libs.mlkit.text.recognition)
     "gmsImplementation"(libs.kotlinx.coroutines.play.services)
     "gmsImplementation"(libs.zxing.core)
 
     // foss flavor engines (ZXing decode+encode; Tesseract OCR, models bundled)
     "fossImplementation"(libs.zxing.core)
-    "fossImplementation"(libs.tesseract4android)
 
     testImplementation(libs.junit)
     "ksp"(libs.androidx.room.compiler)

@@ -9,7 +9,7 @@
     <string name="btn_obradi">Process</string>
     <string name="btn_podeli">Share</string>
     <string name="btn_podeli_sve">Share all</string>
-    <string name="btn_qr_slika">QR image</string>
+    <string name="btn_qr_slika">To gallery</string>
     <string name="btn_sacuvaj">Save</string>
     <string name="btn_otkazi">Cancel</string>
     <string name="btn_add_address">Add address</string>
@@ -47,11 +47,12 @@
 
     <string name="show_qr">show QR</string>
     <string name="hide_qr">hide QR</string>
-    <string name="share_qr">share QR image</string>
+    <string name="share_qr">Share QR</string>
     <string name="add_confirmation">add confirmation</string>
+    <string name="qr_regen_failed">The QR cannot be rebuilt — the source file is gone and the bill’s fields are not enough.</string>
     <string name="qr_missing">No QR code found in this document</string>
     <string name="pick_bill_to_pair">Pair with bill:</string>
-    <string name="pick_confirmation">Pick a confirmation from the "potvrde" folder:</string>
+    <string name="pick_confirmation">Pick a confirmation from the “potvrde” folder:</string>
     <string name="no_unpaired_bills">No remembered unpaired bills.</string>
 
     <string name="settings_title">Settings</string>
@@ -60,7 +61,19 @@
     <string name="settings_providers">Provider labels (for file names)</string>
     <string name="settings_language">Language</string>
     <string name="settings_folder">Storage location</string>
-    <string name="settings_choose_location">Choose a different storage location</string>
+    <string name="settings_storage_private">Bills and confirmations are kept inside the app</string>
+    <string name="settings_storage_private_note">Nothing is asked of the phone and nothing is visible to other apps. Export the archive to keep a copy outside Računko.</string>
+    <string name="settings_backup">Archive</string>
+    <string name="settings_export">Export to a folder</string>
+    <string name="settings_import">Import from a folder</string>
+    <string name="settings_backup_note">Export writes bills, confirmations and racunko.json into a folder you pick — the files stay readable without Računko. Import brings them back, along with deadlines, pairings and the address book.</string>
+    <string name="settings_mirror">Keep a copy in my folder</string>
+    <string name="settings_mirror_off">off</string>
+    <string name="settings_mirror_note">When on, every bill and confirmation is also written to a folder you pick, so you can see them outside Računko. The archive inside the app stays the original — the folder is its shadow.</string>
+    <string name="toast_mirror_on">Copy on — %1$d files written across</string>
+    <string name="toast_mirror_off">Copy off — the folder is left as it is</string>
+    <string name="toast_exported">Exported: %1$d files + racunko.json</string>
+    <string name="toast_imported">Imported: %1$d files</string>
     <string name="settings_reset_location">Reset to default (Download/Racunko)</string>
     <string name="legacy_folder_notice">The old folder structure is no longer used. New folders are in Download/Racunko.</string>
     <string name="settings_clear_history">Clear pairing history</string>
@@ -115,7 +128,7 @@
     <string name="due_time_label">At what time</string>
     <string name="due_time_note">For now the reminder appears in the app when you open it. The time is stored for the system notification, once that lands.</string>
     <string name="due_banner_show">Show</string>
-    <string name="due_show_all">Show all</string>
+    <string name="filter_due">Due</string>
     <plurals name="due_banner">
         <item quantity="one">%d bill is due</item>
         <item quantity="other">%d bills are due</item>
@@ -140,7 +153,7 @@
     <string name="settings_danger">Deleting data</string>
     <string name="tag_processed">already processed</string>
     <string name="cta_sifarnik_title">Build your address book</string>
-    <string name="cta_sifarnik_text">Addresses are the one thing Računko cannot derive on its own. With the address book (short label + address text from the bill) files are named by location automatically, e.g. infostan_BDS95_maj26_11152. You can continue without it — the address stays an editable "address?" chip.</string>
+    <string name="cta_sifarnik_text">Addresses are the one thing Računko cannot derive on its own. With the address book (short label + address text from the bill) files are named by location automatically, e.g. infostan_BDS95_maj26_11152. You can continue without it — the address stays an editable “address?” chip.</string>
     <string name="cta_sifarnik_btn">Build address book</string>
     <string name="intake_conf_title">Looks like a confirmation</string>
     <string name="intake_bill_title">Looks like a bill</string>
@@ -191,7 +204,7 @@
     <string name="toast_no_selection">Select at least one file</string>
     <string name="toast_received">Confirmation received</string>
     <string name="toast_folder_error">Cannot access the folder — pick it again</string>
-    <string name="toast_qr_generated">Payment QR created — saved to the gallery</string>
+    <string name="toast_qr_generated">Payment QR created</string>
     <string name="toast_payees_cleared">Remembered payees cleared</string>
 
     <!-- 8c: verified account, generate QR, payee-memory hint, unified + menu -->
@@ -205,12 +218,4 @@
     <string name="add_photo">Add photo</string>
     <string name="settings_clear_payees">Clear remembered payees</string>
 
-    <!-- v1.5.0-rc1/rc2 Change 1: first-run folder grant (onboarding) -->
-    <string name="onboarding_title">Računko needs one folder</string>
-    <string name="onboarding_body">Računko created the Download/Racunko folder for your bills. Just confirm it on the next screen — one tap.</string>
-    <string name="onboarding_grant">Confirm folder</string>
-    <string name="onboarding_hint">No internet. Nothing leaves your phone.</string>
-    <string name="onboarding_info_btn">How does this work?</string>
-    <string name="onboarding_info_title">Confirm the folder</string>
-    <string name="onboarding_info">Računko already created the Download/Racunko folder. On the next screen, just tap \"Use this folder\".\n\nIf the dialog opens Download and the button is greyed out — open Racunko, then confirm.\n\nFiles from other apps (email, provider…) are added via \"Add from file\".</string>
 </resources>

@@ -87,6 +87,10 @@ interface PayeeDao {
     @Query("SELECT * FROM payee_profiles WHERE account = :account LIMIT 1")
     suspend fun byAccount(account: String): PayeeProfileEntity?
 
+    /** v1.7: payee memory is part of what export carries — a file name cannot say it. */
+    @Query("SELECT * FROM payee_profiles")
+    suspend fun all(): List<PayeeProfileEntity>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsert(payee: PayeeProfileEntity)
 

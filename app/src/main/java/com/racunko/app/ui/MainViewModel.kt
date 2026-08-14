@@ -11,6 +11,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.racunko.app.R
 import com.racunko.app.data.AppDb
+import com.racunko.app.data.Archive
 import com.racunko.app.data.FileKind
 import com.racunko.app.data.Gallery
 import com.racunko.app.data.RacunkoTree
@@ -21,6 +22,7 @@ import com.racunko.app.data.StoredFile
 import com.racunko.app.domain.CardItem
 import com.racunko.app.domain.CardMode
 import com.racunko.app.domain.Pipeline
+import com.racunko.app.domain.QrCache
 import com.racunko.app.parser.AddressEntry
 import com.racunko.app.parser.BillName
 import com.racunko.app.parser.Months
@@ -91,10 +93,8 @@ data class UiState(
     val spaceBindings: List<SpaceBinding> = emptyList(),
     /** v1.6: user-added provider names — extra chips for manual entry. */
     val customProviders: List<String> = emptyList(),
-    /** v1.4.7 Change 4 / rc1: the persisted SAF tree grant (Download). null = ask first. */
-    val downloadsTreeUri: String? = null,
-    /** v1.5.0-rc1 Change 1: no valid tree yet → show the first-run folder-grant screen. */
-    val needsOnboarding: Boolean = false
+    /** v1.7: the OPTIONAL visible folder. null = storage is the app's own only. */
+    val downloadsTreeUri: String? = null
 )
 
 class MainViewModel(
@@ -132,64 +132,77 @@ class MainViewModel(
     init {
         viewModelScope.launch {
             val s = settings.load()
-            // v1.5.0-rc1: one SAF tree IS the storage model. Bind it if the grant
-            // is still held; otherwise the UI shows onboarding to request one.
+            // v1.7: storage is the app's own and always available — nothing to
+            // grant, so the list loads on first launch with no screen in front of
+            // it. A tree, if the user turned the optional visible copy on, is
+            // bound quietly and never gates anything.
             val tree = s.downloadsTreeUri?.takeIf { saf.hasPermission(Uri.parse(it)) }
-            val bound = tree != null &&
+            val mirrored = tree != null &&
                 withContext(Dispatchers.IO) { storage.setTree(Uri.parse(tree)) }
-            // rc3: no tree yet → pre-create Download/Racunko so the onboarding grant
-            // dialog lands on an ENABLED "Use this folder" (one tap, no navigation).
-            if (!bound) withContext(Dispatchers.IO) { storage.ensurePublicFolder() }
             _state.value = _state.value.copy(
                 loaded = true,
-                needsOnboarding = !bound,
                 customLocation = false,
                 locationLabel = storage.store().locationLabel,
                 legacyNotice = false,
                 addresses = s.addresses,
                 providerOverrides = s.providerOverrides,
                 language = s.language,
-                downloadsTreeUri = if (bound) tree else null,
+                downloadsTreeUri = if (mirrored) tree else null,
                 spaceBindings = s.spaceBindings,
                 customProviders = s.customProviders
             )
-            if (bound) {
-                refreshFiles()
-                reconcileCards() // rebuild the card list from DB + the two folders
-            }
+            refreshFiles()
+            reconcileCards() // rebuild the card list from DB + the two folders
         }
     }
 
     /**
-     * v1.5.0-rc1 Change 1: the onboarding SAF grant returned. Persist it, create
-     * the `Racunko/Racuni`+`Racunko/Potvrde` tree, then load the (initially empty)
-     * folders. If the tree is somehow inaccessible, stay on onboarding.
+     * The user turned the optional visible copy on and picked a folder. The
+     * archive is copied out once immediately — a mirror that starts empty and
+     * only fills as new bills arrive would look like data loss.
      */
     fun onTreeGranted(uri: Uri) {
         viewModelScope.launch {
+            _state.value = _state.value.copy(busy = true)
             val bound = withContext(Dispatchers.IO) {
                 runCatching { saf.takePersistablePermission(uri) }
                 storage.setTree(uri) // ensureFolders creates the container idempotently
             }
-            if (!bound) { toast(R.string.toast_folder_error); return@launch }
+            if (!bound) {
+                _state.value = _state.value.copy(busy = false)
+                toast(R.string.toast_folder_error)
+                return@launch
+            }
             settings.saveDownloadsTreeUri(uri.toString())
+            val mirror = storage.racunkoStore()
+            val copied = withContext(Dispatchers.IO) {
+                var n = 0
+                if (mirror != null) for (kind in FileKind.entries) {
+                    for (f in storage.privateStore().list(kind)) {
+                        if (f.name !in mirror.existingNames(kind) &&
+                            mirror.importFile(kind, f.uri, f.name, "application/octet-stream") != null
+                        ) n++
+                    }
+                }
+                n
+            }
             _state.value = _state.value.copy(
-                needsOnboarding = false,
                 downloadsTreeUri = uri.toString(),
-                locationLabel = storage.store().locationLabel
+                locationLabel = storage.store().locationLabel,
+                busy = false
             )
+            toast(R.string.toast_mirror_on, copied)
             refreshFiles()
-            reconcileCards()
         }
     }
 
     /**
-     * Called on return-to-foreground. rc1 Change 3: also re-list the folders so a
-     * bill the user manually dropped into `Racunko/Racuni` while we were
-     * backgrounded shows up automatically — no „Potraži", no button.
+     * Called on return-to-foreground, so anything that arrived while we were
+     * backgrounded shows up by itself — no „Potraži", no button. There is no
+     * readiness check any more: the app's own storage is always there.
      */
     fun onResume() {
-        if (_state.value.loaded && storage.isReady()) viewModelScope.launch {
+        if (_state.value.loaded) viewModelScope.launch {
             refreshFiles()
             syncCards()
         }
@@ -327,20 +340,94 @@ class MainViewModel(
 
     // ------------------------------------------------- storage (v1.5.0-rc1)
 
-    /** Change folder: re-grant a SAF tree — identical to first-run onboarding. */
+    /** Pick the folder the optional visible copy is written to. */
     fun chooseCustomLocation(uri: Uri) = onTreeGranted(uri)
 
-    /** Drop the grant and return to onboarding so the user can pick a folder again. */
+    // ------------------------------------------------- izvoz / uvoz (v1.7)
+
+    /**
+     * Write the whole archive — files plus `racunko.json` — into a folder the
+     * user picked. This is what makes private storage safe: the copy is theirs,
+     * readable without Računko, and re-importable into it.
+     */
+    fun exportArchive(treeUri: Uri) {
+        viewModelScope.launch {
+            _state.value = _state.value.copy(busy = true)
+            val app = getApplication<Application>()
+            val s = settings.load()
+            val payload = Archive.Payload(
+                bills = dao.all(),
+                cards = cardDao.all(),
+                payees = payeeDao.all(),
+                addresses = s.addresses,
+                providerOverrides = s.providerOverrides,
+                customProviders = s.customProviders,
+                spaceBindings = s.spaceBindings
+            )
+            val res = withContext(Dispatchers.IO) {
+                runCatching { saf.takePersistablePermission(treeUri) }
+                Archive.export(app, treeUri, storage.store(), payload)
+            }
+            _state.value = _state.value.copy(busy = false)
+            if (res.manifest) toast(R.string.toast_exported, res.files)
+            else toast(R.string.toast_folder_error)
+        }
+    }
+
+    /**
+     * Read a folder back in: copy the files the app does not already have, then
+     * restore the rows the manifest carries. Both halves are optional — a folder
+     * of plain PDFs still imports, and a manifest alone restores the memory.
+     */
+    fun importArchive(treeUri: Uri) {
+        viewModelScope.launch {
+            _state.value = _state.value.copy(busy = true)
+            val app = getApplication<Application>()
+            val (res, payload) = withContext(Dispatchers.IO) {
+                runCatching { saf.takePersistablePermission(treeUri) }
+                Archive.importFiles(app, treeUri, storage.store())
+            }
+            if (payload != null) {
+                // Rows first, then reconcile: reconcileCards() drops any record
+                // whose file is missing, so an entry that arrived without its file
+                // simply does not survive — no dangling cards.
+                payload.bills.forEach { dao.upsert(it) }
+                payload.cards.forEach { cardDao.upsert(it) }
+                payload.payees.forEach { payeeDao.upsert(it) }
+                if (payload.addresses.isNotEmpty()) settings.saveAddresses(payload.addresses)
+                if (payload.providerOverrides.isNotEmpty()) settings.saveOverrides(payload.providerOverrides)
+                if (payload.customProviders.isNotEmpty()) settings.saveCustomProviders(payload.customProviders)
+                if (payload.spaceBindings.isNotEmpty()) settings.saveSpaceBindings(payload.spaceBindings)
+                val s = settings.load()
+                _state.value = _state.value.copy(
+                    addresses = s.addresses,
+                    providerOverrides = s.providerOverrides,
+                    customProviders = s.customProviders,
+                    spaceBindings = s.spaceBindings
+                )
+            }
+            refreshFiles()
+            reconcileCards()
+            _state.value = _state.value.copy(busy = false)
+            toast(R.string.toast_imported, res.files)
+        }
+    }
+
+    /**
+     * Turn the optional visible copy off. Nothing is deleted — neither the
+     * archive nor what is already in the folder. Turning a mirror off should not
+     * be a way to lose files by accident.
+     */
     fun resetLocation() {
         viewModelScope.launch {
             storage.setTree(null)
             settings.saveDownloadsTreeUri(null)
             _state.value = _state.value.copy(
-                needsOnboarding = true,
                 downloadsTreeUri = null,
                 customLocation = false,
                 locationLabel = storage.store().locationLabel
             )
+            toast(R.string.toast_mirror_off)
         }
     }
 
@@ -896,6 +983,7 @@ class MainViewModel(
                         // The card's own file + every QR copy it made (Download + Pictures).
                         runCatching { store.delete(Uri.parse(c.uri)) }
                         Gallery.delete(app, c.qrImageUri ?: cardDao.byName(c.currentName)?.qrImageUri)
+                        QrCache.remove(app, QrCache.keyFor(c.roDigits, c.nameBase))
                         // v1.4.8 Change 3: a paired confirmation is cleaned in full too —
                         // its file, its own QR (if any), and its list record.
                         c.pairedConfName?.let { confName ->
@@ -929,7 +1017,10 @@ class MainViewModel(
                 (store.list(FileKind.RACUN) + store.list(FileKind.POTVRDA)).forEach {
                     runCatching { store.delete(it.uri) }
                 }
-                cardDao.all().forEach { Gallery.delete(app, it.qrImageUri) }
+                cardDao.all().forEach {
+                    Gallery.delete(app, it.qrImageUri)
+                    QrCache.remove(app, QrCache.keyFor(it.roDigits, it.name.substringBeforeLast('.')))
+                }
             }
             cardDao.clear()
             dao.clear()
@@ -1055,19 +1146,96 @@ class MainViewModel(
 
     // ------------------------------------------------------------------ actions
 
+    /**
+     * The QR is derived, never stored, so a card that is about to show one asks
+     * for its bytes here. Lazy on purpose: only a card the user can actually see
+     * pays for it, and „open only when unpaid" keeps that to the few bills that
+     * still need paying rather than the whole list.
+     */
+    private val qrInFlight = mutableSetOf<String>()
+
+    fun ensureQr(cardId: String) {
+        val item = _state.value.items.firstOrNull { it.id == cardId } ?: return
+        if (item.qrPng != null || !item.hasQr || item.qrUnavailable) return
+        if (!qrInFlight.add(cardId)) return
+        viewModelScope.launch {
+            val qr = withContext(Dispatchers.IO) { runCatching { pipeline.qrFor(item) }.getOrNull() }
+            qrInFlight.remove(cardId)
+            val current = _state.value.items.firstOrNull { it.id == cardId } ?: return@launch
+            val updated =
+                if (qr == null) current.copy(qrUnavailable = true)
+                // A code rebuilt from the fields is not the issuer's own — it
+                // inherits the verify-before-paying notice.
+                else current.copy(qrPng = qr.png, qrGenerated = current.qrGenerated || qr.generated)
+            // Deliberately NOT persisted. The record stores no bitmap, so the
+            // only thing that would be written is a `qrGenerated` raised by a
+            // fallback — and a source file that was briefly unreachable must not
+            // mark the bill as generated for good. It also keeps display off the
+            // write path entirely: showing a card touches no database.
+            _state.value = _state.value.copy(
+                items = _state.value.items.map { if (it.id == cardId) updated else it }
+            )
+        }
+    }
+
+    /**
+     * Odluka 4: „Podeli QR" — the second of the two equal ways out. The PNG is
+     * written to `cacheDir/share` and handed over through FileProvider, so the
+     * system owns the copy and cleans it up; nothing lands in the gallery.
+     * Intesa takes a shared PNG straight to payment; AIK does not appear in the
+     * share sheet at all, which is why the other button exists too.
+     */
+    fun shareQr(id: String) {
+        val item = _state.value.items.firstOrNull { it.id == id } ?: return
+        val app = getApplication<Application>()
+        viewModelScope.launch {
+            val png = item.qrPng ?: withContext(Dispatchers.IO) {
+                runCatching { pipeline.qrFor(item) }.getOrNull()?.png
+            }
+            if (png == null) {
+                toast(R.string.qr_missing)
+                return@launch
+            }
+            val uri = withContext(Dispatchers.IO) {
+                runCatching {
+                    val bmp = BitmapFactory.decodeByteArray(png, 0, png.size) ?: return@runCatching null
+                    val dir = File(app.cacheDir, "share").apply { mkdirs() }
+                    val target = File(dir, "${item.nameBase}_QR.png")
+                    val ok = Gallery.writeCaptionedPng(bmp, item.nameBase, target)
+                    bmp.recycle()
+                    if (ok) FileProvider.getUriForFile(app, "${app.packageName}.fileprovider", target)
+                    else null
+                }.getOrNull()
+            }
+            if (uri == null) {
+                toast(R.string.toast_folder_error)
+                return@launch
+            }
+            runCatching { startShare(listOf(uri), "image/png") }
+            if (item.qrGenerated) maybeShowQrDisclaimer()
+        }
+    }
+
     fun saveQrToGallery(id: String) {
         val item = _state.value.items.firstOrNull { it.id == id } ?: return
         viewModelScope.launch(Dispatchers.IO) {
             // v1.4.7 Change 1: restored cards have no in-memory bytes — re-derive.
-            val png = item.qrPng ?: pipeline.qrBytesFor(item)
+            val png = item.qrPng ?: pipeline.qrFor(item)?.png
             if (png == null) {
                 withContext(Dispatchers.Main) { toast(R.string.qr_missing) }
                 return@launch
             }
             val bmp = BitmapFactory.decodeByteArray(png, 0, png.size) ?: return@launch
+            // Saving is now a repeatable tap rather than something processing did
+            // once, so drop the copy booked earlier instead of leaving „(1)"
+            // duplicates behind in the gallery.
+            pipeline.savedQrUris(item)?.let { Gallery.delete(getApplication(), it) }
             val joined = Gallery.save(getApplication(), bmp, "${item.nameBase}_QR", storage.racunkoStore(), caption = item.nameBase)
             bmp.recycle()
             if (joined != null) {
+                // On the BILL record, not just the card: this is the bookkeeping
+                // that lets pairing delete the copy again (Odluka 5).
+                pipeline.recordSavedQr(item, joined)
                 withContext(Dispatchers.Main) {
                     replaceItem(item.copy(qrPng = png, qrImageUri = joined))
                     toast(R.string.toast_qr_saved)
@@ -1084,9 +1252,24 @@ class MainViewModel(
      * Content uris are tried directly; if the grant is refused, fall back to
      * copying into app cache and sharing via FileProvider.
      */
+    /**
+     * v1.7: the archive lives in `filesDir`, so its uris are `file://` — which
+     * may never leave the app (`FileUriExposedException`). Hand the receiver a
+     * FileProvider uri instead. Anything already a `content://` uri (an optional
+     * folder copy, a picked document) passes through untouched.
+     */
+    private fun shareableUri(uri: Uri): Uri {
+        if (uri.scheme != "file") return uri
+        val app = getApplication<Application>()
+        val f = uri.path?.let { File(it) } ?: return uri
+        return runCatching {
+            FileProvider.getUriForFile(app, "${app.packageName}.fileprovider", f)
+        }.getOrDefault(uri)
+    }
+
     fun share(uriStrings: List<String>, names: List<String>, mime: String) {
         val app = getApplication<Application>()
-        val uris = uriStrings.map { Uri.parse(it) }
+        val uris = uriStrings.map { shareableUri(Uri.parse(it)) }
         try {
             startShare(uris, mime)
         } catch (e: SecurityException) {
@@ -1123,6 +1306,17 @@ class MainViewModel(
                 type = mime
             }
         }
+        // The read grant rides on the ClipData, not on the extra. Without this
+        // the SYSTEM share sheet cannot open the uri to draw its preview — the
+        // QR shows up as a grey rectangle in the very sheet where the user is
+        // supposed to recognize what they are sending. Found on device: the
+        // resolver logged `SecurityException: Permission Denial: opening
+        // provider ... FileProvider` while the send itself still worked.
+        // The label is deliberately generic: it can surface in the sheet, and a
+        // bill's file name carries the address and the amount.
+        intent.clipData = android.content.ClipData.newUri(
+            app.contentResolver, app.getString(R.string.app_name), uris[0]
+        ).apply { uris.drop(1).forEach { addItem(android.content.ClipData.Item(it)) } }
         intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         val chooser = Intent.createChooser(intent, null).apply {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)

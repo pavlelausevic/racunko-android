@@ -1,4 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <paths>
+    <!-- Temp copies behind „Podeli QR" and the share fallback. -->
     <cache-path name="share" path="share/" />
+    <!-- v1.7: the archive itself. Bills and confirmations live in filesDir, so
+         sharing one out means handing over a FileProvider uri — a file:// uri
+         may not leave the app. Read-only exposure, and only for a uri the app
+         hands over on an explicit tap. -->
+    <files-path name="racuni" path="racuni/" />
+    <files-path name="potvrde" path="potvrde/" />
 </paths>

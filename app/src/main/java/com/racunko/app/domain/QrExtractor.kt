@@ -49,7 +49,8 @@ object QrExtractor {
                     } finally {
                         page.close()
                     }
-                    val payload = engines.qrDecoder.decode(bmp)
+                    // One page, decoded once — worth the slower sweep.
+                    val payload = engines.qrDecoder.decodeThorough(bmp)
                         .firstOrNull { it.startsWith(IpsQr.PREFIX) }
                     bmp.recycle()
                     if (payload != null) {

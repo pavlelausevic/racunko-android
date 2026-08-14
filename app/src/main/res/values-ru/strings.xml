@@ -9,7 +9,7 @@
     <string name="btn_obradi">Обработать</string>
     <string name="btn_podeli">Поделиться</string>
     <string name="btn_podeli_sve">Поделиться всем</string>
-    <string name="btn_qr_slika">QR-картинка</string>
+    <string name="btn_qr_slika">В галерею</string>
     <string name="btn_sacuvaj">Сохранить</string>
     <string name="btn_otkazi">Отмена</string>
     <string name="btn_add_address">Добавить адрес</string>
@@ -47,8 +47,9 @@
 
     <string name="show_qr">показать QR</string>
     <string name="hide_qr">скрыть QR</string>
-    <string name="share_qr">поделиться QR-картинкой</string>
+    <string name="share_qr">Отправить QR</string>
     <string name="add_confirmation">добавить подтверждение</string>
+    <string name="qr_regen_failed">QR-код нельзя воссоздать — исходный файл недоступен, а данных со счёта недостаточно.</string>
     <string name="qr_missing">QR-код в этом документе не найден</string>
     <string name="pick_bill_to_pair">Сопоставить со счётом:</string>
     <string name="pick_confirmation">Выберите подтверждение из папки «Potvrde»:</string>
@@ -60,7 +61,19 @@
     <string name="settings_providers">Названия поставщиков (для имени файла)</string>
     <string name="settings_language">Язык</string>
     <string name="settings_folder">Место хранения</string>
-    <string name="settings_choose_location">Выбрать другое место хранения</string>
+    <string name="settings_storage_private">Счета и подтверждения хранятся в приложении</string>
+    <string name="settings_storage_private_note">У телефона ничего не запрашивается, и другим приложениям ничего не видно. Экспортируйте архив, чтобы сохранить копию вне Računko.</string>
+    <string name="settings_backup">Архив</string>
+    <string name="settings_export">Экспорт в папку</string>
+    <string name="settings_import">Импорт из папки</string>
+    <string name="settings_backup_note">Экспорт запишет счета, подтверждения и racunko.json в выбранную папку — файлы читаются и без Računko. Импорт вернёт их вместе со сроками, сопоставлениями и справочником адресов.</string>
+    <string name="settings_mirror">Хранить копию в моей папке</string>
+    <string name="settings_mirror_off">выключено</string>
+    <string name="settings_mirror_note">Когда включено, каждый счёт и подтверждение записываются и в выбранную папку, так что они видны вне Računko. Архив в приложении остаётся основным — папка лишь его тень.</string>
+    <string name="toast_mirror_on">Копия включена — перенесено файлов: %1$d</string>
+    <string name="toast_mirror_off">Копия выключена — папка остаётся как есть</string>
+    <string name="toast_exported">Экспортировано: %1$d файлов + racunko.json</string>
+    <string name="toast_imported">Импортировано: %1$d файлов</string>
     <string name="settings_reset_location">Вернуть по умолчанию (Download/Racunko)</string>
     <string name="legacy_folder_notice">Старая структура папок больше не используется. Новые папки — в Download/Racunko.</string>
     <string name="settings_clear_history">Очистить историю сопоставлений</string>
@@ -115,7 +128,7 @@
     <string name="due_time_label">В какое время</string>
     <string name="due_time_note">Пока напоминание показывается в приложении при его открытии. Время сохраняется для системного уведомления, когда мы его добавим.</string>
     <string name="due_banner_show">Показать</string>
-    <string name="due_show_all">Показать все</string>
+    <string name="filter_due">К сроку</string>
     <plurals name="due_banner">
         <item quantity="one">%d счёт подходит к сроку</item>
         <item quantity="few">%d счёта подходят к сроку</item>
@@ -195,7 +208,7 @@
     <string name="toast_no_selection">Выберите хотя бы один файл</string>
     <string name="toast_received">Подтверждение получено</string>
     <string name="toast_folder_error">Нет доступа к папке — выберите её заново</string>
-    <string name="toast_qr_generated">QR для оплаты создан — сохранён в галерею</string>
+    <string name="toast_qr_generated">QR для оплаты создан</string>
     <string name="toast_payees_cleared">Сохранённые получатели удалены</string>
 
     <string name="verified_account">счёт проверен (контрольное число)</string>
@@ -208,10 +221,4 @@
     <string name="add_photo">Добавить фотографию</string>
     <string name="settings_clear_payees">Удалить сохранённых получателей</string>
 
-    <string name="onboarding_title">Računko нужна одна папка</string>
-    <string name="onboarding_body">Računko создал папку Download/Racunko для ваших счетов. На следующем экране просто подтвердите её — одно касание.</string>
-    <string name="onboarding_grant">Подтвердить папку</string>
-    <string name="onboarding_hint">Без интернета. Ничего не покидает телефон.</string>
-    <string name="onboarding_info_btn">Как это работает?</string>
-    <string name="onboarding_info">Računko уже создал папку Download/Racunko. На следующем экране нажмите «Использовать эту папку».\n\nЕсли диалог открылся в Download, а кнопка неактивна — зайдите в Racunko и подтвердите там.\n\nФайлы из других приложений (почта, EPS…) добавляются через «Добавить из файла».</string>
 </resources>

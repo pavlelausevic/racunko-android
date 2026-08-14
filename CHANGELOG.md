@@ -1,5 +1,123 @@
 # Changelog
 
+## [Neobjavljeno] — čita i ćirilicu
+
+### Promenjeno
+- **Računko sada čita ćirilicu i u Play izdanju.** Računi javnih preduzeća
+  štampaju se ćirilicom, a prepoznavač teksta koji je Play izdanje koristilo zna
+  samo latinicu — zato sa screenshot-a takvog računa nije umeo da pročita ni
+  adresu ni rok. Sada oba izdanja koriste isti prepoznavač, sa srpskim jezikom.
+  Aplikacija je pri tom **manja za 3,6 MB**.
+- **Aplikacija se više ne pravi rezervna kopija na Google Drive.** Otkad se
+  arhiva čuva u samoj aplikaciji, sistemsko automatsko čuvanje bi je slalo na
+  tvoj Drive nalog. Isključeno. Ako želiš kopiju van telefona, to radi izvoz —
+  kad ti odlučiš i u fasciklu koju izabereš.
+
+### Popravljeno
+- **Aplikacija se otvarala na engleskom** na telefonu podešenom na srpski
+  (latinicu), iako je u Podešavanjima pisalo da je izabran srpski. Android nije
+  prepoznavao da je podrazumevani tekst aplikacije pisan latiničnim srpskim, pa
+  je birao engleski kao sledeći jezik sa liste telefona.
+- **Potvrde više ne pišu „neplaćeno".** Zbir po adresi je brojao potvrde kao da
+  su računi, pa su i one uz plaćen račun izgledale kao dug.
+- **„Datum valute" se sada čita kao rok plaćanja.** Falio je jedan padež.
+- **Rok plaćanja se sada čita i sa slike računa.** Screenshot računa je u
+  aplikaciju ulazio u veličini u kojoj je i snimljen, a sitno štampani redovi na
+  toj veličini nisu bili čitljivi — račun bi dobio sve ostalo, ali bi ostao bez
+  roka. Slika se sada uveća pre čitanja, kao što se to oduvek radilo sa PDF-om.
+- **Račun se imenuje po adresi prostora, a ne po adresi za poštu.** Na računima
+  koji štampaju obe, aplikacija je umela da uzme onu za poštu — i to tek pošto
+  se i ona doda u šifarnik, pa je izgledalo kao da se pokvarilo nešto što je
+  radilo. Sada uvek ima prednost adresa prostora na koji se račun odnosi.
+- **Iz pregleda računa pred rokom sada se lako vraćaš.** Filter je postao
+  dugme sa zvoncetom u istom redu sa adresama, pa ga „Sve" gasi kao i svaki
+  drugi filter.
+
+## [Neobjavljeno] — arhiva je tvoja, ne fasciklina
+
+Instaliraš Računko i on radi. Bez pitanja o dozvolama, bez ekrana pre prvog
+ekrana, bez fascikle koju moraš da odobriš da bi aplikacija uopšte počela.
+
+### Promenjeno
+- **Računi i potvrde se sada čuvaju u samoj aplikaciji.** Ništa se ne traži od
+  telefona i ništa nije vidljivo drugim aplikacijama. Prvi ekran koji si ranije
+  morao da prođeš — biranje fascikle — više ne postoji.
+- **Fascikla se vratila kao izbor.** U Podešavanjima uključiš „Čuvaj i kopiju u
+  mojoj fascikli" i svaki račun se upisuje i tamo, pa ga vidiš i van Računka. Kad
+  je uključiš, postojeća arhiva se odmah prepiše. Kad je isključiš, **ništa se ne
+  briše** — ni arhiva ni ono što je već u fascikli.
+
+### Dodato
+- **Izvoz i uvoz, ravnopravno.** Izvoz upisuje račune, potvrde i `racunko.json` u
+  fasciklu koju izabereš. Fajlovi ostaju obični fajlovi — otvoriš ih bilo čime, a
+  imena im i dalje govore ko, gde, koji mesec i koliko. Manifest uz njih nosi ono
+  što ime ne može: rokove, podsetnike, koja potvrda pripada kom računu, šifarnik
+  adresa, memoriju primalaca, tvoje nazive pružalaca.
+- Uvoz vraća sve to na bilo kom telefonu. Radi i sa fasciklom bez manifesta —
+  tada dobiješ fajlove i ono što njihova imena nose.
+
+## [Neobjavljeno] — QR bez traga
+
+QR kôd više ne postoji kao fajl. Postoji kao nešto što se napravi kad zatreba.
+
+### Promenjeno
+- **Neplaćen račun odmah pokazuje svoj QR.** Ranije je svaka kartica tražila da
+  se klikne „prikaži QR" — i to baš na računu koji tek treba platiti, dakle na
+  jedinom mestu gde kôd zaista treba. Sada je otvoren kad račun nije plaćen, a
+  sklopljen kad jeste. Time i visina kartice govori u kom je stanju: plaćene su
+  kraće nego ranije.
+- **Ništa se više ne upisuje u galeriju samo od sebe.** Do sada je svaki obrađen
+  račun ostavljao QR sliku na dva mesta bez pitanja. Sada nula — kôd izlazi iz
+  aplikacije isključivo kad ti to zatražiš.
+
+### Dodato
+- **„Podeli QR"** — šalje sliku direktno u aplikaciju banke ili gde god hoćeš,
+  preko privremene kopije koju sistem sam počisti. Uz njega ostaje i **„U
+  galeriju"** za trajno čuvanje. Dva puta zato što banke nisu iste: neke primaju
+  podeljenu sliku i odmah otvaraju plaćanje, druge se u listi deljenja uopšte ne
+  pojavljuju pa im kôd mora doći iz galerije. Aplikacija ne može da pogodi koja
+  je tvoja — probaš jednom i znaš.
+- Kad se QR ne može ni pročitati iz dokumenta ni sklopiti iz podataka, kartica to
+  **kaže**, umesto da ostavi prazno mesto.
+
+### Popravljeno
+- **QR je preživeo gašenje aplikacije.** Slika se nije čuvala u bazi, pa je posle
+  restarta „QR slika" umela da ne uradi ništa. Sada se kôd obnavlja — pročita se
+  ponovo iz samog računa, a ako to ne uspe, sklopi se iz zapamćenih podataka
+  (tada nosi napomenu da ga proveriš pre plaćanja, jer to više nije kôd koji je
+  odštampao izdavalac).
+- **Lista deljenja nije prikazivala QR** koji deliš — stajao je sivi pravougaonik
+  baš tamo gde treba da prepoznaš šta šalješ.
+- **F-Droid izdanje nije umelo da pročita QR sa InfoStan računa** i tiho ga je
+  sklapalo iz podataka umesto da pročita izdavačev. Kôd je mali deo cele
+  stranice, pa se sada strana pretražuje temeljnije. Skeniranje kamerom je
+  namerno ostavljeno brzo — tamo se gleda trideset slika u sekundi.
+- **InfoStan računi su od verzije 1.6.0 čitani naopako, i to tiho.** Da bi
+  aplikacija bila manja, tada je izbačen deo biblioteke za čitanje PDF-a uz
+  obrazloženje da služi samo kineskom, japanskom i korejskom pismu. Nije bilo
+  tako: među tim fajlovima su i dva koja opisuju kodiranje koje koristi gotovo
+  svaki savremeni PDF sa ugrađenim fontom — a takvi su InfoStan računi.
+  Bez njih se iz računa i dalje izvlačio tekst, samo što nije bio tekst:
+  „ЈАВНО КОМУНАЛНО" je stizalo kao `jabho komyhanho`. Adresa se nije mogla
+  pročitati, rok takođe, i račun je umeo da završi na **tuđoj adresi**.
+  Vraćeno. Aplikacija je zbog toga veća za 1,2 MB — i čita račune kako treba.
+- **Kad dokument ipak ne može da se pročita, Računko više ne pogađa adresu.**
+  Ranije bi je popunio iz pamćenja, po računu primaoca — a kod izdavalaca poput
+  InfoStana taj račun je isti za sve korisnike i sve stanove, pa nije mogao da
+  razlikuje adrese. Sada adresa ostaje `adresa?` sa oznakom „dopuni ručno" i fajl
+  se ne preimenuje. Isto pravilo po kom se adresa nikad ne izvodi iz QR koda —
+  kad se ne može dokazati, pita se.
+- **Srpski navodnici su ostajali nezatvoreni** u pet poruka („+", „potvrde",
+  „adresa?"…). Android izbacuje običan navodnik iz teksta ako nije označen; sada
+  se koristi pravi zatvoreni navodnik.
+- Napomena ispod napravljenog QR-a poravnata je kao i ostali tekst u aplikaciji —
+  jedan red centriran, više redova ravno na obe margine.
+
+### Privatnost
+- QR sačuvan u galeriju i dalje se **briše sam kad račun postane plaćen**. Briše
+  se isključivo slika koju je Računko sam upisao i zapamtio — galerija se nikad
+  ne pretražuje ni za čim.
+
 ## [1.6.2] — 2026-08-13
 
 Mirnije lice i jedan izlaz koji je nedostajao. Aplikacija radi isto — samo se

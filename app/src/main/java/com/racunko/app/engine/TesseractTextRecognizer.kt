@@ -11,11 +11,22 @@ import kotlinx.coroutines.withContext
 import java.io.File
 
 /**
- * foss OCR via Tesseract (tesseract4android). Language models (srp, srp_latn,
- * eng) are BUNDLED in the APK assets (`tessdata/`) — zero network at runtime,
- * so foss keeps the no-INTERNET guarantee. On first use the models are copied
- * from read-only assets into app-private storage (Tesseract needs a filesystem
- * datapath), then the engine is initialized once and reused.
+ * OCR via Tesseract (tesseract4android) — for BOTH flavors since v1.7, which is
+ * why it lives in the shared source set rather than under one of them. The
+ * flavor split exists to keep a PROPRIETARY engine out of shared code; Tesseract
+ * is Apache-2.0, so that reason does not apply to it.
+ *
+ * It is here because of the script. Every bill a public utility prints in Serbia
+ * is in CYRILLIC, and ML Kit's on-device recognizer is Latin-only with no
+ * Cyrillic model available — on a screenshot of such a bill it returned nothing
+ * usable, which is how an InfoStan bill ended up with no address and no
+ * deadline. Tesseract carries `srp`.
+ *
+ * Language models (srp, srp_latn, eng) are BUNDLED in the APK assets
+ * (`tessdata/`) — zero network at runtime, so the no-INTERNET guarantee holds in
+ * both flavors. On first use the models are copied from read-only assets into
+ * app-private storage (Tesseract needs a filesystem datapath), then the engine
+ * is initialized once and reused.
  */
 class TesseractTextRecognizer(context: Context) : TextRecognizer {
 
