@@ -41,8 +41,18 @@ object AddressMatcher {
         provider: String
     ): AddressMatch {
         val zones = mutableListOf<String>()
-        ips?.get("P")?.let { if (it.isNotEmpty()) zones.add(Normalizer.norm(it)) }
         val t = Normalizer.norm(text)
+        // v1.7: the PROPERTY anchor outranks the QR's P field. P is the PAYER's
+        // postal address, which is a different thing from the place the bill is
+        // for — an InfoStan bill prints the flat/garage under „adresa:" while P
+        // carries where the post goes, and the two are routinely different
+        // addresses that the user keeps as two separate labels. Whenever a bill
+        // states the property itself, that is the answer.
+        // The rest of the app already treats P as not-the-label: `buildBillCard`
+        // withholds the QR entirely on the scan path for this exact reason. This
+        // only finishes the thought. Providers with no anchor (mts, yettel, sz)
+        // are unaffected — for them P IS the subscriber's address, and it stays
+        // the first zone tried.
         if (provider == "eps") {
             val i = t.indexOf("mernog mesta")
             if (i >= 0) zones.add(t.substring(i, minOf(t.length, i + 140)))
@@ -51,6 +61,7 @@ object AddressMatcher {
             val i = t.indexOf("adresa:")
             if (i >= 0) zones.add(t.substring(i, minOf(t.length, i + 120)))
         }
+        ips?.get("P")?.let { if (it.isNotEmpty()) zones.add(Normalizer.norm(it)) }
         zones.add(t)
 
         for (zone in zones) {

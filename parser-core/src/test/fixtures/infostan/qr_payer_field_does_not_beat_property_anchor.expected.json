@@ -1,0 +1,12 @@
+{
+  "note": "The QR's P field is the PAYER's postal address and the `adresa:` anchor is the PROPERTY the bill is for; here they are two DIFFERENT addresses the user keeps as two labels. The property wins. Found on device 14.08.2026: with only SG26 in the book this bill named itself SG26, and it silently became KD7 the moment the payer's own address was added as a second label — P used to be the first zone tried. Both labels must exist in the book for this case to mean anything.",
+  "sourceKind": "IMAGE_OCR",
+  "ips": "K:PR|V:01|C:1|R:200220618010100048|N:JKP INFOSTAN TEHNOLOGIJE BEOGRAD|P:PETROVIC PETAR KOSTE DRAGOJEVICA 7|I:RSD970,52|SF:122|S:OBJEDINJENA NAPLATA|RO:11800614276087-26050-1",
+  "provider": "infostan",
+  "addressLabel": "SG26",
+  "addressAmbiguous": false,
+  "month": "maj26",
+  "amount": 971,
+  "spaceId": "614276",
+  "expectedName": "infostan_SG26_maj26_971"
+}
