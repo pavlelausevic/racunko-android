@@ -8,7 +8,9 @@ package com.racunko.app.parser
  *    hyphen-anchored suffix (v1.4.1 Bug 1 — the old unanchored pattern could bite
  *    an earlier "...080-" inside the ident and misread the month)
  * 4. text: billing period dd.MM.yyyy - dd.MM.yyyy -> end date's month
- * 5. text: Serbian month name + 4-digit year
+ * 5. text: Serbian month name + 4-digit year — the one that comes first IN THE
+ *    TEXT, never first in the calendar (v1.7 Bug: a back charge for an earlier
+ *    month, printed among the line items, was renaming the whole bill)
  */
 object MonthDetector {
 
@@ -30,11 +32,7 @@ object MonthDetector {
                 val mm = m.groupValues[1].toInt()
                 if (mm in 1..12) return MonthYear(mm, m.groupValues[2].toInt() % 100)
             }
-            for (i in MONTH_NAME_RX.indices) {
-                MONTH_NAME_RX[i].find(sn)?.let { m ->
-                    return MonthYear(i + 1, m.groupValues[1].toInt() % 100)
-                }
-            }
+            earliestMonthName(sn)?.let { return it }
         }
 
         if (provider == "eps" && roDigits.length >= 4) {
@@ -55,11 +53,29 @@ object MonthDetector {
             if (mm in 1..12) return MonthYear(mm, m.groupValues[6].toInt() % 100)
         }
 
-        for (i in MONTH_NAME_RX.indices) {
-            MONTH_NAME_RX[i].find(t)?.let { m ->
-                return MonthYear(i + 1, m.groupValues[1].toInt() % 100)
-            }
-        }
-        return null
+        return earliestMonthName(t)
     }
+
+    /**
+     * The month name that comes first IN THE DOCUMENT, not first in the calendar.
+     *
+     * This used to loop over the month list and return on the first regex that
+     * matched anywhere, which made January beat December no matter where either
+     * stood on the page. Found on device 15.08.2026: an InfoStan bill for July
+     * carries the line „заједничка електрична енергија – мај 2026." — a back
+     * charge for May — and the bill was named `..._maj26_...`. Every issuer
+     * prints the billing month in the HEADER and older months further down (back
+     * charges, consumption charts, comparisons), so earliest-in-text is both the
+     * right answer here and the safer rule in general.
+     *
+     * Only reached when the QR is unreadable — with it, rules 1–3 answer first,
+     * which is why `gms` named the same bill correctly and `foss` did not.
+     */
+    private fun earliestMonthName(t: String): MonthYear? =
+        MONTH_NAME_RX.withIndex()
+            .mapNotNull { (i, rx) ->
+                rx.find(t)?.let { m -> m.range.first to MonthYear(i + 1, m.groupValues[1].toInt() % 100) }
+            }
+            .minByOrNull { it.first }
+            ?.second
 }

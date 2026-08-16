@@ -34,11 +34,44 @@ object DueDateParser {
         // date went unread (found on device 14.08.2026). Widening the ending
         // cannot revive the „Валута РСД" decoy — that one is stopped by the date
         // requirement below, not by the ending.
-        "\\bvalut[ae]\\b"
+        BARE_VALUTA
     )
 
-    private val PATTERNS = LABELS.map { label ->
-        Regex("$label[^0-9]{0,25}(\\d{1,2})\\s*[.\\-/]\\s*(\\d{1,2})\\s*[.\\-/]\\s*(\\d{2,4})")
+    private const val DATE = "(\\d{1,2})\\s*[.\\-/]\\s*(\\d{1,2})\\s*[.\\-/]\\s*(\\d{2,4})"
+
+    private val PATTERNS = LABELS.map { label -> Regex("$label[^0-9]{0,25}$DATE") }
+
+    /**
+     * Second pass, for TABLE layouts. InfoStan prints the four column headings in
+     * one row and their values in the next, so „датум доспећа" is separated from
+     * its date by the other columns' values — the bill number comes first, and the
+     * strict pass above stops at its digits. Widening the strict pass is not the
+     * answer: it would let the ISSUE date win on every label-adjacent layout,
+     * which is the one mistake this parser exists to avoid.
+     *
+     * So: only when the strict pass finds nothing, read a bounded window after the
+     * label and take the LATEST date in it. Latest is not a positional guess — of
+     * the dates a bill prints in that row (issue, delivery, deadline), the
+     * deadline is by definition the last one.
+     *
+     * The bare „валута" label is excluded here: no issuer prints it as a column
+     * heading, and it is the one label loose enough to catch a stray date.
+     * Found on device 14.08.2026 — three InfoStan bills read `due date?` while
+     * their deadline was printed on the page.
+     */
+    private const val BARE_VALUTA = "\\bvalut[ae]\\b"
+    private val TABLE_LABELS = LABELS.filterNot { it == BARE_VALUTA }.map { Regex(it) }
+    private val ANY_DATE = Regex(DATE)
+    private const val TABLE_WINDOW = 160
+
+    private fun MatchResult.toDate(): LocalDate? {
+        val day = groupValues[1].toIntOrNull() ?: return null
+        val month = groupValues[2].toIntOrNull() ?: return null
+        val rawYear = groupValues[3].toIntOrNull() ?: return null
+        val year = if (rawYear < 100) 2000 + rawYear else rawYear
+        if (month !in 1..12 || day !in 1..31 || year !in 2020..2045) return null
+        // LocalDate.of rejects 31.02 and friends — a malformed date is no date.
+        return runCatching { LocalDate.of(year, month, day) }.getOrNull()
     }
 
     /** Deadline from the document text, or null when none is printed. */
@@ -46,14 +79,13 @@ object DueDateParser {
         val t = Normalizer.norm(text)
         if (t.isEmpty()) return null
         for (pattern in PATTERNS) {
-            val m = pattern.find(t) ?: continue
-            val day = m.groupValues[1].toIntOrNull() ?: continue
-            val month = m.groupValues[2].toIntOrNull() ?: continue
-            val rawYear = m.groupValues[3].toIntOrNull() ?: continue
-            val year = if (rawYear < 100) 2000 + rawYear else rawYear
-            if (month !in 1..12 || day !in 1..31 || year !in 2020..2045) continue
-            // LocalDate.of rejects 31.02 and friends — a malformed date is no date.
-            runCatching { LocalDate.of(year, month, day) }.getOrNull()?.let { return it }
+            (pattern.find(t) ?: continue).toDate()?.let { return it }
+        }
+        for (label in TABLE_LABELS) {
+            val m = label.find(t) ?: continue
+            val from = m.range.last + 1
+            val window = t.substring(from, minOf(t.length, from + TABLE_WINDOW))
+            ANY_DATE.findAll(window).mapNotNull { it.toDate() }.maxOrNull()?.let { return it }
         }
         return null
     }

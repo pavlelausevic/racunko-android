@@ -151,6 +151,66 @@ class DueDateParserTest {
         assertNull(DueDateParser.parse(slipOnly))
     }
 
+    /**
+     * The layout InfoStan actually prints, found on device 14.08.2026: the four
+     * column headings in one row, their values in the next. „Датум доспећа" is
+     * therefore separated from its date by the BILL NUMBER and two other dates,
+     * and the label-adjacent pass cannot reach it — three real bills read
+     * `due date?` while their deadline was on the page.
+     *
+     * The case below is the real STRUCTURE with invented values (§9): the ident,
+     * the bill number and the dates are made up. Break the table fallback and
+     * this test fails; break it by widening the strict pass instead, and
+     * [tableFallbackNeverBeatsAnAdjacentLabel] fails.
+     */
+    @Test
+    fun infostan_tableLayout_dueDateIsInTheValueRow() {
+        val text = """
+            Шифра корисника (ИДЕНТ): 0123456
+            Рачун за јул 2026. године
+            Број рачуна
+            Место и датум издавања
+            Датум испоруке добара и услуга
+            Датум доспећа
+            2026/07-0123456
+            Београд, 31.07.2026. године
+            31.07.2026. године
+            31.08.2026. године
+            СП
+            Назив пружаоца услуге
+            За уплату
+        """.trimIndent()
+        assertEquals(LocalDate.of(2026, 8, 31), DueDateParser.parse(text))
+    }
+
+    /**
+     * The fallback must stay a FALLBACK. Yettel prints „Рок за плаћање" right next
+     * to its date and, a few lines on, a much later contract-expiry date. If the
+     * window pass ever ran first — or ran at all here — the deadline would jump to
+     * 2027 and the bill would look like it has months left.
+     */
+    @Test
+    fun tableFallbackNeverBeatsAnAdjacentLabel() {
+        val text = """
+            Датум израде рачуна: 31.07.2026.
+            Рок за плаћање: 20.08.2026.
+            Место издавања рачуна: Београд
+            Уговорна обавеза истиче: 31.03.2027.
+        """.trimIndent()
+        assertEquals(LocalDate.of(2026, 8, 20), DueDateParser.parse(text))
+    }
+
+    /** A bill with no deadline label at all still has no deadline. */
+    @Test
+    fun tableFallbackDoesNotInventADeadline() {
+        val text = """
+            Датум издавања рачуна: 31.07.2026.
+            Датум промета: 31.07.2026.
+            Период обрачуна: 01.07.2026 - 31.07.2026
+        """.trimIndent()
+        assertNull(DueDateParser.parse(text))
+    }
+
     @Test
     fun infostan_discountCutoffDoesNotBeatDospece() {
         val text = """

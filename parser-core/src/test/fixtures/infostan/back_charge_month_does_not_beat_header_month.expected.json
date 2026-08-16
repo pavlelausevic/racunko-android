@@ -1,0 +1,10 @@
+{
+  "note": "No QR, so the month falls to the text rule. The bill is for JUL and says so in its header; a back charge for MAJ sits among the line items. The month that comes first IN THE TEXT wins — never the one that comes first in the calendar. Found on device 15.08.2026 in the foss build, where ZXing could not read this issuer's QR and the fallback named a July bill maj26.",
+  "sourceKind": "PDF_TEXT",
+  "provider": "infostan",
+  "addressLabel": "KD7",
+  "addressAmbiguous": false,
+  "month": "jul26",
+  "amount": 6818,
+  "expectedName": "infostan_KD7_jul26_6818"
+}
