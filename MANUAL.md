@@ -30,20 +30,20 @@ way to install Android apps outside the store:
 > ❓ **Is there a PC (.exe) or iPhone version?** No — Računko is Android-only
 > (Android 10+).
 
-## 2. First launch — one tap
+## 2. First launch — there is nothing to set up
 
-On first launch Računko creates the **`Download/Racunko`** folder and asks you
-to confirm it:
+You open the app and it works. No permission prompts, no screen before the first
+screen, no folder to approve.
 
-1. Tap **"Confirm folder"**.
-2. A system screen opens already positioned on the *Racunko* folder — just tap
-   **"Use this folder"** and confirm.
+Bills and confirmations are kept **inside the app**. Nothing is asked of the
+phone and nothing is visible to other apps.
 
-That's the whole setup. Your bills (`Racuni`), confirmations (`Potvrde`) and
-QR images live in that folder — always accessible from any file manager too.
-
-> If "Use this folder" is greyed out, you are in the *Download* folder — open
-> *Racunko* first, then confirm (the ⓘ button explains this in-app).
+> If you want to see them outside Računko, Settings (section 11) gives you two
+> options: **"Export to a folder"** whenever you want a copy, or **"Keep a copy
+> in my folder"** so every bill is written there as well.
+>
+> Because the archive lives inside the app, **uninstalling deletes it**. If the
+> archive matters to you, export it now and then.
 
 ## 3. Adding bills
 
@@ -60,7 +60,7 @@ four fields: **provider, address, month, amount**. Whatever was read with
 certainty is filled in; anything uncertain shows a question mark (e.g.
 "address?") — tap the field to complete it. *Računko never guesses — it asks.*
 
-The file is moved to `Download/Racunko/Racuni` and renamed, e.g.:
+The file is moved into the app's archive and renamed, e.g.:
 
 ```
 infostan_KD7_maj26_11152.pdf
@@ -70,8 +70,9 @@ infostan_KD7_maj26_11152.pdf
    └─ provider
 ```
 
-> 💡 You can also drop a bill straight into `Download/Racunko/Racuni` with a
-> file manager — Računko picks it up automatically on next open.
+> 💡 Got a whole folder of bills? You do not have to add them one by one —
+> **Settings → Import from a folder** copies them all in at once. They land in
+> the "Files in folder" section and wait for you to tap **"Process"**.
 
 ## 4. Address book (recommended, takes 2 minutes)
 
@@ -175,18 +176,36 @@ Viber, WhatsApp or a note — not just while it sits in the app.
 
 ## 11. Settings
 
-Language (Serbian/English/Russian/system), address book, provider display names,
-storage location, and destructive actions (clear pairing history, clear
-remembered payees, empty the folder — double-confirmed, irreversible).
+- **Language** — Serbian / English / Russian / follow system.
+- **My addresses** — the address book (section 4).
+- **Provider labels** — how each provider is written in the file name.
+- **Storage location** — tells you the archive is inside the app. There is
+  nothing to choose.
+- **Export to a folder** — writes bills, confirmations and `racunko.json` into a
+  folder you pick. The files stay plain files you can open with anything; the
+  manifest beside them carries what a file name cannot — deadlines, reminders,
+  which confirmation belongs to which bill, the address book, payee memory.
+- **Import from a folder** — brings all of that back, on this phone or another.
+  It also works with an ordinary folder of PDFs; you then get what the file
+  names carry.
+- **Keep a copy in my folder** — when on, every bill is also written to a folder
+  you pick, so you can see it outside Računko. Turning it on rewrites the
+  existing archive into it immediately. Turning it off **deletes nothing**.
+- **Deletions** — pairing history, remembered payees, or emptying the whole
+  archive (double-confirmed, irreversible).
 
 ## 12. FAQ
 
-**Where is my data?** Only on your phone, in `Download/Racunko` (plus the
-app's local database). The app has no internet permission — verify it yourself
-in Android's app settings.
+**Where is my data?** Only on your phone, in the app's own private storage.
+Other apps cannot see it, and Računko has no internet permission — verify that
+yourself in Android's app settings. The app is also excluded from Android's
+automatic backup, so your bills never reach Google Drive.
 
-**What if I uninstall the app?** The files in `Download/Racunko` remain —
-they're your normal files. Only the pairing memory is lost.
+**What if I uninstall the app?** **The archive goes with it.** That is the price
+of asking nothing of the phone. This is what **Export to a folder** is for — an
+exported folder is ordinary files that survive uninstalling, and Import brings
+them back together with deadlines, pairings and the address book. If the archive
+matters to you, export it before you uninstall or switch phones.
 
 **My bank isn't recognized?** The confirmation will ask for manual pairing —
 it works, just not automatically. Want your bank supported? Open an issue on

@@ -30,20 +30,20 @@ prodavnice:
 > ❓ **Postoji li verzija za računar (.exe) ili iPhone?** Ne — Računko je
 > isključivo Android aplikacija (Android 10 i noviji).
 
-## 2. Prvo pokretanje — jedan dodir
+## 2. Prvo pokretanje — nema šta da se podešava
 
-Pri prvom pokretanju Računko sam napravi fasciklu **`Download/Racunko`** na
-telefonu i zamoli te da je potvrdiš:
+Otvoriš aplikaciju i ona radi. Nema pitanja o dozvolama, nema ekrana pre prvog
+ekrana, nema fascikle koju moraš da odobriš.
 
-1. Klikni **„Potvrdi fasciklu"**.
-2. Otvoriće se sistemski ekran već pozicioniran na fasciklu *Racunko* — samo
-   klikni **„Koristi ovu fasciklu"** (i potvrdi pristup).
+Računi i potvrde se čuvaju **u samoj aplikaciji**. Od telefona se ništa ne
+traži i ništa nije vidljivo drugim aplikacijama.
 
-To je celo podešavanje. U toj fascikli žive tvoji računi (`Racuni`), potvrde
-(`Potvrde`) i QR slike — sve ti je uvek dostupno i iz običnog file managera.
-
-> Ako je dugme „Koristi ovu fasciklu" sivo, znači da si u fascikli *Download* —
-> uđi u *Racunko* pa potvrdi (dugme ⓘ na ekranu ti to i pokaže).
+> Ako želiš da ih vidiš i van Računka, imaš dve mogućnosti u Podešavanjima
+> (tačka 11): **„Izvezi u fasciklu"** kad god ti zatreba kopija, ili
+> **„Čuvaj i kopiju u mojoj fascikli"** da se svaki račun upisuje i tamo.
+>
+> Pošto arhiva živi u aplikaciji, **deinstalacija je briše**. Ako ti je stalo
+> do te arhive, s vremena na vreme uradi izvoz.
 
 ## 3. Dodavanje računa
 
@@ -60,7 +60,7 @@ Posle dodavanja klikni **Obradi**. Računko pročita račun i pokaže karticu sa
 biće popunjeno; ono što nije, piše sa znakom pitanja (npr. „adresa?") — klikni
 na polje i dopuni. *Računko nikad ne pogađa — radije pita.*
 
-Fajl se automatski premesti u `Download/Racunko/Racuni` i preimenuje, npr.:
+Fajl se premesti u arhivu aplikacije i preimenuje, npr.:
 
 ```
 infostan_KD7_maj26_11152.pdf
@@ -70,8 +70,9 @@ infostan_KD7_maj26_11152.pdf
    └─ pružalac usluge
 ```
 
-> 💡 Račun možeš i ručno da ubaciš u fasciklu `Download/Racunko/Racuni` preko
-> file managera — Računko ga sam primeti pri sledećem otvaranju.
+> 💡 Ako imaš celu fasciklu računa, ne moraš da ih dodaješ jedan po jedan —
+> **Podešavanja → Uvezi iz fascikle** ih prekopira odjednom. Posle uvoza stoje
+> u sekciji „Fajlovi u fascikli" i čekaju da klikneš **„Obradi"**.
 
 ## 4. Šifarnik adresa (preporučeno, 2 minuta)
 
@@ -178,18 +179,32 @@ nalepiš** u Viber, WhatsApp ili belešku — a ne samo dok stoji u aplikaciji.
 - **Jezik** — srpski / engleski / ruski / prati sistem.
 - **Moje adrese** — šifarnik (tačka 4).
 - **Nazivi pružalaca** — kako se koji pružalac piše u imenu fajla.
-- **Lokacija čuvanja** — promena fascikle (za napredne korisnike).
+- **Mesto čuvanja** — piše ti da je arhiva u samoj aplikaciji. Nema šta da se
+  bira.
+- **Izvezi u fasciklu** — upiše račune, potvrde i `racunko.json` u fasciklu koju
+  izabereš. Fajlovi ostaju obični fajlovi, otvoriš ih bilo čime; manifest uz njih
+  nosi ono što ime fajla ne može — rokove, podsetnike, koja potvrda pripada kom
+  računu, šifarnik i zapamćene primaoce.
+- **Uvezi iz fascikle** — vraća sve to, na ovom ili na drugom telefonu. Radi i sa
+  običnom fasciklom PDF-ova, samo tada dobiješ ono što imena fajlova nose.
+- **Čuvaj i kopiju u mojoj fascikli** — kad uključiš, svaki račun se upisuje i u
+  fasciklu koju izabereš, pa ga vidiš i van Računka. Uključivanje odmah prepiše
+  postojeću arhivu u nju. Isključivanje **ništa ne briše**.
 - **Brisanja** — istorija uparivanja, zapamćeni primaoci, ili kompletno
-  pražnjenje fascikle (dva potvrđivanja — nepovratno!).
+  pražnjenje arhive (dva potvrđivanja — nepovratno!).
 
 ## 12. Česta pitanja
 
-**Gde su moji podaci?** Isključivo na tvom telefonu, u `Download/Racunko` (i
-lokalna baza aplikacije). Aplikacija nema dozvolu za internet — proveri i sam
-u Android podešavanjima aplikacije.
+**Gde su moji podaci?** Isključivo na tvom telefonu, u privatnom prostoru same
+aplikacije. Drugim aplikacijama nisu vidljivi, a Računko nema dozvolu za internet
+— proveri i sam u Android podešavanjima aplikacije. Aplikacija je isključena i iz
+sistemskog automatskog bekapa, da tvoji računi ne bi završili na Google Drive-u.
 
-**Šta ako obrišem aplikaciju?** Fajlovi u `Download/Racunko` ostaju — to su
-tvoji normalni fajlovi. Gubi se samo memorija uparivanja.
+**Šta ako obrišem aplikaciju?** **Arhiva se briše sa njom.** To je cena toga što
+se ništa ne traži od telefona. Zato postoji **Izvezi u fasciklu** — izvezena
+fascikla su obični fajlovi koji preživljavaju deinstalaciju, a uvoz ih vraća
+zajedno sa rokovima, uparivanjima i šifarnikom. Ako ti je arhiva važna, izvezi je
+pre nego što obrišeš aplikaciju ili promeniš telefon.
 
 **Moja banka nije prepoznata?** Potvrda će tražiti ručno uparivanje — radi,
 samo nije automatski. Ako želiš da banka bude podržana, otvori „issue" na

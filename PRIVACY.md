@@ -10,21 +10,35 @@ construction.
   `tools:node="remove"`, so no bundled library can pull it back in. `ACCESS_NETWORK_STATE`
   is stripped the same way. An app with no `INTERNET` permission physically cannot
   open a socket — there is no "trust us," there is the Android permission model.
-- On-device engines only: QR decoding and OCR run from **bundled** models
-  (ML Kit in the `gms` flavor; ZXing + Tesseract in the `foss` flavor). Nothing is
+- On-device engines only: text recognition is **bundled Tesseract in both
+  flavors**, QR decoding is bundled ML Kit (`gms`) or ZXing (`foss`). Nothing is
   uploaded for "cloud recognition."
+- **The app is excluded from Android Auto Backup** (`allowBackup="false"`). Since
+  the archive lives in the app's own storage, leaving backup on would have shipped
+  your bills to Google Drive. An app that removes its own `INTERNET` permission
+  must not let a system service carry the same data out.
 
 ## What is stored, and where
 
 Everything is **local to the device**. Nothing is synced or backed up to a server.
 
+Since v1.7 the archive is kept in the app's **private storage**: no permission is
+requested, no folder is granted, and nothing is visible to other apps. A copy in a
+folder of your choosing is optional, off by default, and yours to turn on.
+
 | Data | Where | Why | How to clear |
 |---|---|---|---|
-| Renamed bills / confirmations | `Download/Racunko/**` (your storage) | the whole point — your files, in your Downloads | delete the files |
+| Renamed bills / confirmations | app-private storage | the archive itself | select the cards → delete, with „delete files too" |
+| Optional visible copy | a folder you pick, only if you turn it on | so you can see the files outside Računko | turn it off (nothing is deleted) and delete the folder yourself |
 | Pairing index (bill records) | app-private Room database | matches confirmations to bills | Settings → „Obriši istoriju uparivanja" |
 | Payee memory (account → provider + address) | app-private Room database | prefill recurring monthly bills | Settings → „Obriši zapamćene primaoce" |
-| QR images | `Download/Racunko` (+ `Pictures/Racunko`) | scan from the gallery to pay | deleted automatically on pairing; or delete manually |
+| QR images | **nowhere by default** — the code is derived when shown | a stored QR is a copy of a payment order you did not ask to keep | „To gallery" writes one to `Pictures/Racunko` only when you tap it, and pairing deletes exactly that copy |
+| Exported archive | the folder you pick, only when you run Export | your backup, readable without Računko | delete the folder |
 | Settings (addresses, language, provider labels) | app-private DataStore | your configuration | uninstall / clear app data |
+
+The export carries a `racunko.json` next to the files. It holds what the file names
+cannot — deadlines, reminders, which confirmation belongs to which bill, the address
+book, payee memory. It is plain JSON you can read; it goes only where you export it.
 
 Payee memory keeps only what a bill already prints — the **recipient's** account,
 provider and address label. It never stores your own account or personal name as

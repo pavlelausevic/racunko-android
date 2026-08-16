@@ -28,12 +28,13 @@ Ne moraš da znaš ništa o GitHub-u niti o programiranju:
 
 1. Otvori stranicu **[Releases](../../releases/latest)** (dugme „Releases" desno
    na ovoj stranici).
-2. Preuzmi fajl **`Racunko-X.Y.Z.apk`** na telefon (~36 MB — u sebi nosi sve
+2. Preuzmi fajl **`Racunko-X.Y.Z.apk`** na telefon (~34 MB — u sebi nosi sve
    modele za čitanje, zato i radi bez interneta).
 3. Otvori preuzeti fajl i instaliraj (Android će pitati da dozvoliš instalaciju
    iz ovog izvora — potvrdi).
-4. Pri prvom pokretanju potvrdi fasciklu `Download/Racunko` jednim dodirom — to
-   je sve od podešavanja.
+4. Pokreni je. **Nema šta da se podešava** — nema pitanja o dozvolama i nema
+   ekrana pre prvog ekrana. Računi se čuvaju u samoj aplikaciji; ako želiš i
+   kopiju u svojoj fascikli, uključi je kasnije u Podešavanjima.
 
 📖 **Kompletno uputstvo za korišćenje: [UPUTSTVO.md](UPUTSTVO.md)**
 
@@ -72,8 +73,10 @@ Banca Intesa, Erste, AIK + generički šablon. Tvoja banka nije podržana?
 
 ### Za programere
 
-Dve varijante, obe 100% offline: `gms` (ML Kit + ZXing) i `foss`
-(ZXing + Tesseract — bez Google servisa, pogodno za F-Droid).
+Dve varijante, obe 100% offline. Tekst u obe čita **Tesseract** sa srpskim
+modelima — računi javnih preduzeća su ćirilični. Razlika je samo u čitanju QR
+koda: `gms` koristi ML Kit, `foss` ZXing (bez Google servisa, pogodno za
+F-Droid).
 
 ```
 set JAVA_HOME=<JDK 17+ ili Android Studio jbr>
@@ -113,12 +116,13 @@ the device. Details: [PRIVACY.md](PRIVACY.md).
 No GitHub or programming knowledge needed:
 
 1. Open the **[Releases](../../releases/latest)** page.
-2. Download **`Racunko-X.Y.Z.apk`** to your phone (~36 MB — it bundles all
+2. Download **`Racunko-X.Y.Z.apk`** to your phone (~34 MB — it bundles all
    recognition models, which is why it works offline).
 3. Open the downloaded file and install (Android will ask you to allow
    installs from this source — confirm).
-4. On first launch, confirm the `Download/Racunko` folder with one tap — that
-   is the entire setup.
+4. Launch it. **There is nothing to set up** — no permission prompts and no
+   screen before the first screen. Bills are kept inside the app; if you also
+   want a copy in a folder of your own, turn that on later in Settings.
 
 📖 **Full user manual: [MANUAL.md](MANUAL.md)**
 
@@ -147,8 +151,10 @@ No GitHub or programming knowledge needed:
 - **Report** — a monthly per-address summary, spaced so the amounts still line
   up after you paste it into Viber or WhatsApp.
 - **Three languages** — Serbian, English, Russian.
-- Two flavors, both fully offline: `gms` (ML Kit + ZXing) and `foss`
-  (ZXing + Tesseract, Google-free, F-Droid-friendly).
+- Two flavors, both fully offline. Text recognition is **Tesseract with
+  Serbian models in both** — public-utility bills here are printed in Cyrillic.
+  The flavors differ only in QR decoding: `gms` uses ML Kit, `foss` uses ZXing
+  (Google-free, F-Droid-friendly).
 
 ### Building & contributing
 
@@ -185,12 +191,13 @@ especially new bank templates with **redacted** samples.
 Знания GitHub или программирования не нужны:
 
 1. Откройте страницу **[Releases](../../releases/latest)**.
-2. Скачайте на телефон файл **`Racunko-X.Y.Z.apk`** (~36 МБ — внутри все
+2. Скачайте на телефон файл **`Racunko-X.Y.Z.apk`** (~34 МБ — внутри все
    модели распознавания, поэтому приложение работает без интернета).
 3. Откройте скачанный файл и установите (Android попросит разрешить установку
    из этого источника — подтвердите).
-4. При первом запуске одним касанием подтвердите папку `Download/Racunko` —
-   на этом настройка закончена.
+4. Запустите. **Настраивать нечего** — ни запросов разрешений, ни экрана перед
+   первым экраном. Счета хранятся внутри приложения; если нужна ещё и копия в
+   своей папке, включите её позже в Настройках.
 5. Язык переключается в **Настройках → Язык → Русский**.
 
 📖 **Полное руководство: [РУКОВОДСТВО.md](%D0%A0%D0%A3%D0%9A%D0%9E%D0%92%D0%9E%D0%94%D0%A1%D0%A2%D0%92%D0%9E.md)**

@@ -77,6 +77,26 @@ The corpus **is the specification.** A Kotlin test proves the Kotlin code works;
 a fixture proves *an* implementation works, in a form a Swift or any other port
 runs unchanged. That is why vectors belong here rather than in Kotlin strings.
 
+> ### Write the LAYOUT, not just the wording
+>
+> Fixture text is redacted and often typed by hand, and a hand-typed case tends to
+> put a label and its value on one tidy line. Real bills frequently do not.
+>
+> This cost three releases. The deadline cases pinned the *label wording* —
+> `Датум доспећа: 31.08.2026.` — and passed. The real InfoStan bill prints a
+> four-column table: the headings in one row, the values in the next, so the bill
+> NUMBER sits between the label and its date. The parser found nothing, every
+> InfoStan bill silently showed „rok?", and no test noticed, because no test had
+> ever seen that shape.
+>
+> So: reproduce the **structure** of the page — column rows, line-item blocks,
+> the order things actually appear in — and invent only the values. And when a
+> synthetic case stands in for a real document, **say in `note` which property it
+> pins**, so the next person can tell what it does *not* cover. Same lesson from
+> the other direction: a July bill carrying a „мај 2026" back charge among its
+> line items is the case that caught the month detector preferring the calendar
+> over the page.
+
 Each case is two files side by side:
 
 ```

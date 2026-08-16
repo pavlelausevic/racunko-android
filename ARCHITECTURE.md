@@ -29,7 +29,8 @@ Računko renames Serbian utility bills, extracts (or generates) the NBS IPS paym
                  QrDecoder, QrEncoder, TextRecognizer, LiveQrScanner
 
 :app             Android. UI (Compose, Material 3, Serbian-first; sr/en/ru),
-                 storage (SAF under Download/Racunko), CameraX, DI wiring,
+                 storage (app-private files; an optional SAF mirror), CameraX,
+                 export/import, DI wiring,
                  flavor-specific engine implementations.
                  - MainActivity: singleTask, the ONLY long-lived window
                  - ShareTargetActivity: invisible trampoline that owns the
@@ -44,8 +45,17 @@ Računko renames Serbian utility bills, extracts (or generates) the NBS IPS paym
 
 | Flavor | Target | QR decode | QR encode | OCR |
 |---|---|---|---|---|
-| `gms` (default) | Play Store | ML Kit barcode (bundled) | ZXing | ML Kit text-recognition (bundled) |
+| `gms` (default) | Play Store | ML Kit barcode (bundled) | ZXing | Tesseract (`srp`, `srp_latn`, `eng`) |
 | `foss` | F-Droid | ZXing | ZXing | Tesseract (`srp`, `srp_latn`, `eng`) |
+
+**OCR is Tesseract in both since v1.7.** ML Kit's recognizer is Latin-script and
+no Cyrillic model exists for it, while every bill a public utility prints here is
+Cyrillic — on a screenshot of one it returned nothing usable. The swap also made
+the Play build *smaller* (37.1 -> 33.5 MB). ML Kit stays for QR decoding, where
+it is better and has no substitute in that flavor. `TesseractTextRecognizer` is
+therefore the one engine that lives in the shared source set rather than under a
+flavor folder — the rule exists to keep a *proprietary* engine out of shared
+code, and Tesseract is Apache-2.0.
 
 Both implement the same `platform-api` interfaces and are injected via DI. The core and every test run without either engine, because tests feed text and QR strings directly.
 
@@ -109,15 +119,42 @@ This is why OCR mistakes surface as "confirm this number," not as a silent wrong
 
 The core both **reads** the NBS IPS payload (pipe-separated `KEY:VALUE`, keys `K,V,C,R,N,I,SF,S,RO,P`) and **builds** it from `ExtractedFields` for bills that lack one. Generation is gated on a checksum-valid account + present amount, and is covered by a **round-trip test** (build → decode → identical fields). Follow the official NBS IPS QR field spec for order, UTF-8 (`C:1`), and length limits.
 
-## Storage (app layer, v1.3)
+## Storage (app layer, v1.7 — the model changed, ignore anything older)
 
-MediaStore under public Downloads, created once, idempotent by path:
+The archive is **app-private** and asks nothing of the phone: no permission, no
+grant dialog, no setup screen.
+
 ```
-Download/Racunko/Racuni     renamed bills
-Download/Racunko/Potvrde    renamed confirmations
-Download/Racunko            generated/extracted QR PNGs (also indexed for the gallery)
+filesDir/racuni     renamed bills
+filesDir/potvrde    renamed confirmations
+cacheDir/qr         derived QR PNGs (a cache; the system may clear it)
+cacheDir/share      one temporary copy per „Share QR", cleaned by the system
 ```
-No SAF folder-picking by default; „Izaberi drugu lokaciju čuvanja" in Settings overrides it.
+
+`FileStore` is the seam (6 methods + `savePng`). `StorageManager.store()` ALWAYS
+returns `PrivateStore`, so it has no failure mode and no "not ready yet" state.
+When the user turns on „keep a copy in my folder", a bound SAF tree is wrapped
+around it by `MirrorStore`: reads never touch the copy, writes are best-effort,
+turning it on rewrites the archive into the folder, turning it off deletes
+nothing.
+
+**A private file's uri is `file://` and must not leave the app**
+(`FileUriExposedException`): `MainViewModel.shareableUri` converts to a
+FileProvider uri before every share; `content://` passes through untouched.
+
+`data/Archive.kt` does export/import — the files plus a `racunko.json` manifest
+beside them, no ZIP. The manifest carries what file names cannot: deadlines,
+reminders, pairings, payee memory, the address book, space bindings. Both halves
+are independently optional. `qrImageUri` and a card's `uri` are deliberately NOT
+imported — the first would make pairing delete a file in someone else's gallery,
+the second is worthless from another device.
+
+**The QR is derived, never stored by default.** `Pipeline.qrFor` goes cache ->
+document -> rebuild; the document comes first because a rebuilt payload is not
+the issuer's (payee name, payment code and model are not reconstructed), so a
+rebuild raises `qrGenerated` and the card says to check before paying. A gallery
+copy is written only when the user taps „To gallery", and pairing deletes exactly
+that copy.
 
 ## Where to start reading
 

@@ -29,8 +29,8 @@ Please read `ARCHITECTURE.md` first — especially "The template registry" and "
    ```
 3. Build the app:
    ```
-   ./gradlew :app:assembleGmsDebug     # Play-services flavor (ML Kit)
-   ./gradlew :app:assembleFossDebug    # F-Droid flavor (ZXing + Tesseract)
+   ./gradlew :app:assembleGmsDebug     # Play flavor  (ML Kit QR + Tesseract OCR)
+   ./gradlew :app:assembleFossDebug    # F-Droid flavor (ZXing QR  + Tesseract OCR)
    ```
 Keep `parser-core` free of Android imports; if you need something from the device, add it to `:platform-api`.
 
@@ -59,7 +59,7 @@ UI strings are Serbian-first in `values/strings.xml`, English in `values-en/`. M
 
 ## FOSS / engine changes
 
-If you touch OCR or QR, respect the `platform-api` interfaces and update **both** flavors (`gms`, `foss`). Don't call ML Kit or ZXing from `parser-core` or the domain layer.
+If you touch OCR or QR, respect the `platform-api` interfaces and update **both** flavors (`gms`, `foss`). Don't call ML Kit or ZXing from `parser-core` or the domain layer. Note that since v1.7 OCR is Tesseract in both flavors — only QR decoding differs — so `TesseractTextRecognizer` lives in the shared source set; every other engine implementation stays under its flavor folder.
 
 ## Pull request checklist
 
