@@ -5,7 +5,7 @@
 ![Platform](https://img.shields.io/badge/platform-Android%2010%2B-3DDC84?logo=android&logoColor=white)
 ![License](https://img.shields.io/badge/license-Apache--2.0-blue)
 ![Privacy](https://img.shields.io/badge/internet-NEMA%20DOZVOLU-success)
-![Tests](https://img.shields.io/badge/parser--core-76%20testa%20%2B%2022%20fikstura-brightgreen)
+![Tests](https://img.shields.io/badge/parser--core-79%20testova%20%2B%2023%20fikstura-brightgreen)
 ![Languages](https://img.shields.io/badge/jezici-sr%20%C2%B7%20en%20%C2%B7%20ru-blueviolet)
 
 ---
@@ -77,7 +77,7 @@ Dve varijante, obe 100% offline: `gms` (ML Kit + ZXing) i `foss`
 
 ```
 set JAVA_HOME=<JDK 17+ ili Android Studio jbr>
-gradlew.bat :parser-core:test                              # 76 testa + 22 fikstura, sve zeleno
+gradlew.bat :parser-core:test                              # 79 testova + 23 fikstura, sve zeleno
 gradlew.bat :app:assembleGmsDebug :app:assembleFossDebug   # oba flavora moraju da se builduju
 gradlew.bat :app:assembleGmsRelease                        # potpisan APK (vidi ispod)
 ```

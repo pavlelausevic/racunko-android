@@ -1,8 +1,15 @@
 # Changelog
 
-## [Neobjavljeno] — čita i ćirilicu
+## [1.7.0] — 2026-08-15
 
-### Promenjeno
+Instaliraš Računko i on radi — bez pitanja o dozvolama i bez ekrana pre prvog
+ekrana. Arhiva živi u samoj aplikaciji, QR se pravi kad zatreba umesto da stoji
+kao fajl, a izvoz i uvoz čuvaju sve što ime fajla ne može da ponese.
+
+### Čita i ćirilicu
+
+
+#### Promenjeno
 - **Računko sada čita ćirilicu i u Play izdanju.** Računi javnih preduzeća
   štampaju se ćirilicom, a prepoznavač teksta koji je Play izdanje koristilo zna
   samo latinicu — zato sa screenshot-a takvog računa nije umeo da pročita ni
@@ -13,7 +20,7 @@
   tvoj Drive nalog. Isključeno. Ako želiš kopiju van telefona, to radi izvoz —
   kad ti odlučiš i u fasciklu koju izabereš.
 
-### Popravljeno
+#### Popravljeno
 - **Aplikacija se otvarala na engleskom** na telefonu podešenom na srpski
   (latinicu), iako je u Podešavanjima pisalo da je izabran srpski. Android nije
   prepoznavao da je podrazumevani tekst aplikacije pisan latiničnim srpskim, pa
@@ -32,13 +39,23 @@
 - **Iz pregleda računa pred rokom sada se lako vraćaš.** Filter je postao
   dugme sa zvoncetom u istom redu sa adresama, pa ga „Sve" gasi kao i svaki
   drugi filter.
+- **InfoStan računi sada dobijaju rok plaćanja.** Rok je na njima odštampan, ali
+  u tabeli — u jednom redu stoje nazivi kolona, u sledećem njihove vrednosti — pa
+  je između natpisa „Датум доспећа" i samog датума stajao broj računa i
+  aplikacija bi odustala. Kartica je zato pisala „rok?" i podsetnik za te račune
+  nikad nije mogao da se uključi. Sada se čita.
+- **Račun se više ne imenuje po mesecu iz stavke.** Julski InfoStan račun koji
+  nosi zaostatak za maj („заједничка електрична енергија – мај") umeo je da se
+  nazove `maj26`, jer je od svih meseci koje dokument pomene biran onaj koji je
+  prvi po kalendaru, a ne onaj koji stoji prvi na samom računu. Sada je merilo
+  gde se mesec nalazi na papiru, a ne gde je u godini.
 
-## [Neobjavljeno] — arhiva je tvoja, ne fasciklina
+### Arhiva je tvoja, ne fasciklina
 
 Instaliraš Računko i on radi. Bez pitanja o dozvolama, bez ekrana pre prvog
 ekrana, bez fascikle koju moraš da odobriš da bi aplikacija uopšte počela.
 
-### Promenjeno
+#### Promenjeno
 - **Računi i potvrde se sada čuvaju u samoj aplikaciji.** Ništa se ne traži od
   telefona i ništa nije vidljivo drugim aplikacijama. Prvi ekran koji si ranije
   morao da prođeš — biranje fascikle — više ne postoji.
@@ -47,7 +64,7 @@ ekrana, bez fascikle koju moraš da odobriš da bi aplikacija uopšte počela.
   je uključiš, postojeća arhiva se odmah prepiše. Kad je isključiš, **ništa se ne
   briše** — ni arhiva ni ono što je već u fascikli.
 
-### Dodato
+#### Dodato
 - **Izvoz i uvoz, ravnopravno.** Izvoz upisuje račune, potvrde i `racunko.json` u
   fasciklu koju izabereš. Fajlovi ostaju obični fajlovi — otvoriš ih bilo čime, a
   imena im i dalje govore ko, gde, koji mesec i koliko. Manifest uz njih nosi ono
@@ -56,11 +73,11 @@ ekrana, bez fascikle koju moraš da odobriš da bi aplikacija uopšte počela.
 - Uvoz vraća sve to na bilo kom telefonu. Radi i sa fasciklom bez manifesta —
   tada dobiješ fajlove i ono što njihova imena nose.
 
-## [Neobjavljeno] — QR bez traga
+### QR bez traga
 
 QR kôd više ne postoji kao fajl. Postoji kao nešto što se napravi kad zatreba.
 
-### Promenjeno
+#### Promenjeno
 - **Neplaćen račun odmah pokazuje svoj QR.** Ranije je svaka kartica tražila da
   se klikne „prikaži QR" — i to baš na računu koji tek treba platiti, dakle na
   jedinom mestu gde kôd zaista treba. Sada je otvoren kad račun nije plaćen, a
@@ -70,7 +87,7 @@ QR kôd više ne postoji kao fajl. Postoji kao nešto što se napravi kad zatreb
   račun ostavljao QR sliku na dva mesta bez pitanja. Sada nula — kôd izlazi iz
   aplikacije isključivo kad ti to zatražiš.
 
-### Dodato
+#### Dodato
 - **„Podeli QR"** — šalje sliku direktno u aplikaciju banke ili gde god hoćeš,
   preko privremene kopije koju sistem sam počisti. Uz njega ostaje i **„U
   galeriju"** za trajno čuvanje. Dva puta zato što banke nisu iste: neke primaju
@@ -80,7 +97,7 @@ QR kôd više ne postoji kao fajl. Postoji kao nešto što se napravi kad zatreb
 - Kad se QR ne može ni pročitati iz dokumenta ni sklopiti iz podataka, kartica to
   **kaže**, umesto da ostavi prazno mesto.
 
-### Popravljeno
+#### Popravljeno
 - **QR je preživeo gašenje aplikacije.** Slika se nije čuvala u bazi, pa je posle
   restarta „QR slika" umela da ne uradi ništa. Sada se kôd obnavlja — pročita se
   ponovo iz samog računa, a ako to ne uspe, sklopi se iz zapamćenih podataka

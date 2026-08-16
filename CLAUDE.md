@@ -11,11 +11,16 @@ understand a bill; when a value can't be proven, ask the user.
 $env:JAVA_HOME="C:\Program Files\Android\Android Studio\jbr"   # PowerShell
 .\gradlew.bat :parser-core:test                  # pure-JVM tests (the real gate)
 .\gradlew.bat :app:assembleGmsDebug :app:assembleFossDebug     # both flavors MUST build
-.\gradlew.bat :app:assembleGmsRelease            # signed APK (keystore in repo root)
+.\gradlew.bat :app:assembleGmsRelease            # signed APK (keystore note below)
 .\gradlew.bat :parser-core:run --args="mkaccount 190 99870"    # → valid 18-digit account
 ```
-Signed release APKs are ~62 MB gms / ~48 MB foss (bundled ML Kit / Tesseract
-models; see the size notes in app/build.gradle.kts). Keep APKs,
+Signed release APKs are ~33.5 MB gms / ~23.8 MB foss (R8 on since 1.6.1,
+Tesseract bundled in BOTH since v1.7; see the size notes in
+app/build.gradle.kts). The signing key lives OUTSIDE this repo entirely — the
+git-ignored `keystore.properties` points at it by relative path — so it can never
+be swept into a commit or into an archive of this folder. Without that file a
+release build silently falls back to the DEBUG signature: check
+`apksigner verify --print-certs` before shipping anything. Keep APKs,
 `prezentacija/`, `.claude/`, tessdata out of git (already in `.gitignore`).
 
 ## Modules (dependency rule: :app → :parser-core + :platform-api)
@@ -60,27 +65,48 @@ app:
 - `ui/MainViewModel.kt` — UiState + all actions.
 - `domain/Pipeline.kt` — processBill/processImageBill/processScannedQr/
   processConfirmation/buildBillCard, generateQr, pairing, applyEdits.
-- `domain/{QrExtractor,PdfText,PdfOcr,ScanArtifact}.kt`.
-- `data/{Db(Room),Storage(SAF-only: SafStore+StorageManager+NoopStore),Saf
-  (ensureFolders→Racunko/Racuni/Potvrde),Gallery(QR→SAF tree+Pictures publish),
-  Settings(DataStore)}.kt`.
+- `domain/{QrExtractor,PdfText,PdfOcr,ScanArtifact,QrCache}.kt`.
+- `data/{Db(Room),Storage(v1.7: PrivateStore is primary, optional SafStore behind
+  MirrorStore, StorageManager; NoopStore GONE),Archive(export/import via
+  racunko.json),Saf(ensureFolders→Racunko/Racuni/Potvrde),Gallery(QR→Pictures,
+  ON REQUEST only),Settings(DataStore)}.kt`.
 
 ## Conventions
 - Filename: `{provider}_{ADDR}_{monthYY}_{amount}.pdf`; confirmation `uplata_`+name;
   QR `{name}_QR.png`. Month token always Serbian lowercase.
-- Storage (v1.5.0-rc3): SINGLE model = SAF. One persisted OPEN_DOCUMENT_TREE grant
-  on **`Download/Racunko`** (Android 11+ GREYS OUT the grant on the Downloads ROOT,
-  so onboarding EXTRA_INITIAL_URI = `primary:Download/Racunko`; ensureFolders treats
-  a granted folder named Racunko as the container, no double-nest → makes
-  Racuni/Potvrde). rc3: `StorageManager.ensurePublicFolder()` MediaStore-creates
-  Download/Racunko BEFORE onboarding (minSdk 29, no perm, idempotent readme) so the
-  grant dialog lands ENABLED = ONE TAP; VM init calls it when no tree bound. QR PNG in the SAF `Racunko` container + a gallery copy published
-  to `Pictures/Racunko` via MediaStore.Images (the ONLY remaining MediaStore use).
-  Adding files from the Downloads ROOT = „Dodaj iz fajla" = ACTION_OPEN_DOCUMENT
-  system picker (NO permission, Play-safe); NEVER a tree grant on the root.
-  First run → OnboardingScreen (+ ⓘ info popup) → grant. Manual drop into
-  Racunko/Racuni auto-detected on start/resume/refresh. „Potraži" scans the granted
-  Racunko tree. Edge-to-edge (setDecorFitsSystemWindows(false)) so IME insets work.
+- Storage (**v1.7 — the model CHANGED, ignore anything older**): the archive is
+  PRIVATE by default, `filesDir/{racuni,potvrde}` via `PrivateStore`, plain
+  `java.io.File`. No permission, no grant dialog, no onboarding: a first-run user
+  lands straight in the list. `StorageManager.store()` ALWAYS returns the private
+  store, so it has no failure mode and no "not ready yet" state.
+  A SAF tree is now only the OPTIONAL visible copy („čuvaj i kopiju u mojoj
+  fascikli"): `store()` wraps private in `MirrorStore` when a tree is bound —
+  reads never touch the copy, writes are best-effort, turning it ON first
+  re-writes the whole archive into the folder (a copy that starts empty reads as
+  data loss), turning it OFF deletes nothing.
+  DELETED with this, do not look for them: `OnboardingScreen`, `needsOnboarding`,
+  `NoopStore`, `StorageManager.ensurePublicFolder()` (the Android-11
+  greyed-out-grant workaround — with no grant on the critical path the problem
+  stops existing), and the folder picker in Settings.
+  **A private file's uri is `file://` and MUST NOT leave the app**
+  (`FileUriExposedException`): `MainViewModel.shareableUri` converts to a
+  FileProvider uri before every share, `content://` passes through untouched;
+  `file_paths.xml` carries `files-path` for `racuni/` and `potvrde/`.
+  Export/import is `data/Archive.kt` — the files plus a `racunko.json` manifest
+  beside them, no ZIP, both halves independently optional (folder without
+  manifest = ordinary files; manifest without files = memory and settings back).
+  `qrImageUri` and a card's `uri` are deliberately NOT imported: the first would
+  make pairing delete a file in someone else's gallery, the second is worthless
+  from another device (`reconcileCards` re-links by name anyway).
+  QR PNGs are DERIVED, never stored by default — see the step-1 note further
+  down; the gallery copy is written ON REQUEST only, and `Pictures/Racunko` via
+  MediaStore.Images stays the ONLY MediaStore use.
+  Adding files = ACTION_OPEN_DOCUMENT picker; the BILLS tab accepts
+  `application/pdf` ONLY (App.kt), so an image gets in through „Dodaj
+  fotografiju" — the Potvrde tab takes both. Imported/dropped-in files surface by
+  themselves in the folded „Fajlovi u fascikli" section on start/resume/refresh
+  and wait for „Obradi" — there is no „Potraži" button any more. Edge-to-edge
+  (setDecorFitsSystemWindows(false)) so IME insets work.
 - New user strings → both `values/` and `values-en/`.
 - Checksum gates everything: unverified account ≠ layer-2 key, ≠ QR generation.
 
@@ -98,6 +124,38 @@ app:
   ("a..b main -> main") confirms success; check `git rev-parse HEAD == origin/main`.
 
 ## Version / phase state (update as it moves)
+
+**v1.7.0 executed 2026-08-15** — the storage + QR round, shipped after a full
+device pass of BOTH flavors on a second phone (SM-G998U, Android 15, release
+APKs). versionCode 11 / versionName 1.7.0.
+Ten real bills from five issuers across five addresses, plus eight bank
+confirmations: every bill named correctly, **zero `adresa?`**, 7 of 8
+confirmations auto-paired and the 8th correctly refused (its amount matches no
+bill). Processing wrote **zero** files to the gallery. Export → wipe → import
+restored deadlines, pairings, payee memory and the address book intact.
+**Three defects the device found, all fixed here, all in `parser-core`:**
+(1) **InfoStan never got a deadline** — a table layout the tests never modelled;
+see the DueDateParserTest note below.
+(2) **`MonthDetector` rule 5 looped over the CALENDAR, not the page.** It
+returned the first month NAME that matched anywhere, so a July bill carrying a
+back charge for May („заједничка електрична енергија – мај 2026", an ordinary
+InfoStan line item) was named `..._maj26_...`. Now the earliest month IN THE
+TEXT wins — every issuer prints the billing month in the header and older months
+further down. Only reachable when the QR is unreadable, which is why `gms` named
+that bill correctly and `foss` did not; the corpus case is
+`infostan/back_charge_month_does_not_beat_header_month`.
+(3) The `valut[ae]` widening from the previous round is now device-proven: an SZ
+bill whose ONLY deadline label is „Датум валуте" reads its rok.
+**Known, NOT fixed, `foss` only:** ZXing cannot decode the IPS QR on one
+InfoStan bill that ML Kit reads (the same issuer whose QR `decodeThorough`
+already targets). Consequence in F-Droid builds: that bill classifies UNKNOWN and
+the intake asks „bill or confirmation?" once. Everything downstream is correct
+after answering — the two flavors produce byte-identical names and totals.
+Worth a look before claiming flavor parity on QR reading.
+**Not proven on any device: the sr-Latn language fix.** The test phone is
+`en-US`, so it opens in English — correct behaviour, but it means the
+`b+sr+Latn` fix is verified only by `aapt2 dump configurations`, never by
+behaviour. Needs a phone set to Serbian (Latin).
 
 **Storage round, test pass 2026-08-14 (SM-S948B, release APK, gms).** Not
 released, version NOT bumped. Tesseract in `gms` is DEVICE-PROVEN under R8 (D1):
@@ -425,10 +483,18 @@ per-issuer LAYOUT cases for MTS/EPS/InfoStan/SBB-Yettel/Yettel — each pinning 
 decoy that must NOT win (complaint deadline, contract expiry, discount cut-off,
 the EPS slip's „Валута" currency column). Real bills confirmed the label wording
 locally and never left the maintainer's machine; the committed text is synthetic.
+**v1.7 — that per-issuer set proved the LABEL WORDING, not the LAYOUT, and the
+difference cost InfoStan its deadline for three releases.** The old case wrote
+`Датум доспећа: 31.08.2026.` on one line; the real bill is a four-column table
+with the headings in one row and the values in the next, so the bill NUMBER sits
+between the label and its date. Device-found 14.08.2026, fixed by a second pass
+(see DueDateParser) and pinned by `infostan_tableLayout_dueDateIsInTheValueRow`
++ `tableFallbackNeverBeatsAnAdjacentLabel`. **When a synthetic case stands in for
+a real one, say which property it pins.**
 ReportTest (v1.6: amounts align by WIDTH not char count; spacer never overshoots
 and never emits two ASCII spaces in a row).
-**76 green + 22 fixture cases** (was 86 + 8; the drop is migration, not loss —
-every removed Kotlin test is a corpus case, and the corpus grew by 13).
+**79 green + 23 fixture cases** (was 86 + 8; the drop is migration, not loss —
+every removed Kotlin test is a corpus case, and the corpus grew by 15).
 README carries the count in a badge and in the build snippet — update BOTH.
 UI has no JVM proof → device pass. A PR adding a template needs a fixture; never
 weaken a checksum/false-positive assertion.

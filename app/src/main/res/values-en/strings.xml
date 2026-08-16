@@ -16,7 +16,7 @@
 
     <string name="files_in_folder">Files in folder</string>
     <string name="empty_folder">No PDF files in this folder.</string>
-    <string name="empty_racuni">Računko reads PDF bills from the Download folder (default).\n\nAdd bills with the + button — Računko reads, renames them and extracts the NBS IPS payment QR code. Attach a payment confirmation to each bill via the + on its card.</string>
+    <string name="empty_racuni">The archive lives inside the app — nothing is asked of the phone.\n\nAdd bills with the + button — Računko reads, renames them and extracts the NBS IPS payment QR code. Attach a payment confirmation to each bill via the + on its card.</string>
     <string name="empty_potvrde">Confirmations arrive by sharing from the bank into Računko (Share → Računko) or via the + on a bill\'s card.</string>
     <string name="system_picker">system file picker</string>
     <string name="btn_add_bill">Add bill</string>

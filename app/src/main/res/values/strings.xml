@@ -16,7 +16,7 @@
 
     <string name="files_in_folder">Fajlovi u fascikli</string>
     <string name="empty_folder">Nema PDF fajlova u ovoj fascikli.</string>
-    <string name="empty_racuni">Računko čita PDF račune iz fascikle Download (podrazumevano).\n\nDodaj račune dugmetom „+”, a Računko ih čita, preimenuje i izdvaja NBS IPS QR kôd za plaćanje. Potvrdu o plaćanju dodaješ na svaki račun preko „+” na njegovoj kartici.</string>
+    <string name="empty_racuni">Arhiva je u samoj aplikaciji — ništa se ne traži od telefona.\n\nDodaj račune dugmetom „+”, a Računko ih čita, preimenuje i izdvaja NBS IPS QR kôd za plaćanje. Potvrdu o plaćanju dodaješ na svaki račun preko „+” na njegovoj kartici.</string>
     <string name="empty_potvrde">Potvrde stižu deljenjem iz banke u Računko (Podeli → Računko) ili preko „+” na kartici računa.</string>
     <string name="system_picker">sistemski birač fajlova</string>
     <string name="btn_add_bill">Dodaj račun</string>
