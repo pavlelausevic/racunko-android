@@ -35,6 +35,7 @@
 
     <string name="seg_provider_missing">pružalac?</string>
     <string name="seg_address_missing">adresa?</string>
+    <string name="card_address_hint">na računu piše: %1$s</string>
     <string name="seg_month_missing">mesec?</string>
     <string name="seg_amount_missing">iznos?</string>
 

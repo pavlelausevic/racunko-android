@@ -266,12 +266,20 @@ class MainViewModel(
         currentName = name
     )
 
-    /** Persist a processed card (skip errors and un-renamed inputs). */
+    /**
+     * Persist a processed card. Only an ERROR card is skipped.
+     *
+     * v1.7.1: the name used to be a condition — a card whose file could not be
+     * renamed (`BillName.PROCESSED`) was never written down. That quietly punished
+     * exactly the bill that needs the most help: one whose address could not be
+     * proven keeps its original file name, so its pairing, its deadline and its
+     * reminder were forgotten on the next start and the user had to redo work the
+     * app had already done. Records are keyed by file name and `reconcileCards`
+     * drops any whose file has vanished, so writing one down for an un-renamed
+     * file costs nothing and leaves nothing dangling.
+     */
     private fun persist(card: CardItem) {
         if (card.status == com.racunko.app.domain.CardStatus.ERROR) return
-        if (!BillName.PROCESSED.matches(card.currentName) &&
-            !card.currentName.lowercase().matches(Regex(".*_(\\d+)\\.(jpg|jpeg|png|webp)$"))
-        ) return
         viewModelScope.launch { cardDao.upsert(card.toRecord()) }
     }
 

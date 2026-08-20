@@ -1289,6 +1289,26 @@ private fun Card(
                                 onClick = edit?.let { { it("month") } }
                             )
                         }
+                        // v1.7.1: say WHY the address is missing. Without this the
+                        // card only said „adresa?", which reads as a failed parse —
+                        // and on 19.08.2026 that is exactly how a street merely
+                        // absent from the book was misread, by its own author.
+                        if (item.address.isEmpty() && item.addressHint.isNotEmpty()) {
+                            Spacer(Modifier.height(3.dp))
+                            Text(
+                                stringResource(R.string.card_address_hint, item.addressHint),
+                                color = Palette.Amber,
+                                fontSize = 11.5.sp,
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(6.dp))
+                                    .then(
+                                        edit?.let { e ->
+                                            Modifier.clickable { e("address") }
+                                        } ?: Modifier
+                                    )
+                                    .padding(vertical = 1.dp)
+                            )
+                        }
                     }
                 }
                 if (item.status != CardStatus.ERROR) {
