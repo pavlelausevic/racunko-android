@@ -34,6 +34,7 @@
     <string name="badge_placeno">paid ✓</string>
 
     <string name="seg_provider_missing">provider?</string>
+    <string name="settings_unsaved">You have unsaved changes. “Cancel” discards them.</string>
     <string name="card_address_hint">the bill says: %1$s</string>
     <string name="seg_address_missing">address?</string>
     <string name="seg_month_missing">month?</string>

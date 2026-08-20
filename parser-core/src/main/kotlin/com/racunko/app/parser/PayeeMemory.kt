@@ -25,10 +25,35 @@ data class PrefillResult(
 object PayeeMemory {
 
     /**
-     * Fills missing provider/address from a known payee. Values the current
-     * document clearly provides are NEVER overridden — memory only fills gaps,
-     * and filled values are flagged "suggested" (predloženo) for the UI.
-     * Lookup only happens for a **checksum-valid** account.
+     * Fills the missing PROVIDER from a known payee. Values the current document
+     * clearly provides are NEVER overridden — memory only fills gaps, and a
+     * filled value is flagged "suggested" (predloženo) for the UI. Lookup only
+     * happens for a **checksum-valid** account.
+     *
+     * **It deliberately does NOT fill the address any more (v1.7.1).** The key
+     * here is the RECIPIENT account, and that identifies the ISSUER, not the
+     * place the bill is for: InfoStan's is institutional and shared by every
+     * customer and every flat, EPS's likewise, and a telecom's is the operator's
+     * own. Keyed that way, memory can only ever return "whichever address was
+     * seen last", which merely looks correct while a person has one property per
+     * issuer.
+     *
+     * Device 20.08.2026, and it is worth keeping the shape of it: with the SG26
+     * label deleted from the book, a bill for a COMPLETELY DIFFERENT address was
+     * filed under SG26 — because the matcher found nothing and memory filled the
+     * blank from the shared account. This is the same wrong-address failure the
+     * cmap regression produced, arriving through a different door; the guard
+     * added then (`textIsReadable`) only refuses when the document is
+     * UNREADABLE, and this document read perfectly.
+     *
+     * The address half of this prefill could only ever run when the matcher had
+     * already failed — which is exactly the moment a guess is unsafe. So it is
+     * gone, and the card now says „adresa?" plus what the bill prints. Provider
+     * stays: that IS a property of the account, and cannot be wrong.
+     *
+     * A sharper key (account + InfoStan IDENT), or learning which accounts are
+     * non-discriminating, is recorded for v2 — neither is a reason to keep
+     * guessing in the meantime.
      */
     fun prefill(
         account: String?,
@@ -42,12 +67,12 @@ object PayeeMemory {
             ?: return PrefillResult(currentProvider, currentAddress, false, false)
 
         val fillProvider = currentProvider.isBlank() && profile.provider.isNotBlank()
-        val fillAddress = currentAddress.isBlank() && profile.addressLabel.isNotBlank()
         return PrefillResult(
             provider = if (fillProvider) profile.provider else currentProvider,
-            addressLabel = if (fillAddress) profile.addressLabel else currentAddress,
+            // the document's address, or nothing — never the remembered one
+            addressLabel = currentAddress,
             providerSuggested = fillProvider,
-            addressSuggested = fillAddress
+            addressSuggested = false
         )
     }
 

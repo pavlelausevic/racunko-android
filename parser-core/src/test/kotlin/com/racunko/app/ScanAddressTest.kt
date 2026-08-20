@@ -43,13 +43,21 @@ class ScanAddressTest {
     }
 
     @Test
-    fun knownPayeePrefillsTheLabel_unknownLeavesItEmpty() {
+    fun knownPayeePrefillsTheProviderButNeverTheLabel() {
         val account = IpsQr.recipientAccountDigits(ips) // checksum-valid (SZ vector)
         val profile = PayeeProfile(account, "mts", "KD7", "Telekom Srbija")
 
+        // v1.7.1: the remembered PROVIDER still arrives — it is a property of the
+        // account and cannot be wrong. The remembered ADDRESS no longer does: this
+        // key is the recipient's, i.e. the operator's, so „KD7" here means only
+        // „the last property processed for this issuer". Pinning it was pinning a
+        // guess; on device 20.08.2026 the same path filed a bill under a label
+        // belonging to a different address entirely.
         val known = PayeeMemory.prefill(account, "", "") { profile }
-        assertEquals("KD7", known.addressLabel)
-        assertTrue(known.addressSuggested)
+        assertEquals("mts", known.provider)
+        assertTrue(known.providerSuggested)
+        assertEquals("", known.addressLabel)
+        assertFalse(known.addressSuggested)
 
         val unknown = PayeeMemory.prefill(account, "", "") { null }
         assertEquals("", unknown.addressLabel)

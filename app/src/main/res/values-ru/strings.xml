@@ -34,6 +34,7 @@
     <string name="badge_placeno">оплачено ✓</string>
 
     <string name="seg_provider_missing">поставщик?</string>
+    <string name="settings_unsaved">Есть несохранённые изменения. «Отмена» их отбросит.</string>
     <string name="card_address_hint">на счёте указано: %1$s</string>
     <string name="seg_address_missing">адрес?</string>
     <string name="seg_month_missing">месяц?</string>

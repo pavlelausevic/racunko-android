@@ -10,6 +10,12 @@ import org.junit.Test
 /**
  * Change 6 / Change 9.4 — payee memory prefills month-2 documents and is
  * cleanly disabled once the remembered payees are cleared.
+ *
+ * v1.7.1 INVERTED one of these assertions on purpose: memory fills the PROVIDER
+ * and no longer the ADDRESS. Its key is the recipient account, which names the
+ * issuer rather than the property — institutional and shared for InfoStan and
+ * EPS — so a remembered address is only ever „the last one seen". It filed a
+ * bill under a stranger's label on device 20.08.2026. See `PayeeMemory.prefill`.
  */
 class PayeeMemoryTest {
 
@@ -21,12 +27,20 @@ class PayeeMemoryTest {
     private val lookup: (String) -> PayeeProfile? = { table[it] }
 
     @Test
-    fun secondDocumentWithSameAccountGetsPrefilled() {
+    fun secondDocumentWithSameAccountGetsItsProviderPrefilled() {
         val r = PayeeMemory.prefill(account, currentProvider = "", currentAddress = "", lookup)
         assertEquals("sz", r.provider)
-        assertEquals("DS99", r.addressLabel)
         assertTrue(r.providerSuggested)
-        assertTrue(r.addressSuggested)
+    }
+
+    @Test
+    fun theRememberedAddressIsNeverHandedBack() {
+        // The blank stays blank. The account is the issuer's, so the address it
+        // remembers belongs to whichever property was processed last — which is a
+        // guess, and this app does not guess an address.
+        val r = PayeeMemory.prefill(account, currentProvider = "", currentAddress = "", lookup)
+        assertEquals("", r.addressLabel)
+        assertFalse(r.addressSuggested)
     }
 
     @Test

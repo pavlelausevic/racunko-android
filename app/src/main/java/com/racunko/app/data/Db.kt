@@ -126,6 +126,13 @@ data class CardRecordEntity(
     /** List-only delete (Change 4): file kept, but card hidden so backfill won't revive it. */
     val dismissed: Boolean,
     val timestamp: Long,
+    /**
+     * v1.7.1: the address the bill PRINTS, when the book did not recognise it.
+     * Persisted because it is the card's explanation of itself — before this it
+     * lived only in memory, so a restart turned „adresa? · na računu piše …" back
+     * into a bare „adresa?" and the user was told nothing again.
+     */
+    val addressHint: String = "",
     /** v1.6: payment deadline as an epoch day; null when the bill prints none. */
     val dueDateEpochDay: Long? = null,
     /** v1.6: per-bill reminder — „Podseti me da se približava plaćanje". */
@@ -159,7 +166,7 @@ interface CardDao {
 
 @Database(
     entities = [BillEntity::class, PayeeProfileEntity::class, CardRecordEntity::class],
-    version = 4,
+    version = 5,
     exportSchema = false
 )
 abstract class AppDb : RoomDatabase() {
@@ -210,9 +217,15 @@ abstract class AppDb : RoomDatabase() {
             }
         }
 
+        private val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE `card_records` ADD COLUMN `addressHint` TEXT NOT NULL DEFAULT ''")
+            }
+        }
+
         fun get(context: Context): AppDb = instance ?: synchronized(this) {
             instance ?: Room.databaseBuilder(context.applicationContext, AppDb::class.java, "racunko.db")
-                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
+                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
                 .build()
                 .also { instance = it }
         }

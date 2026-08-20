@@ -1,6 +1,6 @@
 # Changelog
 
-## [Neobjavljeno]
+## [1.7.1] — 2026-08-20
 
 ### Dodato
 - **Potvrde iz NLB-a i Yettel banke se sada prepoznaju.** Do sada su prolazile
@@ -14,6 +14,28 @@
   tačku (`30.000,00`) — provereno na iznosima od dve do pet cifara.
 - **Provizija se više ne može zameniti sa iznosom uplate.** Na potvrdi koja
   štampa obe, iznos se traži po svom natpisu, a ne kao prvi broj u dokumentu.
+- **Kad adresa nije u šifarniku, Računko sada kaže šta na računu piše.** Ranije
+  je stajalo samo „adresa?", pa je račun za ulicu koju prosto nemaš u šifarniku
+  izgledao kao da aplikacija ne ume da ga pročita. Sada ispod stoji i sama adresa
+  sa računa, pa znaš šta da dodaš. I dalje se **ništa ne popunjava samo** — to je
+  predlog, ne odluka.
+- **Podešavanja javljaju da ima nesačuvanih izmena.** Ekran menja svoju kopiju i
+  tek „Sačuvaj" je upisuje; ranije se to nije videlo, pa je obrisana adresa koja
+  nije sačuvana i dalje delovala kao da postoji.
+
+### Popravljeno
+- **Račun kome adresa nije mogla da se pročita više ne gubi svoje stanje.**
+  Takav račun zadržava izvorno ime fajla, a upravo se po imenu odlučivalo da li
+  se kartica pamti — pa su mu uparivanje, rok i podsetnik nestajali pri sledećem
+  pokretanju.
+- **Adresa se više ne preuzima iz pamćenja primalaca.** Pamćenje je vezano za
+  račun primaoca, a taj račun pripada **izdavaocu**, ne stanu: kod InfoStana i
+  EPS-a je isti za sve korisnike. Zato je umeo da vrati „poslednju viđenu"
+  adresu i da račun zavede pod tuđom oznakom. Pružalac se i dalje pamti — on
+  jeste svojstvo tog računa.
+- **F-Droid izdanje sada pročita i one QR kodove koje je ranije promašivalo.**
+  Kôd je sitan deo gusto štampane A4 strane, pa se strana sada pretražuje po
+  isečcima kad je prvi prolaz ne uspe. Skeniranje kamerom ostaje brzo.
 
 ## [1.7.0] — 2026-08-15
 

@@ -2132,6 +2132,29 @@ private fun SettingsScreen(vm: MainViewModel, onPurge: () -> Unit, onDismiss: ()
             DangerRow(stringResource(R.string.settings_purge)) { onPurge() }
 
             Spacer(Modifier.height(18.dp))
+            // v1.7.1: this screen edits a LOCAL copy and only „Sačuvaj" commits it,
+            // which is invisible until it bites — an address deleted here without
+            // saving stayed in the book, and the bills that kept matching it looked
+            // like a parser fault rather than an unsaved edit (device 20.08.2026).
+            // So the screen now says so, and only when there is something to lose.
+            val savedRows = state.addresses.flatMap { a -> a.patterns.map { p -> a.label to p } }
+            val dirty = rows.toList() != savedRows ||
+                custom.toList() != state.customProviders ||
+                overrides.toMap().filterValues { it.isNotBlank() } !=
+                state.providerOverrides.filterValues { it.isNotBlank() }
+            if (dirty) {
+                Row(
+                    Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Ico(RIcons.Info, Palette.Amber, 14)
+                    Spacer(Modifier.width(7.dp))
+                    Text(
+                        stringResource(R.string.settings_unsaved),
+                        color = Palette.Amber, fontSize = 11.5.sp, lineHeight = 15.sp
+                    )
+                }
+            }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 ActionButton(stringResource(R.string.btn_otkazi), Palette.Muted, Modifier.weight(1f)) { onDismiss() }
                 ActionButton(stringResource(R.string.btn_sacuvaj), Palette.Blue, Modifier.weight(1f), RIcons.Check) {
