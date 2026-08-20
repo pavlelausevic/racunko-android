@@ -72,6 +72,18 @@ android {
             // not touch them — and nothing in Računko does SIKE or Picnic.
             excludes += "/org/bouncycastle/pqc/**"
             excludes += "/org/bouncycastle/x509/CertPathReviewerMessages_*.properties"
+            // The LICENSE*/NOTICE* half of this pattern removes NOTHING that
+            // exists, and that is worth writing down so the question is not
+            // reopened a third time. Apache-2.0 §4(d) only obliges redistributing
+            // a NOTICE when the work HAS one — and none of the ten artifacts that
+            // actually reach the APK ships one: pdfbox-android (a repackaged port
+            // with no META-INF at all), bcprov/bcutil (manifest + signatures only),
+            // ML Kit barcode, Tesseract4Android and ZXing core. Every NOTICE in the
+            // Gradle cache belongs to a BUILD-TIME dependency (the largest, 98 KB,
+            // to room-compiler) that never enters the APK.
+            // Proven by experiment 20.08.2026, not inferred: an APK built with this
+            // line removed entirely contains the same two nested
+            // androidx/**/LICENSE.txt entries and no NOTICE whatsoever.
             excludes += "/META-INF/{AL2.0,LGPL2.1,DEPENDENCIES,LICENSE*,NOTICE*}"
             excludes += "/kotlin/**"
             excludes += "/DebugProbesKt.bin"
