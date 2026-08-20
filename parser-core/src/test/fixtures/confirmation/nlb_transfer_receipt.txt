@@ -1,0 +1,38 @@
+Platilac (naziv, adresa, mesto)
+3(7$53(75295,û
+Novi Beograd
+BULEVAR PRIMERA 1
+6YUKDSODüDQMD
+OBJEDINJENA NAPLATA
+Primalac (naziv, adresa, mesto)
+JKP INFOSTAN TEHNOLOGIJE BEOGR
+.
+.
+5DþXQSODWLRFD
+205-9000123-57
+âLIUDSODüDQMD
+222
+Iznos
+970,52 RSD
+5DþXQSULPDRFD
+200-2206180101000-48
+Model i poziv na broj odobrenja
+11
+800614276087-26050-1
+Status
+Realizovan
+Id transakcije
+0999FAA0933039
+Autorizovao
+3(7$53(75295,û
+Vreme slanja
+13.05.2026 22:46:19
+Provizija
+15,00 RSD
+Hitnost:
+ 
+X
+13.05.2026
+Datum izvršenja
+3RWYUGDYDåLEH]SHþDWDLSRWSLVD
+Potvrda o izvršenom nalogu za prenos

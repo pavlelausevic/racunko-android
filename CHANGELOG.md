@@ -1,5 +1,20 @@
 # Changelog
 
+## [Neobjavljeno]
+
+### Dodato
+- **Potvrde iz NLB-a i Yettel banke se sada prepoznaju.** Do sada su prolazile
+  kroz opšti čitač, pa im iznos i poziv na broj nisu uvek bili pročitani i
+  uparivanje sa računom je znalo da izostane. Sada se čitaju kao i Intesa, Erste
+  i AIK — iznos, račun primaoca i poziv na broj, pa se potvrda sama veže za
+  račun koji je platila.
+- Obe banke štampaju isti naslov, pa se razlikuju po ostatku obrasca — nijedna
+  ne može da preuzme tuđu potvrdu.
+- Iznos se čita i kada je ispisan sa tačkom umesto zareza, i kada ima hiljadnu
+  tačku (`30.000,00`) — provereno na iznosima od dve do pet cifara.
+- **Provizija se više ne može zameniti sa iznosom uplate.** Na potvrdi koja
+  štampa obe, iznos se traži po svom natpisu, a ne kao prvi broj u dokumentu.
+
 ## [1.7.0] — 2026-08-15
 
 Instaliraš Računko i on radi — bez pitanja o dozvolama i bez ekrana pre prvog

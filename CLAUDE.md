@@ -56,7 +56,7 @@ parser-core `com/racunko/app/parser/`:
   AddressMatcher (DEFAULTS = demo U1/P2; fictional sample map = test-only SampleAddresses),
   BillName, Accounts, AccountChecksum (MOD 97-10), IpsQrPayload (build+decode),
   PayeeMemory (prefill), Report (buildSummary + ProviderNames), Confirmation
-  (Intesa/Erste/AIK/Generic BankTemplate), PairingEngine, OcrPolicy.
+  (Intesa/Erste/AIK/Yettel/NLB/Generic BankTemplate), PairingEngine, OcrPolicy.
 - `registry/`: DocumentTemplate, NormalizedDoc/ExtractedFields, TemplateRegistry,
   Adapters (wrap BankTemplate), UplatnicaTemplate (NO address — memory/manual).
 app:
@@ -124,6 +124,36 @@ app:
   ("a..b main -> main") confirms success; check `git rev-parse HEAD == origin/main`.
 
 ## Version / phase state (update as it moves)
+
+**Two more bank confirmations: NLB and Yettel banka (device-proven 2026-08-20,
+foss release).** Both read their amount, keep the payer account out of pairing,
+and pair to the bill they actually paid.
+**They print the SAME title** („Potvrda o izvršenom nalogu za prenos"), so
+neither may match on it alone: NLB additionally requires its report furniture
+(`provizija|id transakcije|autorizovao`), Yettel the NBS paper-form furniture
+(`pecat i potpis banke`, `poziv na broj (odobrenje)`, `obrazac br`).
+**NLB** is a Microsoft Reporting Services PDF with HALF its text layer
+unreadable — labels set in a subsetted `Identity-H` font with no `/ToUnicode`
+arrive shifted by a constant („Račun platioca" as `5DþXQSODWLRFD`) while the
+Helvetica/WinAnsi parts read cleanly. Every anchor is therefore a READABLE label.
+Its payer account sits under an unreadable one, so the RECIPIENT is identified
+positively instead — fenced between „Iznos … RSD" and „Model i poziv na broj
+odobrenja" — and everything else is payer-side; if that order ever breaks it
+degrades to „every account", never to „no account". Amounts verified at 2, 4 and
+5 digits (`26,77`, `2.294`, `30.000,00`) — the thousands separator is grouping,
+stripped before rounding.
+**Yettel** renders the NBS paper order: each value is printed BEFORE its label,
+and the amount uses a DOT decimal (`2294.15`) that `AmountParser.extractAll`
+cannot see at all, so it is parsed in the template and folded back into `amounts`
+or layer-2 pairing would have nothing to match.
+**THE LESSON, and it cost a device cycle: PDFBox WELDS NEIGHBOURING LABELS.**
+It emits `iznosvaluta` and `(zaduzenje)model` as single runs, and welds the
+two-digit model onto the END of the reference (`…2607` + `97`). An anchor with a
+trailing `` after a label matches NOTHING against that. The Yettel fixture had
+been written from a tidied desktop extraction, which hid all three and let the
+test pass while the phone failed — so that fixture now holds the ACTUAL PDFBox
+text, welds and all. **Author confirmation templates against PDFBox output, never
+against another extractor's.**
 
 **v1.7.0 executed 2026-08-15** — the storage + QR round, shipped after a full
 device pass of BOTH flavors on a second phone (SM-G998U, Android 15, release
@@ -433,7 +463,7 @@ the PUBLIC RELEASE note above.)
 
 ## Fixture corpus (v1.6.2 — the portability argument)
 `parser-core/src/test/fixtures/{issuer}/{case}.{txt,expected.json}`, run by
-`FixtureTest`. **22 cases** over eps/infostan/mts/sz/yettel/uplatnica plus three
+`FixtureTest`. **25 cases** over eps/infostan/mts/sz/yettel/uplatnica plus three
 issuer-less buckets: `address/` (matcher boundaries + never-guess), `confirmation/`
 (bank receipts, classification only), `unknown/` (must NOT be offered as bills).
 KEY FINDING that shaped it: the app has TWO extraction paths and they are
@@ -493,7 +523,7 @@ between the label and its date. Device-found 14.08.2026, fixed by a second pass
 a real one, say which property it pins.**
 ReportTest (v1.6: amounts align by WIDTH not char count; spacer never overshoots
 and never emits two ASCII spaces in a row).
-**79 green + 23 fixture cases** (was 86 + 8; the drop is migration, not loss —
+**89 green + 25 fixture cases** (was 86 + 8; the drop is migration, not loss —
 every removed Kotlin test is a corpus case, and the corpus grew by 15).
 README carries the count in a badge and in the build snippet — update BOTH.
 UI has no JVM proof → device pass. A PR adding a template needs a fixture; never

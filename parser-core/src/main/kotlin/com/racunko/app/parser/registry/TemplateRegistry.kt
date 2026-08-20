@@ -4,6 +4,8 @@ import com.racunko.app.parser.AikTemplate
 import com.racunko.app.parser.ErsteTemplate
 import com.racunko.app.parser.GenericTemplate
 import com.racunko.app.parser.IntesaTemplate
+import com.racunko.app.parser.NlbTemplate
+import com.racunko.app.parser.YettelTemplate
 
 /**
  * Ordered template list (Change 1): the FIRST template whose [DocumentTemplate.matches]
@@ -75,6 +77,8 @@ class TemplateRegistry(templates: List<DocumentTemplate>) {
                 ConfirmationTemplateAdapter(IntesaTemplate()),
                 ConfirmationTemplateAdapter(ErsteTemplate()),
                 ConfirmationTemplateAdapter(AikTemplate()),
+                ConfirmationTemplateAdapter(YettelTemplate()),
+                ConfirmationTemplateAdapter(NlbTemplate()),
                 UplatnicaTemplate(),
                 GenericFallbackTemplate(GenericTemplate())
             )

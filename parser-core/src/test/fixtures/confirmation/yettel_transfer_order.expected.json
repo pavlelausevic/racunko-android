@@ -1,0 +1,6 @@
+{
+  "note": "Yettel banka renders the NBS paper transfer order (Obrazac br. 3). This text is the ACTUAL PDFBox extraction from a device run, not a tidied version of it: PDFBox welds neighbouring labels into one run („iznosvaluta\", „(zaduzenje)model\") and welds the two-digit model onto the end of the reference. Anchors that assumed a word boundary after a label matched nothing against it. It also carries the SAME title as the NLB report, so classification rests on the paper-form furniture instead.",
+  "sourceKind": "PDF_TEXT",
+  "docType": "CONFIRMATION",
+  "docTypeConfidence": "HIGH"
+}

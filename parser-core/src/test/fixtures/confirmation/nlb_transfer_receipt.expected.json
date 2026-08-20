@@ -1,0 +1,6 @@
+{
+  "note": "NLB „Potvrda o izvršenom nalogu za prenos\". HALF of this document's text layer is unreadable: labels set in a subsetted Identity-H font with no /ToUnicode arrive shifted by a constant („Račun platioca\" as 5DþXQSODWLRFD), while the Helvetica/WinAnsi parts read cleanly. Classification therefore has to hold on the READABLE title alone, which is also the only bank fingerprint the file has — there is no „NLB\" anywhere in the text or the metadata. Field extraction (the 15,00 fee never beating the 970,52 amount, payer account never becoming a pairing key) is asserted in NlbConfirmationTest, which needs no document. NOTE: unlike the Yettel fixture beside it, this text is a DESKTOP extraction, not the phone’s — the template itself was proven against PDFBox on device 20.08.2026 (amount, recipient and pairing all correct), but if this case is ever extended, re-capture the text from the app rather than from another extractor.",
+  "sourceKind": "PDF_TEXT",
+  "docType": "CONFIRMATION",
+  "docTypeConfidence": "HIGH"
+}
