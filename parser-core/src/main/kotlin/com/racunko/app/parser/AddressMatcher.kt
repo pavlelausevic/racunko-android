@@ -108,7 +108,6 @@ object AddressMatcher {
         text: String?,
         provider: String
     ): AddressMatch {
-        val zones = mutableListOf<String>()
         val t = Normalizer.norm(text)
         // v1.7: the PROPERTY anchor outranks the QR's P field. P is the PAYER's
         // postal address, which is a different thing from the place the bill is
@@ -121,7 +120,27 @@ object AddressMatcher {
         // only finishes the thought. Providers with no anchor (mts, yettel, sz)
         // are unaffected — for them P IS the subscriber's address, and it stays
         // the first zone tried.
-        anchorZone(t, provider)?.let { zones.add(it) }
+        //
+        // v1.7.2: and the anchor is not merely FIRST, it is the ONLY zone. Putting
+        // it first settles the case where the book knows both addresses; it does
+        // nothing for the case where it knows only the postal one. There the
+        // anchor is tried, finds nothing, and the search used to walk on into P
+        // and then the whole page — which is where the postal address is. The bill
+        // then filed itself under a real OTHER label of the user's, in silence.
+        // Found on device 21.08.2026: an InfoStan bill for a GARAGE filed itself
+        // under the label of the FLAT the post goes to, because the garage's own
+        // label was not in the book.
+        //
+        // A bill that STATES its property has answered the question. If the book
+        // does not know that address, the answer is NO LABEL — the card asks, and
+        // [suggestion] hands over the address the bill prints so the user can add
+        // it. That is the same rule as everywhere else in the app: what cannot be
+        // proven is not guessed.
+        anchorZone(t, provider)?.let { return matchIn(it, addresses) }
+
+        // No anchor (mts, yettel, sz): P IS the subscriber's own address, so it
+        // stays the first zone tried, then the page.
+        val zones = mutableListOf<String>()
         ips?.get("P")?.let { if (it.isNotEmpty()) zones.add(Normalizer.norm(it)) }
         zones.add(t)
 
@@ -143,5 +162,24 @@ object AddressMatcher {
             if (found.isNotEmpty()) return AddressMatch(found[0], found.size > 1, found)
         }
         return AddressMatch.NONE
+    }
+
+    /** Every label whose pattern appears in [zone]; the first one wins. */
+    private fun matchIn(zone: String, addresses: List<AddressEntry>): AddressMatch {
+        val found = mutableListOf<String>()
+        for (a in addresses) {
+            for (pat in a.patterns) {
+                // v1.5.1 Change 1: a blank pattern compiles to a regex that matches
+                // EVERY document, silently turning a one-entry book into "always
+                // that label". An entry matches only through a real pattern.
+                if (Normalizer.norm(pat).isBlank()) continue
+                if (patternRegex(pat).containsMatchIn(zone)) {
+                    if (a.label !in found) found.add(a.label)
+                    break
+                }
+            }
+        }
+        return if (found.isEmpty()) AddressMatch.NONE
+        else AddressMatch(found[0], found.size > 1, found)
     }
 }

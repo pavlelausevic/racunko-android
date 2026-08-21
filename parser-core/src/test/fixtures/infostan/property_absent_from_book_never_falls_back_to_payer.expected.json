@@ -1,0 +1,11 @@
+{
+  "note": "The property the bill is FOR is not in the address book; the payer's postal address is. Zone ordering alone does not settle this: the property anchor is tried first and simply finds nothing, and the matcher used to keep going — into the QR's P field and then the whole page, both of which carry the POSTAL address. So the bill filed itself under a real OTHER label of the user's, silently. Sibling of `qr_payer_field_does_not_beat_property_anchor`, which pins the case where BOTH labels are in the book; this one pins the fall-through. When a bill states its own property, that statement is the only answer there is — if the book does not know that address the answer is NO LABEL, and the card asks, carrying `AddressMatcher.suggestion` as the hint. Found on device 21.08.2026 on an InfoStan garage bill.",
+  "sourceKind": "PDF_TEXT",
+  "ips": "K:PR|V:01|C:1|R:200220618010100048|N:JKP INFOSTAN TEHNOLOGIJE BEOGRAD|P:PETROVIC PETAR KOSTE DRAGOJEVICA 7|I:RSD1079,22|SF:122|S:OBJEDINJENA NAPLATA|RO:11800614276087-26069-1",
+  "addressBook": "KD7=koste dragojevića 7",
+  "provider": "infostan",
+  "addressLabel": "",
+  "addressAmbiguous": false,
+  "month": "jun26",
+  "amount": 1079
+}
