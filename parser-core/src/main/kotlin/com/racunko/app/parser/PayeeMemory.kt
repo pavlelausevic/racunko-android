@@ -51,9 +51,12 @@ object PayeeMemory {
      * gone, and the card now says „adresa?" plus what the bill prints. Provider
      * stays: that IS a property of the account, and cannot be wrong.
      *
-     * A sharper key (account + InfoStan IDENT), or learning which accounts are
-     * non-discriminating, is recorded for v2 — neither is a reason to keep
-     * guessing in the meantime.
+     * Two sharper keys were considered and neither justifies guessing in the
+     * meantime: account + InfoStan IDENT is issuer-specific and `SpaceId.detect`
+     * loses the IDENT without the `118` prefix (fixture
+     * `ro_without_model_prefix`), and learning which accounts are
+     * non-discriminating only helps AFTER the first conflict — too late for a
+     * clean install, which is exactly the case above.
      */
     fun prefill(
         account: String?,

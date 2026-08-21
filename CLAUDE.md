@@ -309,11 +309,10 @@ manual tap on the address, never a wrong name. Device-confirmed in both states:
 with cmaps missing the card fell back to `adresa?` + „dopuni ručno" instead of a
 wrong label; with cmaps restored all four test bills read their address straight
 from the document (`sidro=true`, matcher non-empty).
-**Note for a future round:** payee memory can never learn an address for an
-issuer whose recipient account is institutional. The key that would work is the
-InfoStan IDENT (`SpaceId.detect` reads it from the QR reference), but §5's
-`ro_without_model_prefix` shows the IDENT is itself lost without the `118`
-prefix. Moot while text extraction works; relevant if it ever degrades again.
+**Settled in v1.7.1:** payee memory can never learn an address for an issuer
+whose recipient account is institutional, so it no longer fills one — see the
+rationale on `PayeeMemory.prefill`. Provider still comes from memory: that IS a
+property of the account and cannot be wrong.
 
 **Unrelated defect found in passing and fixed:** Android drops an unescaped `"`
 from a string resource, so every Serbian „…" pair in `strings.xml` was rendering
@@ -322,9 +321,8 @@ using the real closing quotes („…” and “…”) rather than escaping —
 was already correct because it uses «…».
 Repo `github.com/pavlelausevic/racunko-android`, branch main. From here every
 round is a point release (1.5.1, 1.5.2 …); 1.6.0 is the first MINOR bump —
-nothing a user depends on broke, so it is not 2.0. Reserve 2.0 for the JSON
-fixture corpus / a consumable `:parser-core` artifact / real system
-notifications.
+nothing a user depends on broke, so it is not 2.0. A major bump is for a break
+in something a user or a port depends on, not for a pile of features.
 
 **v1.6.2 executed 2026-08-13** — second visual pass + the corpus migration.
 THE RULE that drives the repaint: **colour marks state, never category.** The
@@ -523,7 +521,7 @@ between the label and its date. Device-found 14.08.2026, fixed by a second pass
 a real one, say which property it pins.**
 ReportTest (v1.6: amounts align by WIDTH not char count; spacer never overshoots
 and never emits two ASCII spaces in a row).
-**89 green + 25 fixture cases** (was 86 + 8; the drop is migration, not loss —
+**93 green + 26 fixture cases** (was 86 + 8; the drop is migration, not loss —
 every removed Kotlin test is a corpus case, and the corpus grew by 15).
 README carries the count in a badge and in the build snippet — update BOTH.
 UI has no JVM proof → device pass. A PR adding a template needs a fixture; never

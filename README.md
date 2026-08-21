@@ -5,7 +5,7 @@
 ![Platform](https://img.shields.io/badge/platform-Android%2010%2B-3DDC84?logo=android&logoColor=white)
 ![License](https://img.shields.io/badge/license-Apache--2.0-blue)
 ![Privacy](https://img.shields.io/badge/internet-NEMA%20DOZVOLU-success)
-![Tests](https://img.shields.io/badge/parser--core-89%20testova%20%2B%2025%20fikstura-brightgreen)
+![Tests](https://img.shields.io/badge/parser--core-93%20testova%20%2B%2026%20fikstura-brightgreen)
 ![Languages](https://img.shields.io/badge/jezici-sr%20%C2%B7%20en%20%C2%B7%20ru-blueviolet)
 
 ---
@@ -82,7 +82,7 @@ F-Droid).
 
 ```
 set JAVA_HOME=<JDK 17+ ili Android Studio jbr>
-gradlew.bat :parser-core:test                              # 89 testova + 25 fikstura, sve zeleno
+gradlew.bat :parser-core:test                              # 93 testova + 26 fikstura, sve zeleno
 gradlew.bat :app:assembleGmsDebug :app:assembleFossDebug   # oba flavora moraju da se builduju
 gradlew.bat :app:assembleGmsRelease                        # potpisan APK (vidi ispod)
 ```
