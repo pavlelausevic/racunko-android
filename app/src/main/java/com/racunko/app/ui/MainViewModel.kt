@@ -94,8 +94,18 @@ data class UiState(
     /** v1.6: user-added provider names — extra chips for manual entry. */
     val customProviders: List<String> = emptyList(),
     /** v1.7: the OPTIONAL visible folder. null = storage is the app's own only. */
-    val downloadsTreeUri: String? = null
+    val downloadsTreeUri: String? = null,
+    /**
+     * v1.7.2: the document being looked at, full screen, inside the app. Held as
+     * state rather than passed down as a callback because cards already talk to
+     * the view model directly, and the viewer has to survive recomposition of the
+     * list underneath it.
+     */
+    val viewing: ViewedDoc? = null
 )
+
+/** A document open in the in-app viewer. */
+data class ViewedDoc(val uri: String, val name: String)
 
 class MainViewModel(
     app: Application,
@@ -419,7 +429,11 @@ class MainViewModel(
             refreshFiles()
             reconcileCards()
             _state.value = _state.value.copy(busy = false)
-            toast(R.string.toast_imported, res.files)
+            // „Uvezeno: 0 fajlova" is true and useless when what arrived was the
+            // ADDRESS BOOK: the count is files only, and a manifest-only folder has
+            // none. It read as „nothing happened" on a successful import.
+            if (payload != null) toast(R.string.toast_imported_settings, res.files, payload.addresses.size)
+            else toast(R.string.toast_imported, res.files)
         }
     }
 
@@ -534,6 +548,10 @@ class MainViewModel(
             val kind = if (mode == CardMode.RACUN) FileKind.RACUN else FileKind.POTVRDA
             val app = getApplication<Application>()
             _state.value = _state.value.copy(busy = true)
+            // v1.7.2: adding files says how many arrived, the same way importing a
+            // folder does. Silence on success is what made a skipped file and a
+            // finished one look identical.
+            var takenIn = 0
             for (uri in uris) {
                 val name = queryDisplayName(uri) ?: "fajl_${System.currentTimeMillis()}"
                 val mime = app.contentResolver.getType(uri)
@@ -545,6 +563,14 @@ class MainViewModel(
                 val inPlace = withContext(Dispatchers.IO) {
                     store.list(kind).firstOrNull { it.name == name }
                 }
+                // v1.7.2: a name that is already in the archive means the import is
+                // skipped and the copy we HAVE is reprocessed. That is the right
+                // thing to do, but doing it in silence is what made this look like
+                // data loss on device: no new card, the card that is there does not
+                // visibly change, and the picked file stays in Downloads because
+                // "move semantics" only deletes a source that was actually imported.
+                // Three things a person reads as "the app ate my file". So say it.
+                if (inPlace != null) toast(R.string.toast_already_in_archive, name)
                 val file = inPlace ?: withContext(Dispatchers.IO) {
                     val imported = store.importFile(kind, uri, name, mime)
                     if (imported != null) {
@@ -555,11 +581,15 @@ class MainViewModel(
                     }
                     imported
                 } ?: continue
+                if (inPlace == null) takenIn++
                 processOne(file, mode, isImage)
             }
             // v1.4.7 Change 3: jump to the top so the newest results are visible.
             _state.value = _state.value.copy(busy = false, focusItemId = _state.value.items.firstOrNull()?.id)
             refreshFiles()
+            // Only what was actually taken in. A file already in the archive has
+            // said its piece above and must not be counted as newly imported.
+            if (takenIn > 0) toast(R.string.toast_imported, takenIn)
         }
     }
 
@@ -587,7 +617,21 @@ class MainViewModel(
             if (conf != null) item.copy(pairedConfName = conf.name, pairedConfUri = conf.uri.toString())
             else item
         } else item
-        _state.value = _state.value.copy(items = listOf(withSubRow) + _state.value.items)
+        // A file that already has a card is being REPROCESSED, not added — from the
+        // picker when the name is already in the archive, and from „Obradi" on the
+        // folder list, which only ever runs on files that are already there. Cards
+        // are keyed by file name (that is what `reconcileCards` and `cardDao` use),
+        // so prepending a second one put the SAME bill in the list twice, with a
+        // fresh id and no way to tell the copies apart. It also healed itself on the
+        // next rebuild, which is worse, not better: the duplicate vanished on
+        // restart and left the impression the app had lost something. Replace in
+        // place — the card is not new, and its position in its address section is
+        // not news either.
+        val at = _state.value.items.indexOfFirst { it.currentName == withSubRow.currentName }
+        _state.value = _state.value.copy(
+            items = if (at >= 0) _state.value.items.toMutableList().also { it[at] = withSubRow }
+            else listOf(withSubRow) + _state.value.items
+        )
         persist(withSubRow)
         if (withSubRow.matched) {
             markBillCardPaired(
@@ -683,6 +727,26 @@ class MainViewModel(
             }
             processPicked(listOf(uri), asMode)
         }
+    }
+
+    /**
+     * v1.7.2: look at the document itself, without leaving the app. The card can
+     * say „adresa?" or „iznos?" and there was no way to check WHICH bill that is
+     * short of handing the file to another app; a person who cannot see the paper
+     * cannot correct the reading of it.
+     */
+    fun viewDocument(cardId: String) {
+        val card = _state.value.items.firstOrNull { it.id == cardId } ?: return
+        _state.value = _state.value.copy(viewing = ViewedDoc(card.uri, card.currentName))
+    }
+
+    /** Look at a file that has no card of its own — a paired confirmation. */
+    fun viewFile(uri: String, name: String) {
+        _state.value = _state.value.copy(viewing = ViewedDoc(uri, name))
+    }
+
+    fun closeViewer() {
+        _state.value = _state.value.copy(viewing = null)
     }
 
     /** Otkaži on the head intake dialog — skip that file, show the next. */

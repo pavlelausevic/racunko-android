@@ -223,6 +223,24 @@ private fun MainScreen(vm: MainViewModel) {
         ActivityResultContracts.PickVisualMedia()
     ) { uri -> if (uri != null) vm.intake(listOf(uri), mode) }
 
+    // These three live ABOVE the full-screen branches below on purpose. Opening the
+    // viewer (or the camera) drops the main screen out of composition, and anything
+    // remembered INSIDE it goes with it — so coming back used to reset the collapsed
+    // sections and the filter, and the list no longer looked like the one that was
+    // left. Declared here they outlive the detour; `listState` already did, which is
+    // why the scroll position was the one part that used to survive.
+    var addressFilter by rememberSaveable(state.tab) { mutableStateOf<String?>(null) }
+    var dueOnly by rememberSaveable(state.tab) { mutableStateOf(false) }
+    val collapsed = remember(state.tab) { mutableStateMapOf<String, Boolean>() }
+
+    // v1.7.2: looking at the document replaces the main UI the same way the camera
+    // does — but the list underneath keeps its state and comes back untouched.
+    val viewing = state.viewing
+    if (viewing != null) {
+        DocumentViewer(viewing) { vm.closeViewer() }
+        return
+    }
+
     // 8d: full-screen live scanning replaces the main UI until lock/cancel.
     var showCamera by remember { mutableStateOf(false) }
     BackHandler(enabled = showCamera) { showCamera = false }
@@ -276,9 +294,6 @@ private fun MainScreen(vm: MainViewModel) {
         // v1.6: the applied filter is part of „where I left off", so it is saved
         // across process death. The collapse state deliberately is NOT — every
         // entry into the screen starts with the sections open.
-        var addressFilter by rememberSaveable(state.tab) { mutableStateOf<String?>(null) }
-        var dueOnly by rememberSaveable(state.tab) { mutableStateOf(false) }
-        val collapsed = remember(state.tab) { mutableStateMapOf<String, Boolean>() }
 
         val allLabels = remember(tabItems) {
             tabItems.map { it.address }.filter { it.isNotEmpty() }.distinct().sorted()
@@ -1502,6 +1517,13 @@ private fun Card(
             // actions — „QR slika" now sits next to the code itself, so this row
             // is only about the bill FILE.
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                // v1.7.2: „Pogledaj" comes FIRST. A card that could not read its
+                // address or amount is exactly the card whose paper needs looking
+                // at, and that is the action being offered here.
+                ActionButton(
+                    stringResource(R.string.btn_pogledaj), Palette.Muted,
+                    Modifier.weight(1f), RIcons.Document
+                ) { vm.viewDocument(item.id) }
                 ActionButton(
                     stringResource(R.string.btn_podeli), Palette.Blue,
                     Modifier.weight(1f), RIcons.Share
@@ -1534,6 +1556,9 @@ private fun Card(
                             modifier = Modifier.weight(1f)
                         )
                         if (confUri != null) {
+                            IconAction(RIcons.Document, Palette.Muted, stringResource(R.string.btn_pogledaj), 16) {
+                                vm.viewFile(confUri, confName)
+                            }
                             IconAction(RIcons.Share, Palette.Blue, stringResource(R.string.btn_podeli), 16) {
                                 val mime = if (confName.endsWith(".pdf", true))
                                     "application/pdf" else "image/*"
@@ -1922,6 +1947,33 @@ private fun SettingsScreen(vm: MainViewModel, onPurge: () -> Unit, onDismiss: ()
         ProviderDetector.PROVIDERS.map { it to (state.providerOverrides[it] ?: "") }.toMutableStateList()
     }
     val custom = remember { state.customProviders.toMutableStateList() }
+
+    // What is actually stored, as this screen would draw it. Computed here rather
+    // than beside the buttons because both Back and the refresh below need it.
+    val savedRows = state.addresses.flatMap { a -> a.patterns.map { p -> a.label to p } }
+    val dirty = rows.toList() != savedRows ||
+        custom.toList() != state.customProviders ||
+        overrides.toMap().filterValues { it.isNotBlank() } !=
+        state.providerOverrides.filterValues { it.isNotBlank() }
+
+    // The three lists above are a WORKING COPY, taken once. That is what makes
+    // „Sačuvaj" meaningful — but it also meant an import started from this very
+    // screen changed the stored book while the screen kept drawing the old one,
+    // and the address list looked empty until the screen was closed and reopened.
+    // The user read that as „the import failed" (device 21.08.2026).
+    //
+    // So: adopt what arrived from outside, but ONLY when the working copy is still
+    // untouched — comparing against the PREVIOUS stored snapshot, not against the
+    // new one, since right after an import the two differ by definition. An edit in
+    // progress is never overwritten.
+    var lastSaved by remember { mutableStateOf(savedRows) }
+    var lastCustom by remember { mutableStateOf(state.customProviders) }
+    LaunchedEffect(savedRows, state.customProviders, state.providerOverrides) {
+        if (rows.toList() == lastSaved) { rows.clear(); rows.addAll(savedRows) }
+        if (custom.toList() == lastCustom) { custom.clear(); custom.addAll(state.customProviders) }
+        lastSaved = savedRows
+        lastCustom = state.customProviders
+    }
     val exportLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
         if (uri != null) vm.exportArchive(uri)
     }
@@ -1943,8 +1995,20 @@ private fun SettingsScreen(vm: MainViewModel, onPurge: () -> Unit, onDismiss: ()
         Unit
     }
     val imeVisible = WindowInsets.isImeVisible
-    // First Back closes the IME, second Back closes the screen.
-    BackHandler { if (imeVisible) dismissIme() else onDismiss() }
+    val scroll = rememberScrollState()
+    val scrollScope = rememberCoroutineScope()
+    // First Back closes the IME. After that, Back leaves — unless there is unsaved
+    // work, in which case it scrolls DOWN TO THE BUTTONS instead of discarding it.
+    // The amber „nesačuvano" line sits right above them, so the gesture that used
+    // to throw the edit away now puts the choice on screen. Back still leaves once
+    // the edit is saved or cancelled.
+    BackHandler {
+        when {
+            imeVisible -> dismissIme()
+            dirty -> scrollScope.launch { scroll.animateScrollTo(scroll.maxValue) }
+            else -> onDismiss()
+        }
+    }
 
     Surface(color = Palette.Bg, modifier = Modifier.fillMaxSize()) {
         Column(
@@ -1953,7 +2017,7 @@ private fun SettingsScreen(vm: MainViewModel, onPurge: () -> Unit, onDismiss: ()
                 .statusBarsPadding()
                 .navigationBarsPadding()
                 .imePadding()
-                .verticalScroll(rememberScrollState())
+                .verticalScroll(scroll)
                 .padding(horizontal = 16.dp)
         ) {
             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 8.dp)) {
@@ -2137,11 +2201,6 @@ private fun SettingsScreen(vm: MainViewModel, onPurge: () -> Unit, onDismiss: ()
             // saving stayed in the book, and the bills that kept matching it looked
             // like a parser fault rather than an unsaved edit (device 20.08.2026).
             // So the screen now says so, and only when there is something to lose.
-            val savedRows = state.addresses.flatMap { a -> a.patterns.map { p -> a.label to p } }
-            val dirty = rows.toList() != savedRows ||
-                custom.toList() != state.customProviders ||
-                overrides.toMap().filterValues { it.isNotBlank() } !=
-                state.providerOverrides.filterValues { it.isNotBlank() }
             if (dirty) {
                 Row(
                     Modifier.fillMaxWidth().padding(bottom = 8.dp),
@@ -2811,6 +2870,11 @@ private fun AddressGroupHeader(
     // made every confirmation on the Potvrde tab read „neplaćeno" — including the
     // ones sitting under a bill already marked paid.
     val unpaid = cards.count { if (it.mode == CardMode.POTVRDA) !it.matched else !it.paired }
+    // Sections live inside a tab, so every card in one shares a mode. The COUNT
+    // already knew that; the wording did not, and „neplaćeno" on a confirmation is
+    // a contradiction — a confirmation IS the proof of payment. What it can be
+    // missing is the bill it belongs to.
+    val unmatchedWording = cards.firstOrNull()?.mode == CardMode.POTVRDA
     Column {
         Row(
             Modifier
@@ -2838,7 +2902,10 @@ private fun AddressGroupHeader(
             Spacer(Modifier.weight(1f))
             if (unpaid > 0) {
                 Text(
-                    stringResource(R.string.group_unpaid, unpaid),
+                    stringResource(
+                        if (unmatchedWording) R.string.group_unmatched else R.string.group_unpaid,
+                        unpaid
+                    ),
                     color = Palette.Amber, fontSize = 9.5.sp, fontWeight = FontWeight.SemiBold,
                     modifier = Modifier
                         .background(Palette.Amber.copy(alpha = 0.13f), RoundedCornerShape(99.dp))

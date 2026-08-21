@@ -8,6 +8,10 @@
 
     <string name="btn_obradi">Обработать</string>
     <string name="btn_podeli">Поделиться</string>
+    <string name="btn_pogledaj">Посмотреть</string>
+    <string name="viewer_failed">Документ не удаётся показать</string>
+    <string name="viewer_reset">Уменьшить</string>
+    <string name="viewer_truncated">Показаны первые %1$d из %2$d страниц</string>
     <string name="btn_podeli_sve">Поделиться всем</string>
     <string name="btn_qr_slika">В галерею</string>
     <string name="btn_sacuvaj">Сохранить</string>
@@ -76,6 +80,7 @@
     <string name="toast_mirror_off">Копия выключена — папка остаётся как есть</string>
     <string name="toast_exported">Экспортировано: %1$d файлов + racunko.json</string>
     <string name="toast_imported">Импортировано: %1$d файлов</string>
+    <string name="toast_imported_settings">Импортировано: файлов — %1$d, адресов — %2$d</string>
     <string name="settings_reset_location">Вернуть по умолчанию (Download/Racunko)</string>
     <string name="legacy_folder_notice">Старая структура папок больше не используется. Новые папки — в Download/Racunko.</string>
     <string name="settings_clear_history">Очистить историю сопоставлений</string>
@@ -104,6 +109,7 @@
     <string name="filter_all">Все</string>
     <string name="group_no_address">без адреса</string>
     <string name="group_unpaid">%1$d не оплачено</string>
+    <string name="group_unmatched">%1$d несопоставлено</string>
     <plurals name="bill_count">
         <item quantity="one">%d счёт</item>
         <item quantity="few">%d счёта</item>
@@ -207,6 +213,7 @@
     <string name="toast_renamed">Переименовано: %1$s</string>
     <string name="toast_rename_failed">Переименование не удалось — проверьте доступ к папке</string>
     <string name="toast_paired">Сопоставлено: %1$s</string>
+    <string name="toast_already_in_archive">Уже в архиве: %1$s — обработан заново, исходный файл остаётся</string>
     <string name="toast_no_selection">Выберите хотя бы один файл</string>
     <string name="toast_received">Подтверждение получено</string>
     <string name="toast_folder_error">Нет доступа к папке — выберите её заново</string>

@@ -1,5 +1,39 @@
 # Changelog
 
+## [1.7.2] — 2026-08-21
+
+### Dodato
+- **Pregled dokumenta u samoj aplikaciji.** Uz svaku karticu stoji „Pogledaj" —
+  račun ili potvrda se otvara preko celog ekrana, bez izlaska iz Računka. To je
+  potrebno baš onda kad kartica kaže „adresa?" ili „iznos?": da bi se pogrešno
+  pročitan podatak ispravio, papir mora da se vidi. Dvostruki dodir uvećava,
+  prevlačenje pomera, „nazad" vraća listu tačno onakvu kakva je ostavljena.
+- **Dodavanje fajlova sada javlja koliko ih je stiglo** — „Uvezeno: x fajlova",
+  isto kao uvoz fascikle.
+- **Uvoz fascikle javlja i šta je stiglo iz manifesta.** Kad se uvozi samo
+  šifarnik, poruka više nije samo „0 fajlova" — kaže i koliko je adresa uvezeno.
+
+### Popravljeno
+- **Računi čiji se QR kôd nije čitao u F-Droid izdanju sada se čitaju.** Uzrok
+  nije bila ni rezolucija ni drugi kôd na strani, nego to što čitač ume da za
+  ugao kôda uzme sličnu šaru iz samih podataka. Sada se probaju sve mogućnosti,
+  a ne prva. Na 67 stvarnih strana: 31 pročitan pre, 36 posle, i dvostruko brže.
+- **Račun za garažu ili lokal više ne završava pod adresom stana.** InfoStanov
+  račun nosi dve adrese — prostor koji se plaća i adresu na koju stiže pošta.
+  Ako prostor nije u šifarniku, ranije se tiho uzimala poštanska. Sada takav
+  račun kaže „adresa?" i ponudi onu koju sam štampa.
+- **Fajl koji je već u arhivi više ne prolazi u tišini.** Aplikacija kaže „već u
+  arhivi", umesto da izgleda kao da se ništa nije desilo.
+- **Isti račun se više ne pojavljuje dvaput u listi.** Ponovna obrada sada
+  osvežava postojeću karticu umesto da doda drugu — a dupla kartica je pri
+  sledećem pokretanju nestajala, što je delovalo kao da je nešto izgubljeno.
+- **„Nazad" u Podešavanjima ne odbacuje nesačuvane izmene** nego skroluje do
+  dugmadi „Otkaži/Sačuvaj".
+- **Podešavanja se osvežavaju odmah posle uvoza šifarnika**, bez zatvaranja i
+  ponovnog otvaranja ekrana.
+- **U tabu „Potvrde" piše „neupareno", ne „neplaćeno".** Potvrda je dokaz
+  plaćanja; ono što joj može nedostajati je račun uz koji ide.
+
 ## [1.7.1] — 2026-08-20
 
 ### Dodato

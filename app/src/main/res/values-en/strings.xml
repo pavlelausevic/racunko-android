@@ -8,6 +8,10 @@
 
     <string name="btn_obradi">Process</string>
     <string name="btn_podeli">Share</string>
+    <string name="btn_pogledaj">View</string>
+    <string name="viewer_failed">This document cannot be displayed</string>
+    <string name="viewer_reset">Zoom out</string>
+    <string name="viewer_truncated">Showing the first %1$d of %2$d pages</string>
     <string name="btn_podeli_sve">Share all</string>
     <string name="btn_qr_slika">To gallery</string>
     <string name="btn_sacuvaj">Save</string>
@@ -76,6 +80,7 @@
     <string name="toast_mirror_off">Copy off — the folder is left as it is</string>
     <string name="toast_exported">Exported: %1$d files + racunko.json</string>
     <string name="toast_imported">Imported: %1$d files</string>
+    <string name="toast_imported_settings">Imported: %1$d files, %2$d addresses</string>
     <string name="settings_reset_location">Reset to default (Download/Racunko)</string>
     <string name="legacy_folder_notice">The old folder structure is no longer used. New folders are in Download/Racunko.</string>
     <string name="settings_clear_history">Clear pairing history</string>
@@ -107,6 +112,7 @@
     <string name="filter_all">All</string>
     <string name="group_no_address">no address</string>
     <string name="group_unpaid">%1$d unpaid</string>
+    <string name="group_unmatched">%1$d unmatched</string>
     <plurals name="bill_count">
         <item quantity="one">%d bill</item>
         <item quantity="other">%d bills</item>
@@ -203,6 +209,7 @@
     <string name="toast_renamed">Renamed: %1$s</string>
     <string name="toast_rename_failed">Rename failed — check folder permissions</string>
     <string name="toast_paired">Paired: %1$s</string>
+    <string name="toast_already_in_archive">Already in the archive: %1$s — reprocessed, the source file stays</string>
     <string name="toast_no_selection">Select at least one file</string>
     <string name="toast_received">Confirmation received</string>
     <string name="toast_folder_error">Cannot access the folder — pick it again</string>

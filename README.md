@@ -49,6 +49,8 @@ Ne moraš da znaš ništa o GitHub-u niti o programiranju:
   aplikacija pita tebe.
 - **Pametna imena fajlova** — `infostan_KD7_maj26_11152.pdf` umesto
   `Racun-4482913.pdf`: pružalac, tvoja skraćenica adrese, mesec, iznos.
+- **Pregled dokumenta u aplikaciji** — račun ili potvrda se otvara preko celog
+  ekrana, bez predaje drugoj aplikaciji.
 - **QR za plaćanje** — postojeći IPS QR se iseca iz računa; računu bez QR koda
   (papirna uplatnica) aplikacija **sama pravi ispravan kod**, ali samo kada je
   broj računa primaoca matematički proveren (kontrolna cifra, model 97).
@@ -137,6 +139,8 @@ No GitHub or programming knowledge needed:
   no cloud.
 - **Smart file names** — `infostan_KD7_maj26_11152.pdf` instead of
   `Racun-4482913.pdf` (provider, your address label, month, amount).
+- **Built-in document viewer** — a bill or confirmation opens full screen inside
+  the app, with no handoff to anything else.
 - **Payment QR** — extracted from the bill, or **generated** for QR-less paper
   slips (only when the recipient account passes the MOD 97-10 checksum).
 - **Confirmation pairing** — share a payment confirmation from your banking
@@ -213,6 +217,8 @@ especially new bank templates with **redacted** samples.
   спрашивает вас. Ни ИИ, ни облака.
 - **Понятные имена файлов** — `infostan_KD7_maj26_11152.pdf` вместо
   `Racun-4482913.pdf`: поставщик, ваше сокращение адреса, месяц, сумма.
+- **Просмотр документа в приложении** — счёт или подтверждение открывается на
+  весь экран, без передачи в другое приложение.
   Названия месяцев в именах файлов остаются сербскими — это правило
   именования, а не перевод.
 - **QR для оплаты** — извлекается из счёта, а для бумажной квитанции без

@@ -74,6 +74,15 @@ infostan_KD7_maj26_11152.pdf
 > **Podešavanja → Uvezi iz fascikle** ih prekopira odjednom. Posle uvoza stoje
 > u sekciji „Fajlovi u fascikli" i čekaju da klikneš **„Obradi"**.
 
+### Pogledaj sam dokument
+
+Na svakoj kartici stoji **„Pogledaj"** — račun ili potvrda se otvara preko celog
+ekrana, u samom Računku. To najviše treba kad kartica kaže „adresa?" ili
+„iznos?": da bi se podatak ispravio, papir mora da se vidi.
+
+**Dvostruki dodir** uvećava, **prevlačenje** pomera, **„nazad"** prvo vraća uvećanje
+pa tek onda listu — onakvu kakva je ostavljena.
+
 ## 4. Šifarnik adresa (preporučeno, 2 minuta)
 
 Adresa je jedino što Računko ne može sam da izvede — tvoja je odluka da li se

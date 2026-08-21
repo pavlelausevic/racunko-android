@@ -74,6 +74,15 @@ infostan_KD7_maj26_11152.pdf
 > **Settings → Import from a folder** copies them all in at once. They land in
 > the "Files in folder" section and wait for you to tap **"Process"**.
 
+### Look at the document itself
+
+Every card has a **"View"** button — the bill or confirmation opens full screen,
+inside Računko. That matters most when a card says "address?" or "amount?": to
+correct a reading, you have to see the paper.
+
+**Double tap** zooms, **drag** pans, and **Back** undoes the zoom first, then
+returns the list exactly as you left it.
+
 ## 4. Address book (recommended, takes 2 minutes)
 
 The address is the one thing Računko cannot derive by itself. In
