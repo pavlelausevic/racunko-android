@@ -5,11 +5,13 @@ import android.graphics.Bitmap
 import com.google.zxing.BinaryBitmap
 import com.google.zxing.DecodeHintType
 import com.google.zxing.MultiFormatReader
+import com.google.zxing.multi.qrcode.QRCodeMultiReader
 import com.google.zxing.RGBLuminanceSource
 import com.google.zxing.common.HybridBinarizer
 import com.racunko.platform.DefaultLiveQrScanner
 import com.racunko.platform.LiveQrScanner
 import com.racunko.platform.PlatformEngines
+import com.racunko.app.parser.IpsQr
 import com.racunko.platform.QrDecoder
 import com.racunko.platform.QrEncoder
 import com.racunko.platform.TextRecognizer
@@ -43,12 +45,64 @@ private class ZxingQrDecoder : QrDecoder {
      * rendered page is decoded once and a miss means the app has to rebuild the
      * payment code from stored fields instead of reading the issuer's own.
      */
+    /**
+     * EVERY code on the page, not the first one found — and reading them with
+     * ZXing's QR-specific multi-reader, not the generic one. Both halves of that
+     * are load-bearing, and each was measured on 67 real bills.
+     *
+     * *Every* code: an InfoStan bill carries TWO QR codes, the IPS payment code
+     * and a larger, cleaner marketing code pointing at the issuer's app. A reader
+     * that returns ONE result hands back the marketing link, `QrExtractor` finds
+     * no `K:PR` among the results and reports NO QR AT ALL — and the bill, which
+     * plainly has a payment code, falls through to „račun ili potvrda?".
+     *
+     * *QR-specific*: `GenericMultipleBarcodeReader` runs one single-code detector
+     * and then re-crops around what it found, so it inherits that detector's one
+     * shot at picking the three finder patterns. On some bills the payment code's
+     * own data modules happen to contain a false 1:1:3:1:1 run, `FinderPatternFinder`
+     * picks it over a real corner, and the sampled grid is garbage — detection
+     * "succeeds" and decoding fails. Measured on one April InfoStan bill: finders
+     * came back as (460,60), (380,416), (60,60) instead of the three true corners, and
+     * the code stayed unreadable at every render scale up to 3500 px and from the
+     * pristine 520×520 image embedded in the PDF. It is not resolution, not the
+     * renderer and not the second code — it is which payload the issuer encoded,
+     * which is why two otherwise identical bills differ.
+     *
+     * `QRCodeMultiReader` uses `MultiFinderPatternFinder`, which enumerates all
+     * finder-pattern candidates and tries the plausible TRIPLES, so a false corner
+     * costs it one rejected combination instead of the whole read. Over the 67-page
+     * local corpus: payment code found on 31 pages before, 36 after, nothing lost,
+     * and total decode time roughly halved.
+     */
     override fun decodeThorough(bitmap: Bitmap): List<String> {
-        val fast = read(bitmap, tryHarder = false)
-        if (fast.isNotEmpty()) return fast
-        val harder = read(bitmap, tryHarder = true)
-        if (harder.isNotEmpty()) return harder
-        return readTiled(bitmap)
+        val found = LinkedHashSet<String>()
+        // Each stage is skipped once a PAYMENT code is in hand — not merely once
+        // something decoded. Finding "something" is what used to stop the search
+        // one code too early on a page that carries two.
+        found += readAll(bitmap, tryHarder = false)
+        if (found.none(::isPayment)) found += readAll(bitmap, tryHarder = true)
+        if (found.none(::isPayment)) found += readTiled(bitmap)
+        return found.toList()
+    }
+
+    /**
+     * The one-shot path is looking for the bill's IPS code specifically, so that
+     * is what "found it" has to mean here. A page may also carry an unrelated
+     * code — an InfoStan bill prints a marketing one, larger and cleaner than the
+     * payment code, which ZXing reaches first — and treating that as success made
+     * the app report NO QR on a bill that plainly has one.
+     */
+    private fun isPayment(text: String) = text.startsWith(IpsQr.PREFIX)
+
+    /** Whole image, every code on it. */
+    private fun readAll(bitmap: Bitmap, tryHarder: Boolean): List<String> = try {
+        QRCodeMultiReader()
+            .decodeMultiple(binarize(bitmap), hints(tryHarder))
+            .mapNotNull { it.text }
+            .distinct()
+    } catch (_: Exception) {
+        // decodeMultiple throws NotFound like the single reader does
+        read(bitmap, tryHarder)
     }
 
     /**
@@ -69,6 +123,7 @@ private class ZxingQrDecoder : QrDecoder {
      * this, and a scanner that sees ~30 frames a second must stay cheap.
      */
     private fun readTiled(bitmap: Bitmap): List<String> {
+        val found = LinkedHashSet<String>()
         val tileW = bitmap.width / 3
         val tileH = bitmap.height / 4
         if (tileW < MIN_TILE || tileH < MIN_TILE) return emptyList()
@@ -83,34 +138,36 @@ private class ZxingQrDecoder : QrDecoder {
                 }.getOrNull()
                 if (tile != null) {
                     val hit = try {
-                        read(tile, tryHarder = true)
+                        readAll(tile, tryHarder = true)
                     } finally {
                         if (tile !== bitmap) tile.recycle()
                     }
-                    if (hit.isNotEmpty()) return hit
+                    found.addAll(hit)
                 }
                 x += stepX
             }
             y += stepY
         }
-        return emptyList()
+        return found.toList()
     }
 
-    private fun read(bitmap: Bitmap, tryHarder: Boolean): List<String> {
+    private fun read(bitmap: Bitmap, tryHarder: Boolean): List<String> = try {
+        listOf(MultiFormatReader().decode(binarize(bitmap), hints(tryHarder)).text)
+    } catch (e: Exception) {
+        emptyList() // NotFoundException etc. — no QR on this frame/page
+    }
+
+    private fun binarize(bitmap: Bitmap): BinaryBitmap {
         val width = bitmap.width
         val height = bitmap.height
         val pixels = IntArray(width * height)
         bitmap.getPixels(pixels, 0, width, 0, 0, width, height)
-        val source = RGBLuminanceSource(width, height, pixels)
-        val binary = BinaryBitmap(HybridBinarizer(source))
-        val hints = buildMap<DecodeHintType, Any> {
+        return BinaryBitmap(HybridBinarizer(RGBLuminanceSource(width, height, pixels)))
+    }
+
+    private fun hints(tryHarder: Boolean): Map<DecodeHintType, Any> =
+        buildMap {
             put(DecodeHintType.POSSIBLE_FORMATS, listOf(com.google.zxing.BarcodeFormat.QR_CODE))
             if (tryHarder) put(DecodeHintType.TRY_HARDER, true)
         }
-        return try {
-            listOf(MultiFormatReader().decode(binary, hints).text)
-        } catch (e: Exception) {
-            emptyList() // NotFoundException etc. — no QR on this frame/page
-        }
-    }
 }
