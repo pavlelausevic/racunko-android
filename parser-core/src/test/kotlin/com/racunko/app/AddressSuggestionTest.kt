@@ -13,14 +13,18 @@ import org.junit.Test
  */
 class AddressSuggestionTest {
 
+    // Every identifier below is INVENTED. Only the SHAPE of a meter id or a space
+    // code matters to these assertions — they check the street that comes back —
+    // so nothing here needs to be, or is, a real account.
+
     private val infostan =
-        "Шифра простора: 0730021 Адреса: СВЕТОЗАРА ГЛИШИЋА 26 ГА. 356 " +
+        "Шифра простора: 0614276 Адреса: СВЕТОЗАРА ГЛИШИЋА 26 ГА. 356 " +
             "Општина: ПАЛИЛУЛА Насеље: БГ*ПАЛИЛУЛА"
 
     private val eps =
-        "ед број: 5007382290 / 111329252 шифра мерног места:201000108653 " +
+        "ед број: 5001112223 / 111000111 шифра мерног места:201000100000 " +
             "адреса мерног места:косте драгојевића 7 11120 београд - палилула " +
-            "бр.бројила/начин очитавања:01346995"
+            "бр.бројила/начин очитавања:01000111"
 
     @Test
     fun `infostan hint is the property address, not the labels around it`() {
